@@ -58,6 +58,11 @@ Purpose: Provide concise, repository-wide context and preferences for Copilot.
 - `/app` — binary and library code
 - `/README.md` — project README
 - `/.github` — Copilot instructions and prompt files
+- `/tests/` — integration tests and fixtures
+- `/fs_op/` — filesystem operations module
+- `/input/` — input handling module
+- `/runner/` — event loop and application runner module
+- `/ui/` — UI rendering module
 
 ## Tools & environment
 - Language: Rust.
@@ -97,6 +102,9 @@ Purpose: Provide concise, repository-wide context and preferences for Copilot.
 - PRs should be small, focused, and include test results.
 - Write/Update documentation for any public API changes.
 - Write/Update tests for any behavioral.
+-keep readme up to date with any changes.
+ write to change log for any changes.
+
 
 ## Response preferences
 - Keep answers concise and focused

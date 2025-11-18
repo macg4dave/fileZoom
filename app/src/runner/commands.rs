@@ -18,6 +18,9 @@ mod tests {
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
     use std::env;
+    use std::sync::Mutex;
+
+    static TEST_CWD_LOCK: Mutex<()> = Mutex::new(());
 
     fn find_index(app: &App, name: &str) -> Option<usize> {
         app.left
@@ -37,6 +40,9 @@ mod tests {
     #[test]
     fn new_file_and_dir_actions_create_files() -> Result<(), Box<dyn std::error::Error>> {
         let temp = TempDir::new()?;
+        // Acquire global cwd lock to avoid races when tests set the process cwd
+        let _guard = TEST_CWD_LOCK.lock().unwrap();
+        let orig = env::current_dir()?;
         env::set_current_dir(temp.path())?;
 
         let mut app = App::new()?;
@@ -49,12 +55,18 @@ mod tests {
         perform_action(&mut app, Action::NewDir("d1".to_string()))?;
         assert!(temp.child("d1").exists());
 
+        // restore original cwd to avoid interfering with other tests
+        env::set_current_dir(orig)?;
+        drop(_guard);
         Ok(())
     }
 
     #[test]
     fn copy_move_rename_delete_actions_work() -> Result<(), Box<dyn std::error::Error>> {
         let temp = TempDir::new()?;
+        // Acquire global cwd lock to avoid races when tests set the process cwd
+        let _guard = TEST_CWD_LOCK.lock().unwrap();
+        let orig = env::current_dir()?;
         env::set_current_dir(temp.path())?;
 
         // create a source file
@@ -104,6 +116,9 @@ mod tests {
         perform_action(&mut app4, Action::DeleteSelected)?;
         assert!(!temp.child("del.txt").exists());
 
+        // restore original cwd to avoid interfering with other tests
+        env::set_current_dir(orig)?;
+        drop(_guard);
         Ok(())
     }
 }

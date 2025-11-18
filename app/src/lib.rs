@@ -4,6 +4,7 @@ pub mod ui;
 #[path = "runner/mod.rs"]
 pub mod runner;
 pub mod input;
+pub mod fs_op;
 
 pub use crate::app::{Action, App, Entry, InputKind, Mode, Side, SortKey};
 pub use crate::app::path;
