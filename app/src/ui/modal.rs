@@ -15,7 +15,8 @@ pub fn centered_rect(area: Rect, w: u16, h: u16) -> Rect {
 /// Draw a centered modal dialog with a prompt title and content.
 pub fn draw_modal<B: Backend>(f: &mut Frame<B>, area: Rect, prompt: &str, content: &str) {
     let rect = centered_rect(area, 80, 10);
-    let p = Paragraph::new(content.to_string()).block(Block::default().borders(Borders::ALL).title(prompt));
+    let p = Paragraph::new(content.to_string())
+        .block(Block::default().borders(Borders::ALL).title(prompt));
     f.render_widget(p, rect);
 }
 

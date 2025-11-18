@@ -20,7 +20,10 @@ pub fn draw_menu<B: Backend>(f: &mut Frame<B>, area: Rect, _app: &App) {
         if i > 0 {
             parts.push(Span::raw("  "));
         }
-        parts.push(Span::styled(*it, Style::default().fg(Color::Black).bg(Color::White)));
+        parts.push(Span::styled(
+            *it,
+            Style::default().fg(Color::Black).bg(Color::White),
+        ));
     }
     let spans = vec![Spans::from(parts)];
     let menu = Paragraph::new(spans).block(Block::default());

@@ -6,18 +6,27 @@ use tui::Frame;
 use crate::app::App;
 use crate::app::Mode;
 
-pub mod panels;
 pub mod menu;
 pub mod modal;
+pub mod panels;
+pub mod header;
 
-pub use panels::*;
 pub use menu::*;
 pub use modal::*;
+pub use panels::*;
+pub use header::*;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)].as_ref())
+        .constraints(
+            [
+                Constraint::Length(1),
+                Constraint::Min(0),
+                Constraint::Length(1),
+            ]
+            .as_ref(),
+        )
         .split(f.size());
 
     let main_chunks = Layout::default()
@@ -25,8 +34,18 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
         .split(chunks[1]);
 
-    panels::draw_list(f, main_chunks[0], &app.left, app.active == crate::app::Side::Left);
-    panels::draw_list(f, main_chunks[1], &app.right, app.active == crate::app::Side::Right);
+    panels::draw_list(
+        f,
+        main_chunks[0],
+        &app.left,
+        app.active == crate::app::Side::Left,
+    );
+    panels::draw_list(
+        f,
+        main_chunks[1],
+        &app.right,
+        app.active == crate::app::Side::Right,
+    );
 
     // bottom help bar
     let help = Paragraph::new("↑/↓:navigate  PgUp/PgDn:page  Enter:open  Backspace:up  d:delete  c:copy  m:move  R:rename  n:new file  N:new dir  s:sort  q:quit")

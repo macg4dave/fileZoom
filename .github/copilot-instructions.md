@@ -1,4 +1,51 @@
-# Repository custom instructions for GitHub Copilot
+```markdown
+# Rust_MC — Copilot / Agent Instructions (concise)
+
+Purpose: quick, actionable guidance to get an AI coding agent productive in this repo.
+
+**Project Overview**
+- **What**: a single binary Rust CLI file-manager (TUI) in the `app` crate.
+- **Why**: small, dependency-light TUI focused on usability and mouse support for interactive demos and tests.
+
+**Important Paths**
+- `app/` : main crate (source, scripts, tests, fixtures).
+- `app/src/lib.rs`, `app/src/app.rs` : core application logic and public types (`App`, `Action`, `Mode`, `Side`).
+- `app/src/ui/` : UI rendering (see `menu.rs`, `modal.rs`, `panels.rs`).
+- `app/tests/fixtures/` : packaged fixtures used by integration tests.
+- `.github/instructions/` : path-specific prompt files (use these for context-aware tasks).
+
+**Build / Test / Run (practical)**
+- Preferred environment: Linux/macOS or WSL2 on Windows 11. Helper scripts check for WSL and will refuse to run elsewhere.
+- Run tests (inside WSL or Linux): `cd app && cargo test -p app -- --nocapture`
+- Run tests via helper (from WSL): `./app/scripts/run_tests.sh`
+- From Windows PowerShell run tests in WSL: `wsl -- cd /mnt/c/Users/<you>/github/Rust_MC && ./app/scripts/run_tests.sh`
+- Run the interactive demo: `cd app && ./scripts/user_test_wsl.sh prepare|build|run` (note: `run` starts the TUI and will take over your terminal; quit with `q`).
+
+**Key Conventions & Patterns (repo-specific)**
+- Tests and fixtures: integration tests copy/operate on `app/tests/fixtures/` into temp dirs. When adding tests, use `assert_fs`/`tempfile` dev-deps and avoid touching the real filesystem.
+
+**Dependencies & Tooling**
+- See `app/Cargo.toml` for runtime (`clap`, `crossterm`, `tui`, `anyhow`) and dev (`assert_fs`, `tempfile`) dependencies.
+- Use `rust-analyzer`, `cargo fmt`, and `cargo clippy` for local checks.
+
+**What agents should do (practical rules)**
+- Prefer the smallest, focused patch that builds and keeps tests passing for the `app` crate.
+- If behavior changes, add/update tests in `app/tests/` and reference fixtures in `app/tests/fixtures/`.
+- Preserve public CLI flags and machine-facing outputs unless explicitly authorized; document any changes.
+- Avoid `unsafe` unless necessary and accompanied by tests and rationale.
+
+**Files to inspect for context before editing**
+- `app/src/lib.rs`, `app/src/app.rs`, `app/src/main.rs`, `app/src/ui/mod.rs`, `app/tests/integration_tests.rs`, `app/TESTING.md`, `app/scripts/run_tests.sh`, `app/scripts/user_test_wsl.sh`.
+
+**Quick examples**
+- Run tests with output: `cargo test -p app -- --nocapture`
+- Run helper tests script (WSL): `./app/scripts/run_tests.sh`
+
+**Notes**
+- Keep critical rules near the top (Copilot Code Review reads only the first ~4k chars).
+- This file is intentionally concise — consult `app/TESTING.md` and `.github/instructions/` for task-specific prompts.
+
+``` # Repository custom instructions for GitHub Copilot
 
 Purpose: Provide concise, repository-wide context and preferences for Copilot.
 
@@ -37,7 +84,9 @@ Purpose: Provide concise, repository-wide context and preferences for Copilot.
 - Build must pass before submission.
 - fix any build errors and rerun build upto 5 times.
 - fix any test errors and rerun test upto 5 times.
-
+- do not allow dead_code
+- remove any dead_code flags.
+- build and test after code changes
 
 
 ## Testing and PRs

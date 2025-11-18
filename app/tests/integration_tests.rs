@@ -23,7 +23,12 @@ fn test_basic_file_ops() -> Result<(), Box<dyn std::error::Error>> {
     assert!(app.right.entries.iter().any(|e| e.name == "dirA"));
 
     // select file1 and copy it to a new dest dir
-    let idx = app.left.entries.iter().position(|e| e.name == "file1.txt").unwrap();
+    let idx = app
+        .left
+        .entries
+        .iter()
+        .position(|e| e.name == "file1.txt")
+        .unwrap();
     app.left.selected = idx;
 
     let dest_dir = temp.path().join("copy_dest");
@@ -42,7 +47,12 @@ fn test_basic_file_ops() -> Result<(), Box<dyn std::error::Error>> {
     assert!(temp.child("new_dir").exists());
 
     // delete the new file by selecting it and deleting
-    if let Some(pos) = app.left.entries.iter().position(|e| e.name == "new_file.txt") {
+    if let Some(pos) = app
+        .left
+        .entries
+        .iter()
+        .position(|e| e.name == "new_file.txt")
+    {
         app.left.selected = pos;
         app.delete_selected()?;
         assert!(!temp.child("new_file.txt").exists());
