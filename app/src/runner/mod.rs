@@ -5,7 +5,8 @@
 //! main loop, and `commands` for pure helpers that mutate `App` state.
 
 pub mod terminal;
-pub mod event_loop;
+pub mod event_loop2;
+pub mod handlers;
 pub mod commands;
 
-pub use event_loop::run_app;
+pub use event_loop2::run_app;

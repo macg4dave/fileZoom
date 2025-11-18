@@ -55,7 +55,7 @@ Purpose: Provide concise, repository-wide context and preferences for Copilot.
 - Supports MacOS, Debian and Fedora.
 
 ## Folder structure (important paths)
-- `/app` — binary and library code
+- /app/ — main crate
 - `/README.md` — project README
 - `/.github` — Copilot instructions and prompt files
 - `/tests/` — integration tests and fixtures
@@ -63,6 +63,7 @@ Purpose: Provide concise, repository-wide context and preferences for Copilot.
 - `/input/` — input handling module
 - `/runner/` — event loop and application runner module
 - `/ui/` — UI rendering module
+- `/error_logs/` - error logging module
 
 ## Tools & environment
 - Language: Rust.

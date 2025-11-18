@@ -22,6 +22,13 @@ pub enum Mode {
     Confirm {
         msg: String,
         on_yes: Action,
+        selected: usize,
+    },
+    Message {
+        title: String,
+        content: String,
+        buttons: Vec<String>,
+        selected: usize,
     },
     Input {
         prompt: String,

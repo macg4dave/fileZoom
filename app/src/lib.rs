@@ -5,6 +5,7 @@ pub mod ui;
 pub mod runner;
 pub mod input;
 pub mod fs_op;
+pub mod errors_logs;
 
 pub use crate::app::{Action, App, Entry, InputKind, Mode, Side, SortKey};
 pub use crate::app::path;
