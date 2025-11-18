@@ -1,6 +1,7 @@
 pub mod app;
 #[path = "ui/mod.rs"]
 pub mod ui;
+#[path = "runner/mod.rs"]
 pub mod runner;
 pub mod input;
 
