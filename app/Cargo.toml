@@ -1,0 +1,15 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+anyhow = "1.0"
+crossterm = "0.29.0"
+tui = "0.19"
+chrono = { version = "0.4", features = ["alloc"] }
+
+[dev-dependencies]
+assert_fs = "1.0"
+tempfile = "3.6"
