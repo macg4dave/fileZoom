@@ -1,0 +1,28 @@
+# Ignore Rust/Cargo build artifacts
+/target/
+**/target/
+
+# Ignore compiled artifacts
+*.rmeta
+*.rlib
+*.d
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Temporary files
+/tmp/
+
+# Test fixtures/build outputs
+**/build/
+
+# Logs
+*.log
+/target
+.DS_Store
+.vscode/
+**/*.rs.bk
