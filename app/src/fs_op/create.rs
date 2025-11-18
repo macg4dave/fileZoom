@@ -7,7 +7,8 @@ use anyhow::{Context, Result};
 pub fn create_file<P: AsRef<Path>>(path: P) -> Result<()> {
     let p = path.as_ref();
     if let Some(parent) = p.parent() {
-        std::fs::create_dir_all(parent).with_context(|| format!("creating parent dirs for {:?}", p))?;
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating parent dirs for {:?}", p))?;
     }
     OpenOptions::new()
         .write(true)
@@ -19,7 +20,8 @@ pub fn create_file<P: AsRef<Path>>(path: P) -> Result<()> {
 
 /// Create directory and parents.
 pub fn create_dir_all<P: AsRef<Path>>(path: P) -> Result<()> {
-    std::fs::create_dir_all(path.as_ref()).with_context(|| format!("creating dir {:?}", path.as_ref()))?;
+    std::fs::create_dir_all(path.as_ref())
+        .with_context(|| format!("creating dir {:?}", path.as_ref()))?;
     Ok(())
 }
 

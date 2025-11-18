@@ -1,0 +1,8 @@
+Refactor and update modules where appropriate.
+Identify and eliminate duplicate code.
+Remove dead or unused code.
+Add or improve comments so they clearly explain intent, not the obvious.
+Write or update tests for every important function, class, and behaviour.
+Maintain the existing style unless it’s inconsistent or unclear.
+Do not introduce breaking changes unless required to fix something.”
+what could this file be doing better?

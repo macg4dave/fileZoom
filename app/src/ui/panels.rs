@@ -1,6 +1,6 @@
 use tui::backend::Backend;
 use tui::layout::Rect;
-use tui::style::{Style};
+use tui::style::Style;
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, List, ListItem, Paragraph};
 use tui::Frame;
@@ -27,7 +27,11 @@ pub fn draw_list<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel, active
             }
 
             let name = &e.name;
-            let size = if e.is_dir { "<dir>".to_string() } else { format!("{}", e.size) };
+            let size = if e.is_dir {
+                "<dir>".to_string()
+            } else {
+                format!("{}", e.size)
+            };
             let mtime = e
                 .modified
                 .map(|d| d.format("%Y-%m-%d %H:%M").to_string())
@@ -46,7 +50,11 @@ pub fn draw_list<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel, active
         .collect();
 
     let title = format!("{}", panel.cwd.display());
-    let border_style = if active { theme.border_active } else { theme.border_inactive };
+    let border_style = if active {
+        theme.border_active
+    } else {
+        theme.border_inactive
+    };
     let list = List::new(items)
         .block(
             Block::default()
@@ -79,8 +87,12 @@ pub fn draw_preview<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel) {
         acc
     });
     let theme = theme_current();
-    let preview = Paragraph::new(text)
-        .block(Block::default().borders(Borders::ALL).title("Preview").style(theme.preview_block_style));
+    let preview = Paragraph::new(text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Preview")
+            .style(theme.preview_block_style),
+    );
     f.render_widget(preview, area);
 }
 

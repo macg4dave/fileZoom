@@ -11,8 +11,7 @@ pub fn rename_path<P: AsRef<Path>>(path: P, new_name: &str) -> Result<()> {
         .parent()
         .ok_or_else(|| anyhow::anyhow!("path has no parent: {:?}", p))?;
     let dest = parent.join(new_name);
-    fs::rename(p, &dest)
-        .with_context(|| format!("renaming {:?} -> {:?}", p, dest))?;
+    fs::rename(p, &dest).with_context(|| format!("renaming {:?} -> {:?}", p, dest))?;
     Ok(())
 }
 
@@ -38,12 +37,16 @@ pub fn copy_path<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dest: Q) -> Result<()> 
     } else {
         // dest may be directory or file path. If dest is dir, copy into it.
         let final_dest = if d.exists() && d.is_dir() {
-            d.join(s.file_name().ok_or_else(|| anyhow::anyhow!("source has no filename"))?)
+            d.join(
+                s.file_name()
+                    .ok_or_else(|| anyhow::anyhow!("source has no filename"))?,
+            )
         } else {
             d.to_path_buf()
         };
         if let Some(parent) = final_dest.parent() {
-            fs::create_dir_all(parent).with_context(|| format!("creating parent for {:?}", final_dest))?;
+            fs::create_dir_all(parent)
+                .with_context(|| format!("creating parent for {:?}", final_dest))?;
         }
         fs::copy(s, &final_dest).with_context(|| format!("copying {:?} -> {:?}", s, final_dest))?;
     }
@@ -56,7 +59,10 @@ pub fn move_path<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dest: Q) -> Result<()> 
     let d = dest.as_ref();
     // If destination is an existing directory, move into it
     let final_dest = if d.exists() && d.is_dir() {
-        d.join(s.file_name().ok_or_else(|| anyhow::anyhow!("src has no filename"))?)
+        d.join(
+            s.file_name()
+                .ok_or_else(|| anyhow::anyhow!("src has no filename"))?,
+        )
     } else {
         d.to_path_buf()
     };
@@ -65,8 +71,9 @@ pub fn move_path<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dest: Q) -> Result<()> 
         Ok(_) => return Ok(()),
         Err(e) => {
             // try fallback
-            copy_path(s, &final_dest)
-                .with_context(|| format!("fallback copying {:?} -> {:?}: {:?}", s, final_dest, e))?;
+            copy_path(s, &final_dest).with_context(|| {
+                format!("fallback copying {:?} -> {:?}: {:?}", s, final_dest, e)
+            })?;
             // remove original (file or dir)
             if s.is_dir() {
                 fs::remove_dir_all(s).with_context(|| format!("removing dir {:?}", s))?;

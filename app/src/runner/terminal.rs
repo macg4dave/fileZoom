@@ -1,7 +1,9 @@
-use std::io;
 use anyhow::Context;
 use crossterm::execute;
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+};
+use std::io;
 use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
@@ -16,9 +18,12 @@ pub fn init_terminal() -> anyhow::Result<Terminal<CrosstermBackend<std::io::Stdo
 }
 
 /// Restore terminal state (leave alternate screen + disable raw mode) and show cursor.
-pub fn restore_terminal(mut terminal: Terminal<CrosstermBackend<std::io::Stdout>>) -> anyhow::Result<()> {
+pub fn restore_terminal(
+    mut terminal: Terminal<CrosstermBackend<std::io::Stdout>>,
+) -> anyhow::Result<()> {
     disable_raw_mode().context("disable_raw_mode failed")?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen).context("leave alternate screen failed")?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)
+        .context("leave alternate screen failed")?;
     terminal.show_cursor().context("show cursor failed")?;
     Ok(())
 }

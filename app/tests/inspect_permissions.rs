@@ -9,7 +9,10 @@ fn probe_write_dir() -> Result<(), Box<dyn std::error::Error>> {
     let info = inspect_permissions(temp.path(), true)?;
     assert!(info.is_dir);
     assert!(info.can_read);
-    assert!(info.can_write, "expected probe write to succeed in temp dir");
+    assert!(
+        info.can_write,
+        "expected probe write to succeed in temp dir"
+    );
 
     // show the mode for debugging if available
     let _mode = format_unix_mode(info.unix_mode);

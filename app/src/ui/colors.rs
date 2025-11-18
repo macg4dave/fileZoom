@@ -28,15 +28,21 @@ impl Theme {
             border_inactive: Style::default(),
 
             dir_style: Style::default().fg(Color::Blue),
-            parent_style: Style::default().fg(Color::Blue).add_modifier(Modifier::ITALIC),
+            parent_style: Style::default()
+                .fg(Color::Blue)
+                .add_modifier(Modifier::ITALIC),
 
-            highlight_style: Style::default().add_modifier(Modifier::BOLD).bg(Color::Gray),
+            highlight_style: Style::default()
+                .add_modifier(Modifier::BOLD)
+                .bg(Color::Gray),
 
             preview_block_style: Style::default(),
 
             help_block_style: Style::default(),
 
-            header_style: Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
+            header_style: Style::default()
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD),
         }
     }
 
@@ -47,15 +53,22 @@ impl Theme {
             border_inactive: Style::default().fg(Color::Gray),
 
             dir_style: Style::default().fg(Color::LightBlue),
-            parent_style: Style::default().fg(Color::Cyan).add_modifier(Modifier::ITALIC),
+            parent_style: Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::ITALIC),
 
-            highlight_style: Style::default().bg(Color::Blue).fg(Color::Black).add_modifier(Modifier::BOLD),
+            highlight_style: Style::default()
+                .bg(Color::Blue)
+                .fg(Color::Black)
+                .add_modifier(Modifier::BOLD),
 
             preview_block_style: Style::default().fg(Color::LightBlue),
 
             help_block_style: Style::default().fg(Color::Gray).bg(Color::Black),
 
-            header_style: Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            header_style: Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         }
     }
 }
@@ -75,7 +88,10 @@ struct ThemeState {
 static THEME_STATE: OnceLock<RwLock<ThemeState>> = OnceLock::new();
 
 fn init_state() -> RwLock<ThemeState> {
-    RwLock::new(ThemeState { name: ThemeName::Default, theme: Theme::default() })
+    RwLock::new(ThemeState {
+        name: ThemeName::Default,
+        theme: Theme::default(),
+    })
 }
 
 /// Return a clone of the current theme.

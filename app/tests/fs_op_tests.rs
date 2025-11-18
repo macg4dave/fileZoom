@@ -1,5 +1,5 @@
-use assert_fs::prelude::*;
 use app::fs_op::files::*;
+use assert_fs::prelude::*;
 
 #[test]
 fn basic_copy_move_rename_remove() -> Result<(), Box<dyn std::error::Error>> {

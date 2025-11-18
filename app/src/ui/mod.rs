@@ -6,18 +6,18 @@ use tui::Frame;
 use crate::app::App;
 use crate::app::Mode;
 
+pub mod colors;
+pub mod dialogs;
+pub mod header;
 pub mod menu;
 pub mod modal;
 pub mod panels;
-pub mod header;
-pub mod colors;
-pub mod dialogs;
 
+pub use dialogs::*;
+pub use header::*;
 pub use menu::*;
 pub use modal::*;
 pub use panels::*;
-pub use header::*;
-pub use dialogs::*;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let chunks = Layout::default()
@@ -61,9 +61,16 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     // Modal
     match &app.mode {
-        Mode::Confirm { msg, selected, .. } => dialogs::draw_confirm(f, f.size(), "Confirm", msg, &["Yes", "No"], *selected),
+        Mode::Confirm { msg, selected, .. } => {
+            dialogs::draw_confirm(f, f.size(), "Confirm", msg, &["Yes", "No"], *selected)
+        }
         Mode::Input { prompt, buffer, .. } => modal::draw_modal(f, f.size(), prompt, buffer),
-        Mode::Message { title, content, buttons, selected } => {
+        Mode::Message {
+            title,
+            content,
+            buttons,
+            selected,
+        } => {
             // Render as error if title contains "Error", otherwise info
             let btn_refs: Vec<&str> = buttons.iter().map(|s| s.as_str()).collect();
             if title.to_lowercase().contains("error") {

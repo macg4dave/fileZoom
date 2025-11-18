@@ -1,7 +1,7 @@
 pub mod core;
 pub mod panel;
-pub mod types;
 pub mod path;
+pub mod types;
 
 pub use core::App;
 pub use panel::Panel;

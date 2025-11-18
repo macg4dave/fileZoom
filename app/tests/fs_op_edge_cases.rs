@@ -1,10 +1,11 @@
-use assert_fs::prelude::*;
 use app::fs_op::files::*;
+use assert_fs::prelude::*;
 
 #[cfg(unix)]
 use std::os::unix::fs::{symlink, PermissionsExt};
 
 #[test]
+#[cfg(unix)]
 fn symlink_file_and_dir_copy() -> Result<(), Box<dyn std::error::Error>> {
     let temp = assert_fs::TempDir::new()?;
 
@@ -69,7 +70,10 @@ fn permission_denied_create_file() -> Result<(), Box<dyn std::error::Error>> {
 
     let target = no_write.child("a.txt");
     let res = create_file(target.path());
-    assert!(res.is_err(), "expected create_file to fail due to permission denied");
+    assert!(
+        res.is_err(),
+        "expected create_file to fail due to permission denied"
+    );
 
     // restore perms so cleanup can occur
     perms.set_mode(0o700);

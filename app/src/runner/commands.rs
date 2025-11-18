@@ -23,18 +23,15 @@ mod tests {
     static TEST_CWD_LOCK: Mutex<()> = Mutex::new(());
 
     fn find_index(app: &App, name: &str) -> Option<usize> {
-        app.left
-            .entries
-            .iter()
-            .position(|e| {
-                if e.name == name {
-                    return true;
-                }
-                if let Some(fname) = e.path.file_name().and_then(|s| s.to_str()) {
-                    return fname == name;
-                }
-                false
-            })
+        app.left.entries.iter().position(|e| {
+            if e.name == name {
+                return true;
+            }
+            if let Some(fname) = e.path.file_name().and_then(|s| s.to_str()) {
+                return fname == name;
+            }
+            false
+        })
     }
 
     #[test]

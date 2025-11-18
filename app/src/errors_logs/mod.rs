@@ -39,7 +39,12 @@ fn template_or_default(map: &HashMap<String, String>, key: &str, default: &str) 
 /// Parameters (all optional except `err`):
 /// - `path`: primary path involved in the error
 /// - `src` / `dst`: source/destination paths for move operations
-pub fn render_io_error(err: &std::io::Error, path: Option<&str>, src: Option<&str>, dst: Option<&str>) -> String {
+pub fn render_io_error(
+    err: &std::io::Error,
+    path: Option<&str>,
+    src: Option<&str>,
+    dst: Option<&str>,
+) -> String {
     let templates = load_templates();
 
     use std::io::ErrorKind;
@@ -49,25 +54,37 @@ pub fn render_io_error(err: &std::io::Error, path: Option<&str>, src: Option<&st
             return tmpl.replace("{path}", path.unwrap_or("<unknown>"));
         }
         ErrorKind::PermissionDenied => {
-            let tmpl = template_or_default(&templates, "permission_denied", "Permission denied: {path}");
+            let tmpl =
+                template_or_default(&templates, "permission_denied", "Permission denied: {path}");
             return tmpl.replace("{path}", path.unwrap_or("<unknown>"));
         }
         ErrorKind::AlreadyExists => {
-            let tmpl = template_or_default(&templates, "already_exists", "Target already exists: {path}");
+            let tmpl = template_or_default(
+                &templates,
+                "already_exists",
+                "Target already exists: {path}",
+            );
             return tmpl.replace("{path}", path.or(src).or(dst).unwrap_or("<unknown>"));
         }
         ErrorKind::InvalidInput => {
             let tmpl = template_or_default(&templates, "invalid_input", "Invalid input: {details}");
             return tmpl.replace("{details}", &format!("{}", err));
         }
-        ErrorKind::BrokenPipe | ErrorKind::UnexpectedEof | ErrorKind::WouldBlock | ErrorKind::TimedOut => {
+        ErrorKind::BrokenPipe
+        | ErrorKind::UnexpectedEof
+        | ErrorKind::WouldBlock
+        | ErrorKind::TimedOut => {
             let tmpl = template_or_default(&templates, "io_error", "I/O error: {err}");
             return tmpl.replace("{err}", &format!("{}", err));
         }
         _ => {
             // For other errors, attempt to map a move-specific template, then generic.
             if let (Some(s), Some(d)) = (src, dst) {
-                let tmpl = template_or_default(&templates, "unable_to_move", "Unable to move {src} to {dst} ({err})");
+                let tmpl = template_or_default(
+                    &templates,
+                    "unable_to_move",
+                    "Unable to move {src} to {dst} ({err})",
+                );
                 return tmpl
                     .replace("{src}", s)
                     .replace("{dst}", d)

@@ -83,11 +83,14 @@ pub fn inspect_permissions<P: AsRef<Path>>(path: P, test_write: bool) -> Result<
     } else {
         if info.is_dir {
             // attempt to create a probe file inside the directory
-            let probe_name = format!(".perm_probe_{}_{}", process::id(),
-                                     SystemTime::now()
-                                         .duration_since(SystemTime::UNIX_EPOCH)
-                                         .map(|d| d.as_nanos())
-                                         .unwrap_or_default());
+            let probe_name = format!(
+                ".perm_probe_{}_{}",
+                process::id(),
+                SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .map(|d| d.as_nanos())
+                    .unwrap_or_default()
+            );
             let probe_path = path.join(probe_name);
             let created = OpenOptions::new()
                 .write(true)

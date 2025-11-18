@@ -1,6 +1,6 @@
 use tui::backend::Backend;
 use tui::layout::Rect;
- 
+
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Paragraph};
 use tui::Frame;
@@ -22,10 +22,7 @@ pub fn draw_menu<B: Backend>(f: &mut Frame<B>, area: Rect, _app: &App) {
         if i > 0 {
             parts.push(Span::raw("  "));
         }
-        parts.push(Span::styled(
-            *it,
-            theme.help_block_style,
-        ));
+        parts.push(Span::styled(*it, theme.help_block_style));
     }
     let spans = vec![Spans::from(parts)];
     let menu = Paragraph::new(spans).block(Block::default());
