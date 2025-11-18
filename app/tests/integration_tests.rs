@@ -16,13 +16,15 @@ fn test_basic_file_ops() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut app = App::new()?;
 
-    // entries should include our files/dirs
-    assert!(app.entries.iter().any(|e| e.name == "file1.txt"));
-    assert!(app.entries.iter().any(|e| e.name == "dirA"));
+    // entries should include our files/dirs in both panels
+    assert!(app.left.entries.iter().any(|e| e.name == "file1.txt"));
+    assert!(app.left.entries.iter().any(|e| e.name == "dirA"));
+    assert!(app.right.entries.iter().any(|e| e.name == "file1.txt"));
+    assert!(app.right.entries.iter().any(|e| e.name == "dirA"));
 
     // select file1 and copy it to a new dest dir
-    let idx = app.entries.iter().position(|e| e.name == "file1.txt").unwrap();
-    app.selected = idx;
+    let idx = app.left.entries.iter().position(|e| e.name == "file1.txt").unwrap();
+    app.left.selected = idx;
 
     let dest_dir = temp.path().join("copy_dest");
     std::fs::create_dir_all(&dest_dir)?;
@@ -40,15 +42,15 @@ fn test_basic_file_ops() -> Result<(), Box<dyn std::error::Error>> {
     assert!(temp.child("new_dir").exists());
 
     // delete the new file by selecting it and deleting
-    if let Some(pos) = app.entries.iter().position(|e| e.name == "new_file.txt") {
-        app.selected = pos;
+    if let Some(pos) = app.left.entries.iter().position(|e| e.name == "new_file.txt") {
+        app.left.selected = pos;
         app.delete_selected()?;
         assert!(!temp.child("new_file.txt").exists());
     }
 
     // move dirA to moved_dir
-    if let Some(pos) = app.entries.iter().position(|e| e.name == "dirA") {
-        app.selected = pos;
+    if let Some(pos) = app.left.entries.iter().position(|e| e.name == "dirA") {
+        app.left.selected = pos;
         let moved_to = temp.path().join("moved_dir/");
         app.move_selected_to(moved_to.clone())?;
         assert!(moved_to.join("file2.txt").exists());

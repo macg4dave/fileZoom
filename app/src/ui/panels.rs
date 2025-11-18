@@ -1,11 +1,11 @@
 use tui::backend::Backend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, List, ListItem, Paragraph};
 use tui::Frame;
 
-use crate::app::{App, Mode, Panel, Side};
+use crate::app::{Panel, Entry};
 
 pub fn draw_list<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel, active: bool) {
     let list_height = (area.height as usize).saturating_sub(2); // account for borders/title
@@ -44,58 +44,34 @@ pub fn draw_preview<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel) {
     f.render_widget(preview, area);
 }
 
-pub fn draw_modal<B: Backend>(f: &mut Frame<B>, area: Rect, prompt: &str, content: &str) {
-    let w = area.width.min(80);
-    let h = area.height.min(10);
-    let x = (area.width - w) / 2 + area.x;
-    let y = (area.height - h) / 2 + area.y;
-    let rect = Rect::new(x, y, w, h);
-    let p = Paragraph::new(content.to_string()).block(Block::default().borders(Borders::ALL).title(prompt));
-    f.render_widget(p, rect);
+/// Format a directory entry into the fixed-width textual line used by the list.
+///
+/// This mirrors the formatting used by `draw_list`.
+pub fn format_entry_line(e: &Entry) -> String {
+    let name = &e.name;
+    let size = if e.is_dir { "<dir>".to_string() } else { format!("{}", e.size) };
+    let mtime = e.modified.map(|d| d.format("%Y-%m-%d %H:%M").to_string()).unwrap_or_else(|| "-".to_string());
+    format!("{:<40.40} {:>10} {:>16}", name, size, mtime)
 }
 
-pub fn draw_menu<B: Backend>(f: &mut Frame<B>, area: Rect, _app: &crate::app::App) {
-    let menu_items = vec!["File", "Copy", "Move", "New", "Sort", "Help"];
-    let mut spans = Vec::new();
-    let mut parts: Vec<Span> = Vec::new();
-    for (i, it) in menu_items.iter().enumerate() {
-        if i > 0 {
-            parts.push(Span::raw("  "));
-        }
-        parts.push(Span::styled(*it, Style::default().fg(Color::Black).bg(Color::White)));
-    }
-    spans.push(Spans::from(parts));
-    let menu = Paragraph::new(spans).block(Block::default());
-    f.render_widget(menu, area);
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Local;
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)].as_ref())
-        .split(f.size());
+    #[test]
+    fn format_entry_line_for_file_and_dir() {
+        let now = Local::now();
+        let file = Entry { name: "file.txt".to_string(), path: std::path::PathBuf::from("/tmp/file.txt"), is_dir: false, size: 1234, modified: Some(now) };
+        let dir = Entry { name: "somedir".to_string(), path: std::path::PathBuf::from("/tmp/somedir"), is_dir: true, size: 0, modified: None };
+        let fline = format_entry_line(&file);
+        assert!(fline.contains("file.txt"));
+        assert!(fline.contains("1234"));
+        assert!(fline.contains(&now.format("%Y-%m-%d %H:%M").to_string()));
 
-    // main area occupies middle chunk (chunks[1]) now
-    let main_chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-        .split(chunks[1]);
-
-    draw_list(f, main_chunks[0], &app.left, app.active == Side::Left);
-    draw_list(f, main_chunks[1], &app.right, app.active == Side::Right);
-
-    // bottom help bar
-    let help = Paragraph::new("↑/↓:navigate  PgUp/PgDn:page  Enter:open  Backspace:up  d:delete  c:copy  m:move  R:rename  n:new file  N:new dir  s:sort  q:quit")
-        .block(Block::default().borders(Borders::ALL));
-    f.render_widget(help, chunks[2]);
-
-    // top menu bar
-    draw_menu(f, chunks[0], app);
-
-    // Modal
-    match &app.mode {
-        Mode::Confirm { msg, .. } => draw_modal(f, f.size(), "Confirm", msg),
-        Mode::Input { prompt, buffer, .. } => draw_modal(f, f.size(), prompt, buffer),
-        Mode::Normal => {}
+        let dline = format_entry_line(&dir);
+        assert!(dline.contains("somedir"));
+        assert!(dline.contains("<dir>"));
+        assert!(dline.contains("-"));
     }
 }

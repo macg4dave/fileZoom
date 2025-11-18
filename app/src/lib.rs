@@ -1,7 +1,8 @@
 pub mod app;
-pub mod ui;
+pub mod ui_mod;
+pub use ui_mod as ui;
 
-pub use crate::app::{App, Entry, SortKey, Mode, InputKind, Action};
+pub use crate::app::{App, Entry, SortKey, Mode, InputKind, Action, Side};
 
 pub fn greet(name: &str) -> String {
     format!("Hello, {}!", name)
