@@ -1,7 +1,12 @@
 use chrono::{DateTime, Local};
 use std::path::PathBuf;
 
-#[derive(Clone)]
+/// A directory entry displayed in a panel.
+///
+/// This is a lightweight representation used by the UI layer; it intentionally
+/// stores a `PathBuf` and a precomputed `name` to avoid repeated allocations
+/// while rendering.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entry {
     pub name: String,
     pub path: PathBuf,
@@ -10,6 +15,7 @@ pub struct Entry {
     pub modified: Option<DateTime<Local>>,
 }
 
+/// Keys by which listings may be sorted.
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum SortKey {
     Name,
@@ -17,6 +23,13 @@ pub enum SortKey {
     Modified,
 }
 
+/// Mode represents the global UI mode/state the application may be in.
+///
+/// - `Normal` is the default browsing mode.
+/// - `Confirm` is used for yes/no prompts (for example, delete).
+/// - `Message` displays an information dialog with buttons.
+/// - `Input` requests textual input from the user.
+#[derive(Clone, Debug)]
 pub enum Mode {
     Normal,
     Confirm {
@@ -37,6 +50,9 @@ pub enum Mode {
     },
 }
 
+/// The kind of input requested from the user. This guides how the input buffer
+/// is interpreted (e.g. a destination path vs a filename).
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum InputKind {
     Copy,
     Move,
@@ -46,7 +62,11 @@ pub enum InputKind {
     ChangePath,
 }
 
-#[allow(dead_code)]
+/// Actions represent high-level user requests executed by the runner.
+///
+/// These are intentionally simple enums so they can be passed around the UI
+/// and executed by `runner::commands::perform_action`.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Action {
     DeleteSelected,
     CopyTo(PathBuf),
@@ -56,8 +76,35 @@ pub enum Action {
     NewDir(String),
 }
 
+/// Which panel is active.
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Side {
     Left,
     Right,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn action_debug_and_clone() {
+        let p = PathBuf::from("/tmp/x");
+        let a = Action::CopyTo(p.clone());
+        let b = a.clone();
+        assert_eq!(format!("{:?}", a), format!("{:?}", b));
+    }
+
+    #[test]
+    fn entry_equality() {
+        let e1 = Entry {
+            name: "a".to_string(),
+            path: PathBuf::from("a"),
+            is_dir: false,
+            size: 0,
+            modified: None,
+        };
+        let e2 = e1.clone();
+        assert_eq!(e1, e2);
+    }
 }

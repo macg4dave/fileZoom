@@ -3,8 +3,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::time::SystemTime;
+use std::fmt;
 
-use anyhow::{Context, Result};
+use std::result::Result as StdResult;
 
 /// Basic permission information for a filesystem path.
 #[derive(Debug, Clone)]
@@ -40,6 +41,37 @@ impl PermissionInfo {
     }
 }
 
+/// Errors that can occur while inspecting or changing permissions.
+#[derive(Debug)]
+pub enum PermissionError {
+    Io(std::io::Error),
+    Unsupported,
+}
+
+impl fmt::Display for PermissionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PermissionError::Io(e) => write!(f, "IO error: {}", e),
+            PermissionError::Unsupported => write!(f, "operation not supported on this platform"),
+        }
+    }
+}
+
+impl std::error::Error for PermissionError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            PermissionError::Io(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
+impl From<std::io::Error> for PermissionError {
+    fn from(e: std::io::Error) -> Self {
+        PermissionError::Io(e)
+    }
+}
+
 /// Inspect permissions for `path`.
 ///
 /// - `test_write`: when `true`, the function will perform a non-destructive
@@ -50,11 +82,11 @@ impl PermissionInfo {
 /// This function is best-effort and is intended to give the TUI enough
 /// information to decide how to present actions to the user. It avoids making
 /// destructive changes by default.
-pub fn inspect_permissions<P: AsRef<Path>>(path: P, test_write: bool) -> Result<PermissionInfo> {
+pub fn inspect_permissions<P: AsRef<Path>>(path: P, test_write: bool) -> StdResult<PermissionInfo, PermissionError> {
     let path = path.as_ref().to_path_buf();
     let mut info = PermissionInfo::new(path.clone());
 
-    let meta = fs::metadata(&path).with_context(|| format!("reading metadata for {:?}", &path))?;
+    let meta = fs::metadata(&path).map_err(PermissionError::Io)?;
     info.is_dir = meta.is_dir();
     info.readonly = meta.permissions().readonly();
 
@@ -112,19 +144,18 @@ pub fn inspect_permissions<P: AsRef<Path>>(path: P, test_write: bool) -> Result<
 ///
 /// On non-Unix platforms this returns an error indicating unsupported.
 #[cfg(unix)]
-pub fn change_permissions<P: AsRef<Path>>(path: P, mode: u32) -> Result<()> {
+pub fn change_permissions<P: AsRef<Path>>(path: P, mode: u32) -> StdResult<(), PermissionError> {
     use std::os::unix::fs::PermissionsExt;
 
     let path = path.as_ref();
     let perm = fs::Permissions::from_mode(mode);
-    fs::set_permissions(path, perm)
-        .with_context(|| format!("setting permissions {:#o} on {:?}", mode, path))?;
+    fs::set_permissions(path, perm).map_err(PermissionError::Io)?;
     Ok(())
 }
 
 #[cfg(not(unix))]
-pub fn change_permissions<P: AsRef<Path>>(_path: P, _mode: u32) -> Result<()> {
-    anyhow::bail!("changing permission bits is only supported on Unix platforms in this helper");
+pub fn change_permissions<P: AsRef<Path>>(_path: P, _mode: u32) -> StdResult<(), PermissionError> {
+    Err(PermissionError::Unsupported)
 }
 
 /// Helper to render a human-friendly octal mode when available.

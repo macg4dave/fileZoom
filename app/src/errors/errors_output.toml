@@ -1,0 +1,29 @@
+# errors_output — UI error templates
+
+# This file contains a small set of human-friendly error message templates
+# that the TUI can display. Templates use `{{...}}` placeholders which calling
+# code can replace (e.g. `{{path}}`, `{{err}}`, `{{details}}`). This file is plain
+# text/TOML-style to make it easy to edit; the UI code can parse it or load
+# it as a simple key/value mapping when needed.
+
+[errors]
+# Path-related errors
+path_not_found = "Path not found or inaccessible: {{path}}"
+not_a_directory = "Not a directory: {{path}}"
+
+# Permission-related errors
+permission_denied = "Permission denied: {{path}} — check file permissions"
+insufficient_privileges = "Insufficient privileges to perform action on: {{path}}"
+
+# File operation errors
+already_exists = "Target already exists: {{path}}"
+unable_to_create = "Unable to create {{path}}: {{err}}"
+unable_to_remove = "Unable to remove {{path}}: {{err}}"
+unable_to_move = "Unable to move {{src}} to {{dst}}: {{err}}"
+read_error = "Unable to read {{path}}: {{err}}"
+write_error = "Unable to write {{path}}: {{err}}"
+
+# Generic / I/O errors
+io_error = "I/O error: {{err}}"
+invalid_input = "Invalid input: {{details}}"
+unknown_error = "An unknown error occurred: {{err}}"

@@ -1,5 +1,5 @@
 use crate::app::{Action, App, InputKind, Mode, Side, SortKey};
-use crate::errors_logs;
+use crate::errors;
 use crate::input::KeyCode;
 use std::path::PathBuf;
 
@@ -49,7 +49,7 @@ fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Resu
                 } else {
                     if let Err(err) = app.enter() {
                         let path_s = e.path.display().to_string();
-                        let msg = errors_logs::render_io_error(&err, Some(&path_s), None, None);
+                        let msg = errors::render_io_error(&err, Some(&path_s), None, None);
                         app.mode = Mode::Message {
                             title: "Error".to_string(),
                             content: msg,
@@ -60,7 +60,7 @@ fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Resu
                 }
             } else {
                 if let Err(err) = app.enter() {
-                    let msg = errors_logs::render_io_error(&err, None, None, None);
+                    let msg = errors::render_io_error(&err, None, None, None);
                     app.mode = Mode::Message {
                         title: "Error".to_string(),
                         content: msg,
@@ -72,7 +72,7 @@ fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Resu
         }
         KeyCode::Backspace => {
             if let Err(err) = app.go_up() {
-                let msg = errors_logs::render_io_error(&err, None, None, None);
+                let msg = errors::render_io_error(&err, None, None, None);
                 app.mode = Mode::Message {
                     title: "Error".to_string(),
                     content: msg,
@@ -83,7 +83,7 @@ fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Resu
         }
         KeyCode::Char('r') => {
             if let Err(err) = app.refresh() {
-                let msg = errors_logs::render_io_error(&err, None, None, None);
+                let msg = errors::render_io_error(&err, None, None, None);
                 app.mode = Mode::Message {
                     title: "Error".to_string(),
                     content: msg,
@@ -232,7 +232,7 @@ fn handle_confirm(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                 match action {
                     Action::DeleteSelected => {
                         if let Err(err) = app.delete_selected() {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -243,7 +243,7 @@ fn handle_confirm(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                     }
                     Action::CopyTo(p) => {
                         if let Err(err) = app.copy_selected_to(p) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -254,7 +254,7 @@ fn handle_confirm(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                     }
                     Action::MoveTo(p) => {
                         if let Err(err) = app.move_selected_to(p) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -265,7 +265,7 @@ fn handle_confirm(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                     }
                     Action::RenameTo(name) => {
                         if let Err(err) = app.rename_selected_to(name) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -276,7 +276,7 @@ fn handle_confirm(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                     }
                     Action::NewFile(name) => {
                         if let Err(err) = app.new_file(name) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -287,7 +287,7 @@ fn handle_confirm(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                     }
                     Action::NewDir(name) => {
                         if let Err(err) = app.new_dir(name) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -332,7 +332,7 @@ fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                     InputKind::Copy => {
                         let dst = PathBuf::from(input);
                         if let Err(err) = app.copy_selected_to(dst) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -344,7 +344,7 @@ fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                     InputKind::Move => {
                         let dst = PathBuf::from(input);
                         if let Err(err) = app.move_selected_to(dst) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -355,7 +355,7 @@ fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                     }
                     InputKind::Rename => {
                         if let Err(err) = app.rename_selected_to(input) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -366,7 +366,7 @@ fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                     }
                     InputKind::NewFile => {
                         if let Err(err) = app.new_file(input) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -376,8 +376,8 @@ fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                         }
                     }
                     InputKind::NewDir => {
-                        if let Err(err) = app.new_dir(input) {
-                            let msg = errors_logs::render_io_error(&err, None, None, None);
+                            if let Err(err) = app.new_dir(input) {
+                            let msg = errors::render_io_error(&err, None, None, None);
                             app.mode = Mode::Message {
                                 title: "Error".to_string(),
                                 content: msg,
@@ -392,7 +392,7 @@ fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                             Side::Left => {
                                 app.left.cwd = p;
                                 if let Err(err) = app.refresh() {
-                                    let msg = errors_logs::render_io_error(&err, None, None, None);
+                                    let msg = errors::render_io_error(&err, None, None, None);
                                     app.mode = Mode::Message {
                                         title: "Error".to_string(),
                                         content: msg,
@@ -404,7 +404,7 @@ fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                             Side::Right => {
                                 app.right.cwd = p;
                                 if let Err(err) = app.refresh() {
-                                    let msg = errors_logs::render_io_error(&err, None, None, None);
+                                    let msg = errors::render_io_error(&err, None, None, None);
                                     app.mode = Mode::Message {
                                         title: "Error".to_string(),
                                         content: msg,

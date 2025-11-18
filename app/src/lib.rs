@@ -1,5 +1,5 @@
 pub mod app;
-pub mod errors_logs;
+pub mod errors;
 pub mod fs_op;
 pub mod input;
 #[path = "runner/mod.rs"]
