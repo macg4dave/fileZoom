@@ -1,5 +1,5 @@
-# Image for running fileZoom tests with fixtures baked in
-# Builds a container that contains the repository at /work and fixtures at /work/app/tests/fixtures
+# Image for running fileZoom tests with fakefs baked in
+# Builds a container that contains the app and fakefs filesystem image.
 FROM debian:stable-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
