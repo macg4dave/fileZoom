@@ -29,13 +29,3 @@ pub fn draw_menu<B: Backend>(f: &mut Frame<B>, area: Rect, _app: &App) {
     f.render_widget(menu, area);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn menu_labels_expected() {
-        let labels = menu_labels();
-        assert_eq!(labels, vec!["File", "Copy", "Move", "New", "Sort", "Help"]);
-    }
-}

@@ -1,11 +1,11 @@
 ---
-name: rust_mc_ui
+name: fileZoom_ui
 description: "Prompt template for UI/UX changes in the fileZoom TUI (panels, menu, modal, main event loop)."
 ---
 
 Scope
 -----
--- Typical files: `app/src/ui_mod/*`, `app/src/ui/*`, `app/src/main.rs`, `app/src/lib.rs` (if re-exports are needed). (crate: `fileZoom`)
+-- Typical files: `app/src/ui/*`, `app/src/main.rs`, `app/src/lib.rs` (if re-exports are needed). (crate: `fileZoom`)
 
 Hard constraints
 ----------------
@@ -21,7 +21,7 @@ Task:
 
 Details:
 - What to change: <description of rendering/input/behavior change>
-- Files: <list e.g., `app/src/ui_mod/panels.rs, app/src/ui_mod/menu.rs`>
+- Files: <list e.g., `app/src/ui/panels.rs, app/src/ui/menu.rs`>
 - Tests: <which helper functions to unit test>
 """
 
@@ -35,8 +35,8 @@ Assistant instructions
 
 Example prompts
 ---------------
-- "Make top menu keyboard-navigable. Files: `app/src/ui_mod/menu.rs`, `app/src/main.rs`. Add unit tests for menu label helpers." 
-- "Fix list scrolling so selection remains visible after refresh. Files: `app/src/app.rs`, `app/src/ui_mod/panels.rs`. Add unit test for `ensure_selection_visible` behavior." 
+-- "Make top menu keyboard-navigable. Files: `app/src/ui/menu.rs`, `app/src/main.rs`. Add unit tests for menu label helpers." 
+-- "Fix list scrolling so selection remains visible after refresh. Files: `app/src/app.rs`, `app/src/ui/panels.rs`. Add unit test for `ensure_selection_visible` behavior." 
 
 Usage
 -----

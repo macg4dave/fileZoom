@@ -34,7 +34,7 @@ Task:
 
 Details:
 - What to change: <short description of edits or behavior change>
-- Files to consider (optional): <comma-separated list, e.g., `app/src/app.rs, app/src/ui_mod/panels.rs`>
+ - Files to consider (optional): <comma-separated list, e.g., `app/src/app.rs, app/src/ui/panels.rs`>
 - Tests: <describe which tests to add/update or leave blank to auto-detect>
 - Constraints / do not modify: <list any files/behaviors that must remain unchanged>
 """
@@ -63,8 +63,8 @@ Constraints:
 Example Prompts
 ---------------
 - Bug fix: "Task: Fix crash when opening empty directory. Details: guard against index-out-of-bounds in `App::enter` when a panel has no entries. Files: `app/src/app.rs`. Add unit test reproducing the crash."
-- Feature: "Task: Make top menu interactable via arrow keys and Enter. Details: add menu state, render highlight, and handle input in `main.rs`. Files: `app/src/ui_mod/menu.rs`, `app/src/main.rs`. Add tests for menu helper functions and describe manual test steps for the interactive parts."
-- Refactor: "Task: Extract panel list rendering to `app/src/ui_mod/panels.rs` (if not present). Details: move helper functions, add unit tests for formatting helpers. Files: `app/src/ui.rs` -> `app/src/ui_mod/panels.rs`. Ensure `cargo test -p fileZoom` passes."
+-- Feature: "Task: Make top menu interactable via arrow keys and Enter. Details: add menu state, render highlight, and handle input in `main.rs`. Files: `app/src/ui/menu.rs`, `app/src/main.rs`. Add tests for menu helper functions and describe manual test steps for the interactive parts."
+-- Refactor: "Task: Extract panel list rendering to `app/src/ui/panels.rs` (if not present). Details: move helper functions, add unit tests for formatting helpers. Files: `app/src/ui.rs` -> `app/src/ui/panels.rs`. Ensure `cargo test -p fileZoom` passes."
 
 Usage Guidance for VS Code Copilot Prompt Files
 ------------------------------------------------

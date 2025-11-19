@@ -15,18 +15,4 @@ pub fn is_file<P: AsRef<Path>>(path: P) -> bool {
     path.as_ref().is_file()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::tempdir;
 
-    #[test]
-    fn stat_checks() {
-        let td = tempdir().unwrap();
-        let f = td.path().join("file.txt");
-        std::fs::write(&f, b"ok").unwrap();
-        assert!(exists(&f));
-        assert!(is_file(&f));
-        assert!(!is_dir(&f));
-    }
-}

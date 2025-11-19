@@ -31,6 +31,7 @@ Purpose: quick, actionable guidance to get an AI coding agent productive in this
 **What agents should do (practical rules)**
 - Prefer the smallest, focused patch that builds and keeps tests passing for the `fileZoom` crate.
 - If behavior changes, add/update tests in `app/tests/` and reference fixtures in `app/tests/fixtures/` (crate: `fileZoom`).
+ - Keep all tests in the `./app/tests/` folder; do not place tests elsewhere in the repository.
 - Preserve public CLI flags and machine-facing outputs unless explicitly authorized; document any changes.
 - Avoid `unsafe` unless necessary and accompanied by tests and rationale.
 

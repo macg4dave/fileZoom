@@ -1,0 +1,3 @@
+Fixture file 127 in directory 'alpha'
+Generated: 2025-11-19T02:27:17.6926660+00:00
+Sample text: This file is part of the generated fixtures for fileZoom tests.

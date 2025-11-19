@@ -175,12 +175,4 @@ pub fn draw_error<B: Backend>(
     f.render_widget(buttons_para, buttons_rect);
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn compile_only() {
-        // This test ensures the module compiles in CI; rendering is exercised
-        // by integration tests that run the UI.
-        assert!(true);
-    }
-}
+

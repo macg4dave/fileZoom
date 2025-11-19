@@ -1,5 +1,5 @@
 ---
-name: rust_mc_tests
+name: fileZoom_tests
 description: "Prompt template for creating or updating tests and fixtures for fileZoom (`cargo test -p fileZoom`)."
 ---
 
@@ -33,5 +33,5 @@ Assistant instructions
 
 Example prompts
 ---------------
-- "Add unit test for `format_entry_line` in `app/src/ui_mod/panels.rs` that ensures width/padding behavior." 
+ - "Add unit test for `format_entry_line` in `app/src/ui/panels.rs` that ensures width/padding behavior." 
 - "Add an integration test that covers copy/move operations using `assert_fs` temp directories." 

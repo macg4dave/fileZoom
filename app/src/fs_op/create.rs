@@ -58,30 +58,4 @@ pub fn create_dir_all<P: AsRef<Path>>(path: P) -> Result<(), CreateError> {
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::tempdir;
-
-    #[test]
-    fn create_file_and_dir() {
-        let td = tempdir().unwrap();
-        let dir = td.path().join("a/b");
-        let file = dir.join("f.txt");
-        create_dir_all(&dir).unwrap();
-        create_file(&file).unwrap();
-        assert!(file.exists());
-        // Ensure no leftover atomic temp files are present after success.
-        let mut tmp_leftovers = 0;
-        for e in std::fs::read_dir(dir).unwrap() {
-            if let Ok(e) = e {
-                if let Some(name) = e.file_name().to_str() {
-                    if name.starts_with(".tmp_atomic_write.") {
-                        tmp_leftovers += 1;
-                    }
-                }
-            }
-        }
-        assert_eq!(tmp_leftovers, 0, "found leftover atomic temp files");
-    }
-}
+// Tests moved to `app/tests/` integration test directory.

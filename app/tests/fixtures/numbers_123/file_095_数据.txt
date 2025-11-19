@@ -1,0 +1,3 @@
+Fixture file 95 in directory 'numbers_123'
+Generated: 2025-11-19T02:27:17.5750669+00:00
+Sample text: This file is part of the generated fixtures for fileZoom tests.

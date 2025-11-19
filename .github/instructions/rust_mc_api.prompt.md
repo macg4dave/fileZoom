@@ -1,5 +1,5 @@
 ---
-name: rust_mc_api
+name: fileZoom_api
 description: "Prompt template for public API / library-level changes in fileZoom (lib exports, `fileZoom::` surface)."
 ---
 
@@ -32,6 +32,7 @@ Assistant instructions
 3. Add tests that demonstrate the public contract (unit or integration).
 4. If breaking, add a migration note in the changelog or README and include tests.
 5. Run `cargo test -p fileZoom` and include output.
+6. Prefer using well-maintained dependencies for common functionality (UI helpers, logging, parsing, etc.) instead of reimplementing them when appropriate — list suggestions in the PR description.
 
 Example prompts
 ---------------

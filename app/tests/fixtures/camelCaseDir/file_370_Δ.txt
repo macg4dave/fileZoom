@@ -1,0 +1,3 @@
+Fixture file 370 in directory 'camelCaseDir'
+Generated: 2025-11-19T02:30:07.1163926+00:00
+Sample text: This file is part of the generated fixtures for fileZoom tests.
