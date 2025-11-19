@@ -1,5 +1,5 @@
 
-**Overview**: This file explains how to run the integration tests and use the provided fixtures for `app`.
+**Overview**: This file explains how to run the integration tests and use the provided fixtures for `fileZoom` (crate `fileZoom`).
 
 **Important (Windows 11 users)**: If your development machine is Windows 11, build and test inside WSL2 (Windows Subsystem for Linux) to ensure the environment matches CI and contributors. The helper scripts included here will refuse to run if they are not executed inside a WSL environment.
 
@@ -7,7 +7,7 @@
 
 ```
 cd app
-cargo test -- --nocapture
+cargo test -p fileZoom -- --nocapture
 ```
 
 - **Run tests via helper script** (inside WSL2):
@@ -17,7 +17,7 @@ cargo test -- --nocapture
 ```
 
 - **Manual exploratory testing using fixtures**:
-  - The packaged fixtures are in `app/tests/fixtures/`.
+  -- The packaged fixtures are in `app/tests/fixtures/`.
   - To try the example repository manually, open a terminal:
 
 

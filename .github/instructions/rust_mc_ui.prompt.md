@@ -1,15 +1,15 @@
 ---
 name: rust_mc_ui
-description: "Prompt template for UI/UX changes in the Rust_MC TUI (panels, menu, modal, main event loop)."
+description: "Prompt template for UI/UX changes in the fileZoom TUI (panels, menu, modal, main event loop)."
 ---
 
 Scope
 -----
-- Typical files: `app/src/ui_mod/*`, `app/src/ui/*`, `app/src/main.rs`, `app/src/lib.rs` (if re-exports are needed).
+-- Typical files: `app/src/ui_mod/*`, `app/src/ui/*`, `app/src/main.rs`, `app/src/lib.rs` (if re-exports are needed). (crate: `fileZoom`)
 
 Hard constraints
 ----------------
-- Run `cargo test -p app` and paste the full output in your response.
+-- Run `cargo test -p fileZoom` and paste the full output in your response.
 - Keep changes minimal and focused to UI code only unless core changes are required.
 - Do not change CLI flags or machine-facing outputs.
 
@@ -30,7 +30,7 @@ Assistant instructions
 1. State a 2–3 bullet plan.
 2. Implement a minimal patch that compiles.
 3. Add unit tests for pure helpers (formatting, layout helpers) and update integration tests only if UI contract changed.
-4. Run `cargo test -p app` and include the full output.
+4. Run `cargo test -p fileZoom` and include the full output.
 5. If tests fail, iterate and fix up to 5 times.
 
 Example prompts

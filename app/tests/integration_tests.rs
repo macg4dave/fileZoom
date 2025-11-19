@@ -1,7 +1,7 @@
 use assert_fs::prelude::*;
 
 // `App` is re-exported from the library `lib.rs` so tests can access it directly.
-use app::App;
+use fileZoom::App;
 
 #[test]
 fn test_basic_file_ops() -> Result<(), Box<dyn std::error::Error>> {

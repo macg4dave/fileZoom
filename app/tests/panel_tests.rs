@@ -1,5 +1,5 @@
-use app::app::Panel;
-use app::Entry;
+use fileZoom::app::Panel;
+use fileZoom::Entry;
 use std::path::PathBuf;
 
 #[test]

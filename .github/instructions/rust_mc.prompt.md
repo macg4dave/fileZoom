@@ -1,13 +1,13 @@
 ---
-name: "Rust_MC Assistant"
+name: "fileZoom Assistant"
 scope: "repository"
-description: "Repository-aware Copilot prompt template for the Rust_MC CLI file manager. Use this when asking for code changes, tests, or PR-ready patches."
+description: "Repository-aware Copilot prompt template for the fileZoom CLI file manager. Use this when asking for code changes, tests, or PR-ready patches."
 ---
 
 Context
 -------
-- Project: Rust_MC — a CLI file manager written in Rust (no external deps beyond standard crates).
-- Main code: `app/` (binary + library). Tests: `cargo test` (unit + integration under `app/tests`).
+-- Project: fileZoom — a CLI file manager written in Rust (no external deps beyond standard crates).
+-- Main code: `app/` (binary + library; crate name `fileZoom`). Tests: `cargo test -p fileZoom` (unit + integration under `app/tests`).
 - Tooling: `cargo build`, `cargo test`, `cargo run`, `rustfmt`, `clippy`.
 
 Hard constraints (always include)
@@ -41,13 +41,13 @@ Details:
 
 Assistant instructions (use when generating the patch):
 """
-You are an expert Rust developer working inside the Rust_MC repository. Produce a minimal, well-tested change that implements the requested feature.
+You are an expert Rust developer working inside the fileZoom repository. Produce a minimal, well-tested change that implements the requested feature.
 
 Action steps you must follow:
 1. Explain the plan in 2–3 bullets. Keep it concise.
 2. Make the smallest possible code changes. Use the repository's style and conventions.
 3. Add or update unit/integration tests that validate the behavior change.
-4. Run `cargo test -p app` (or a specified `cargo test` command) and paste the full output.
+4. Run `cargo test -p fileZoom` (or a specified `cargo test` command) and paste the full output.
 5. If tests fail, iterate up to 5 times to fix failures (explain each iteration briefly and show test outputs).
 6. When done, return:
    - A short summary of changes with file paths.
@@ -64,7 +64,7 @@ Example Prompts
 ---------------
 - Bug fix: "Task: Fix crash when opening empty directory. Details: guard against index-out-of-bounds in `App::enter` when a panel has no entries. Files: `app/src/app.rs`. Add unit test reproducing the crash."
 - Feature: "Task: Make top menu interactable via arrow keys and Enter. Details: add menu state, render highlight, and handle input in `main.rs`. Files: `app/src/ui_mod/menu.rs`, `app/src/main.rs`. Add tests for menu helper functions and describe manual test steps for the interactive parts."
-- Refactor: "Task: Extract panel list rendering to `app/src/ui_mod/panels.rs` (if not present). Details: move helper functions, add unit tests for formatting helpers. Files: `app/src/ui.rs` -> `app/src/ui_mod/panels.rs`. Ensure `cargo test -p app` passes."
+- Refactor: "Task: Extract panel list rendering to `app/src/ui_mod/panels.rs` (if not present). Details: move helper functions, add unit tests for formatting helpers. Files: `app/src/ui.rs` -> `app/src/ui_mod/panels.rs`. Ensure `cargo test -p fileZoom` passes."
 
 Usage Guidance for VS Code Copilot Prompt Files
 ------------------------------------------------

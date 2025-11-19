@@ -1,6 +1,6 @@
 use assert_fs::prelude::*;
 
-use app::fs_op::files::{format_unix_mode, inspect_permissions};
+use fileZoom::fs_op::files::{format_unix_mode, inspect_permissions};
 
 #[test]
 fn probe_write_dir() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# WSL-specific interactive user test helper for the `app` crate.
+# WSL-specific interactive user test helper for the `fileZoom` crate.
 # Usage: ./user_test_wsl.sh [prepare|reset|build|run|rebuild|run-new|run-new-konsole|help]
 
 set -euo pipefail
@@ -18,8 +18,8 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 # When the repository lives on a Windows-mounted path (e.g. /mnt/c/...),
 # prefer copying the workspace into a native WSL location for builds and
 # I/O heavy work. Set `WSL_BUILD_ROOT` in your environment to override.
-WSL_BUILD_ROOT="${WSL_BUILD_ROOT:-$HOME/rust_mc_workspace}"
-BUILD_REPO_DIR="$WSL_BUILD_ROOT/Rust_MC"
+WSL_BUILD_ROOT="${WSL_BUILD_ROOT:-$HOME/filezoom_workspace}"
+BUILD_REPO_DIR="$WSL_BUILD_ROOT/fileZoom"
 
 # ACTIVE_ROOT will point to the path where build/run operations occur.
 # It defaults to `ROOT_DIR` but will be switched to `BUILD_REPO_DIR`
@@ -27,7 +27,7 @@ BUILD_REPO_DIR="$WSL_BUILD_ROOT/Rust_MC"
 ACTIVE_ROOT="$ROOT_DIR"
 FIXTURES_DIR="$ACTIVE_ROOT/tests/fixtures"
 DEMO_DIR="$ACTIVE_ROOT/target/demo_workspace"
-BINARY_PATH="$ACTIVE_ROOT/target/debug/app"
+BINARY_PATH="$ACTIVE_ROOT/target/debug/fileZoom"
 
 USE_WSL_BUILD=0
 
@@ -55,7 +55,7 @@ function ensure_wsl_build_root() {
   # update dependent paths
   FIXTURES_DIR="$ACTIVE_ROOT/tests/fixtures"
   DEMO_DIR="$ACTIVE_ROOT/target/demo_workspace"
-  BINARY_PATH="$ACTIVE_ROOT/target/debug/app"
+  BINARY_PATH="$ACTIVE_ROOT/target/debug/fileZoom"
 }
 
 function usage() {

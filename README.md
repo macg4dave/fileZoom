@@ -1,6 +1,6 @@
-# my_rust_project
+# fileZoom
 
-Minimal Cargo workspace with a single binary crate `app`.
+Minimal Cargo workspace with a single binary crate `fileZoom`.
 
 Run locally (use WSL2 on Windows 11):
 
@@ -10,20 +10,20 @@ Option 1 — inside WSL2 (recommended):
 
 ```bash
 # open your WSL2 shell (e.g. Ubuntu) and then:
-cd /path/to/Rust_MC
-cargo run -p app
+cd /path/to/fileZoom
+cargo run -p fileZoom
 ```
 
 Option 2 — from Windows to WSL (one-liner):
 
 ```pwsh
 # run this from PowerShell to execute the command inside your default WSL distro
-wsl -- cd /mnt/c/Users/<you>/github/Rust_MC && cargo run -p app
+wsl -- cd /mnt/c/Users/<you>/github/fileZoom && cargo run -p fileZoom
 ```
 
 Run tests (inside WSL2):
 
 ```bash
-cd /path/to/Rust_MC
-cargo test -p app
+cd /path/to/fileZoom
+cargo test -p fileZoom
 ```

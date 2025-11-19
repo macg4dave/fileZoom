@@ -1,15 +1,15 @@
 ---
 name: rust_mc_tests
-description: "Prompt template for creating or updating tests and fixtures for Rust_MC (`cargo test -p app`)."
+description: "Prompt template for creating or updating tests and fixtures for fileZoom (`cargo test -p fileZoom`)."
 ---
 
 Scope
 -----
-- Typical files: `app/tests/*`, unit tests in `app/src/*`, fixtures under `app/tests/fixtures`.
+-- Typical files: `app/tests/*`, unit tests in `app/src/*`, fixtures under `app/tests/fixtures` (crate: `fileZoom`).
 
 Hard constraints
 ----------------
-- Always run `cargo test -p app` locally and include the full output.
+-- Always run `cargo test -p fileZoom` locally and include the full output.
 - Tests must be deterministic and not depend on external network resources.
 - Use `assert_fs` or temporary directories for filesystem fixtures.
 
@@ -29,7 +29,7 @@ Assistant instructions
 1. Provide a short plan (1-3 bullets).
 2. Add the smallest test changes required and helper fixtures.
 3. If new helper code is needed, add it with unit tests.
-4. Run `cargo test -p app` and paste the full output.
+4. Run `cargo test -p fileZoom` and paste the full output.
 
 Example prompts
 ---------------

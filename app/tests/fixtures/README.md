@@ -1,4 +1,4 @@
-This directory contains sample files and folders used as fixtures for manual or exploratory testing of the `app` crate.
+This directory contains sample files and folders used as fixtures for manual or exploratory testing of the `fileZoom` crate.
 
 - `file1.txt` – sample text file
 - `dirA/file2.txt` – nested file inside a directory

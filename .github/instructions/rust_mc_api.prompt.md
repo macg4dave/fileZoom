@@ -1,17 +1,17 @@
 ---
 name: rust_mc_api
-description: "Prompt template for public API / library-level changes in Rust_MC (lib exports, `app::` surface)."
+description: "Prompt template for public API / library-level changes in fileZoom (lib exports, `fileZoom::` surface)."
 ---
 
 Scope
 -----
-- Typical files: `app/src/lib.rs`, `app/src/app.rs`, public helpers in `app/src/*`.
+-- Typical files: `app/src/lib.rs`, `app/src/app.rs`, public helpers in `app/src/*` (crate name: `fileZoom`).
 
 Hard constraints
 ----------------
 - Preserve backward-compatible public APIs unless a breaking change is explicitly requested.
-- If breaking changes are necessary, include a migration note and tests demonstrating the new behavior.
-- Run `cargo test -p app` and include full output.
+-- If breaking changes are necessary, include a migration note and tests demonstrating the new behavior.
+-- Run `cargo test -p fileZoom` and include full output.
 
 Prompt template
 ---------------
@@ -31,7 +31,7 @@ Assistant instructions
 2. Make minimal changes; prefer additive APIs over breaking ones.
 3. Add tests that demonstrate the public contract (unit or integration).
 4. If breaking, add a migration note in the changelog or README and include tests.
-5. Run `cargo test -p app` and include output.
+5. Run `cargo test -p fileZoom` and include output.
 
 Example prompts
 ---------------

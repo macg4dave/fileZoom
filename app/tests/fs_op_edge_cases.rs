@@ -1,4 +1,4 @@
-use app::fs_op::files::*;
+use fileZoom::fs_op::files::*;
 use assert_fs::prelude::*;
 
 #[cfg(unix)]

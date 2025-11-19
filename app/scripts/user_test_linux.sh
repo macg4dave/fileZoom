@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Linux-specific interactive user test helper for the `app` crate.
+# Linux-specific interactive user test helper for the `fileZoom` crate.
 # Usage: ./user_test_linux.sh [prepare|reset|build|run|rebuild|run-new|run-new-konsole|help]
 
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 FIXTURES_DIR="$ROOT_DIR/tests/fixtures"
 DEMO_DIR="$ROOT_DIR/target/demo_workspace"
-BINARY_PATH="$ROOT_DIR/target/debug/app"
+BINARY_PATH="$ROOT_DIR/target/debug/fileZoom"
 
 function usage() {
   cat <<'EOF'

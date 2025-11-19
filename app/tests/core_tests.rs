@@ -1,4 +1,4 @@
-use app::app::{App, Mode, Panel, Side, SortKey};
+use fileZoom::app::{App, Mode, Panel, Side, SortKey};
 use assert_fs::prelude::*;
 use std::path::PathBuf;
 

@@ -1,5 +1,5 @@
 ```markdown
-# Rust_MC — Copilot / Agent Instructions (concise)
+# fileZoom — Copilot / Agent Instructions (concise)
 
 Purpose: quick, actionable guidance to get an AI coding agent productive in this repo.
 
@@ -16,9 +16,9 @@ Purpose: quick, actionable guidance to get an AI coding agent productive in this
 
 **Build / Test / Run (practical)**
 - Preferred environment: Linux/macOS or WSL2 on Windows 11. Helper scripts check for WSL and will refuse to run elsewhere.
-- Run tests (inside WSL or Linux): `cd app && cargo test -p app -- --nocapture`
-- Run tests via helper (from WSL): `./app/scripts/run_tests.sh`
-- From Windows PowerShell run tests in WSL: `wsl -- cd /mnt/c/Users/<you>/github/Rust_MC && ./app/scripts/run_tests.sh`
+-- Run tests (inside WSL or Linux): `cd app && cargo test -p fileZoom -- --nocapture`
+-- Run tests via helper (from WSL): `./app/scripts/run_tests.sh`
+-- From Windows PowerShell run tests in WSL: `wsl -- cd /mnt/c/Users/<you>/github/fileZoom && ./app/scripts/run_tests.sh`
 - Run the interactive demo: `cd app && ./scripts/user_test_wsl.sh prepare|build|run` (note: `run` starts the TUI and will take over your terminal; quit with `q`).
 
 **Key Conventions & Patterns (repo-specific)**
@@ -29,8 +29,8 @@ Purpose: quick, actionable guidance to get an AI coding agent productive in this
 - Use `rust-analyzer`, `cargo fmt`, and `cargo clippy` for local checks.
 
 **What agents should do (practical rules)**
-- Prefer the smallest, focused patch that builds and keeps tests passing for the `app` crate.
-- If behavior changes, add/update tests in `app/tests/` and reference fixtures in `app/tests/fixtures/`.
+- Prefer the smallest, focused patch that builds and keeps tests passing for the `fileZoom` crate.
+- If behavior changes, add/update tests in `app/tests/` and reference fixtures in `app/tests/fixtures/` (crate: `fileZoom`).
 - Preserve public CLI flags and machine-facing outputs unless explicitly authorized; document any changes.
 - Avoid `unsafe` unless necessary and accompanied by tests and rationale.
 
@@ -38,7 +38,7 @@ Purpose: quick, actionable guidance to get an AI coding agent productive in this
 - `app/src/lib.rs`, `app/src/app.rs`, `app/src/main.rs`, `app/src/ui/mod.rs`, `app/tests/integration_tests.rs`, `app/TESTING.md`, `app/scripts/run_tests.sh`, `app/scripts/user_test_wsl.sh`.
 
 **Quick examples**
-- Run tests with output: `cargo test -p app -- --nocapture`
+-- Run tests with output: `cargo test -p fileZoom -- --nocapture`
 - Run helper tests script (WSL): `./app/scripts/run_tests.sh`
 
 **Notes**
