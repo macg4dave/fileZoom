@@ -1,3 +1,0 @@
-Fixture file 298 in directory 'dotfiles'
-Generated: 2025-11-19T02:27:18.2840750+00:00
-Sample text: This file is part of the generated fixtures for fileZoom tests.

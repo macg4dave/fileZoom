@@ -1,3 +1,0 @@
-Fixture file 148 in directory 'multi.ext.tar.gz'
-Generated: 2025-11-19T02:30:06.3142134+00:00
-Sample text: This file is part of the generated fixtures for fileZoom tests.

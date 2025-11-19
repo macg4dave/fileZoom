@@ -1,11 +1,29 @@
 param(
     [int]$count = 300,
     [string]$manifest = "",
-    [switch]$append
+    [switch]$append,
+    [string]$basePath = ""
 )
 
-# Resolve fixtures path relative to this script
-$basePath = (Resolve-Path (Join-Path $PSScriptRoot "..\tests\fixtures")).Path
+# Determine fixtures path: prefer explicit param, otherwise use script-relative tests/fixtures.
+if ([string]::IsNullOrWhiteSpace($basePath)) {
+    $candidate = Join-Path $PSScriptRoot "..\tests\fixtures"
+    $resolved = Resolve-Path -Path $candidate -ErrorAction SilentlyContinue
+    if ($null -ne $resolved) {
+        $basePath = $resolved.Path
+    } else {
+        # Path doesn't exist yet; use the candidate and ensure it's created below
+        $basePath = (Get-Item -Path $candidate -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+        if ([string]::IsNullOrWhiteSpace($basePath)) {
+            $basePath = $candidate
+        }
+    }
+}
+
+# Ensure the fixtures directory exists
+if (-not (Test-Path -Path $basePath)) {
+    New-Item -ItemType Directory -Path $basePath -Force | Out-Null
+}
 
 # Directory name variants (spaces, unicode, dots, nested levels, weird chars)
 $dirs = @(

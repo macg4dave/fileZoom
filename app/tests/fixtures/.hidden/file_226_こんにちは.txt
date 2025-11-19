@@ -1,3 +1,0 @@
-Fixture file 226 in directory '.hidden'
-Generated: 2025-11-19T02:30:06.5954692+00:00
-Sample text: This file is part of the generated fixtures for fileZoom tests.

@@ -1,3 +1,0 @@
-Fixture file 187 in directory 'xxxxxxxxxxxxxxxxxxxx'
-Generated: 2025-11-19T02:30:06.4584498+00:00
-Sample text: This file is part of the generated fixtures for fileZoom tests.

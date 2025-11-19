@@ -1,3 +1,0 @@
-Fixture file 161 in directory 'deep\\level1\\level2'
-Generated: 2025-11-19T02:30:06.3587939+00:00
-Sample text: This file is part of the generated fixtures for fileZoom tests.

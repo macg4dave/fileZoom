@@ -1,3 +1,0 @@
-Fixture file 337 in directory 'spaced dir'
-Generated: 2025-11-19T02:30:06.9999506+00:00
-Sample text: This file is part of the generated fixtures for fileZoom tests.

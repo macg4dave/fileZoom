@@ -1,3 +1,0 @@
-Fixture file 322 in directory 'longdirname_'
-Generated: 2025-11-19T02:30:06.9477017+00:00
-Sample text: This file is part of the generated fixtures for fileZoom tests.
