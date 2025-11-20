@@ -1,14 +1,13 @@
-use tui::backend::Backend;
-use tui::layout::Rect;
-use tui::style::Color;
-use tui::widgets::{Block, Borders, Paragraph, Wrap};
-use tui::Frame;
+use ratatui::layout::Rect;
+use ratatui::style::Color;
+use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
+use ratatui::Frame;
 
 use crate::ui::colors::current as theme_current;
 
 /// Draw a centered dialog with a title, content and a small buttons/footer line.
-pub fn draw_confirm<B: Backend>(
-    f: &mut Frame<B>,
+pub fn draw_confirm(
+    f: &mut Frame,
     area: Rect,
     prompt: &str,
     content: &str,
@@ -65,8 +64,8 @@ pub fn draw_confirm<B: Backend>(
 }
 
 /// Draw a simple informational dialog with an OK hint.
-pub fn draw_info<B: Backend>(
-    f: &mut Frame<B>,
+pub fn draw_info(
+    f: &mut Frame,
     area: Rect,
     title: &str,
     content: &str,
@@ -120,8 +119,8 @@ pub fn draw_info<B: Backend>(
 }
 
 /// Draw an error dialog; styled like info but reserved for errors.
-pub fn draw_error<B: Backend>(
-    f: &mut Frame<B>,
+pub fn draw_error(
+    f: &mut Frame,
     area: Rect,
     title: &str,
     content: &str,

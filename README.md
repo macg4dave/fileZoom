@@ -65,3 +65,19 @@ Prerequisites & notes
 
 If you want different fixture defaults (counts, multilingual probability, tree
 depth/branching), tell me the desired values and I will update the generator.
+
+UI notes
+-------
+
+The TUI is implemented using Ratatui widgets (List, Paragraph, Scrollbar, etc.).
+To visually verify the scrollbars, open `fileZoom` in a directory with many
+files or run the included `make_fakefs` helper to generate a fixture directory
+and then launch `fileZoom`:
+
+```bash
+cd app
+cargo run --release
+```
+
+Use the arrow keys or page keys to scroll and confirm the vertical scrollbars
+appear at the right hand side of panels and in the preview.

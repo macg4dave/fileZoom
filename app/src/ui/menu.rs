@@ -1,9 +1,7 @@
-use tui::backend::Backend;
-use tui::layout::Rect;
-
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, Paragraph};
-use tui::Frame;
+use ratatui::layout::Rect;
+use ratatui::text::{Span, Line};
+use ratatui::widgets::{Block, Tabs};
+use ratatui::Frame;
 
 use crate::app::App;
 use crate::ui::colors::current as theme_current;
@@ -14,17 +12,15 @@ pub fn menu_labels() -> Vec<&'static str> {
 }
 
 /// Draw the top menu bar. The menu is currently static and non-interactive.
-pub fn draw_menu<B: Backend>(f: &mut Frame<B>, area: Rect, _app: &App) {
-    let menu_items = menu_labels();
-    let mut parts: Vec<Span> = Vec::new();
+pub fn draw_menu(f: &mut Frame, area: Rect, _app: &App) {
+    let labels = menu_labels();
     let theme = theme_current();
-    for (i, it) in menu_items.iter().enumerate() {
-        if i > 0 {
-            parts.push(Span::raw("  "));
-        }
-        parts.push(Span::styled(*it, theme.help_block_style));
-    }
-    let spans = vec![Spans::from(parts)];
-    let menu = Paragraph::new(spans).block(Block::default());
-    f.render_widget(menu, area);
+
+    // Use Tabs to render a top menu with a highlighted first tab (static)
+    let titles: Vec<Line> = labels
+        .iter()
+        .map(|t| Line::from(Span::styled(*t, theme.help_block_style)))
+        .collect();
+    let tabs = Tabs::new(titles).select(0).block(Block::default());
+    f.render_widget(tabs, area);
 }

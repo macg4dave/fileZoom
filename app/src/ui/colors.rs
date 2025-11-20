@@ -1,5 +1,5 @@
 use std::sync::{OnceLock, RwLock};
-use tui::style::{Color, Modifier, Style};
+use ratatui::style::{Color, Modifier, Style};
 
 /// Theme holds the styles used across the UI. Cloneable so callers can
 /// take a snapshot for rendering without holding locks.
@@ -18,6 +18,8 @@ pub struct Theme {
     pub help_block_style: Style,
 
     pub header_style: Style,
+    pub scrollbar_style: Style,
+    pub scrollbar_thumb_style: Style,
 }
 
 impl Theme {
@@ -44,6 +46,8 @@ impl Theme {
             header_style: Style::default()
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD),
+            scrollbar_style: Style::default().fg(Color::Gray),
+            scrollbar_thumb_style: Style::default().fg(Color::White).bg(Color::Blue),
         }
     }
 }
@@ -71,6 +75,8 @@ impl Default for Theme {
             header_style: Style::default()
                 .fg(Color::Magenta)
                 .add_modifier(Modifier::BOLD),
+            scrollbar_style: Style::default().fg(Color::Gray),
+            scrollbar_thumb_style: Style::default().fg(Color::Black).bg(Color::Gray),
         }
     }
 }

@@ -1,77 +1,129 @@
----
-name: "fileZoom Assistant"
-scope: "repository"
-description: "Repository-aware Copilot prompt template for the fileZoom CLI file manager. Use this when asking for code changes, tests, or PR-ready patches."
----
+Rust MC Prompt (Improved)
 
-Context
--------
--- Project: fileZoom — a CLI file manager written in Rust (no external deps beyond standard crates).
--- Main code: `app/` (binary + library; crate name `fileZoom`). Tests: `cargo test -p fileZoom` (unit + integration under `app/tests`).
-- Tooling: `cargo build`, `cargo test`, `cargo run`, `rustfmt`, `clippy`.
+name: “fileZoom Assistant” scope: “repository” description:
+“High‑precision, repository-aware Copilot prompt for Rust code changes,
+refactors, tests, and PR-ready patches.”
 
-Hard constraints (always include)
---------------------------------
-- Run the test suite locally and include the full test output (`cargo test` or a targeted test command).
-- Make the smallest possible change needed to solve the request.
-- Add or update tests for any behavioral change.
-- Preserve public APIs and CLI machine-facing outputs unless explicitly allowed.
-- Avoid removing features or tests. If behavior is changed, add a migration note and tests.
+------------------------------------------------------------------------
 
-Repository preferences (from repo instructions)
---------------------------------------------
-- Prefer idiomatic Rust: `snake_case`, `Result` error handling, avoid `unwrap()` except in tiny examples/tests.
-- Keep patches minimal and focused on the impacted modules.
-- Add doc-comments on public APIs and small unit tests for new helpers.
+🔥 Hard Constraints (Always Enforced)
 
-Prompt Template
----------------
-Use this template when you want a code change, refactor, or test added. Replace placeholders in <angle-brackets>.
+-   Run full test suite (cargo test -p fileZoom) before and after
+    changes.
+-   Make the smallest correct patch.
+-   Add/update tests for any behavioural change.
+-   Preserve public CLI interfaces and machine-facing output unless
+    explicitly permitted.
+-   Never remove features/tests unless tests confirm they’re obsolete.
+-   No unwrap() except in trivial test scaffolding.
+-   No unsafe unless absolutely necessary and validated with tests +
+    rationale.
 
-Task:
-"""
-<Brief one-line summary of the requested change>
+------------------------------------------------------------------------
+
+🧱 Repository Context
+
+-   Project: fileZoom, a pure Rust TUI file manager using Ratatui +
+    Crossterm.
+-   Crate root: app/ (fileZoom).
+-   Tests: Integration tests in app/tests/, using fixtures from
+    app/tests/fixtures/.
+-   Build tools: cargo build, cargo test, cargo run, rustfmt, clippy.
+
+Important paths: - Core: app/src/lib.rs, app/src/app.rs - UI:
+app/src/ui/ - Tests: app/tests/ - Scripts: app/scripts/ - Helper:
+app/test_helper/
+
+------------------------------------------------------------------------
+
+🦀 Rust Conventions (Repo-Specific)
+
+-   Idiomatic Rust only:
+    -   snake_case, PascalCase for types
+    -   error handling via Result + ?
+    -   avoid clone-heavy or allocation-heavy patterns
+    -   enums > booleans for state
+-   Keep functions small and single‑purpose.
+-   Add doc‑comments to all public APIs.
+-   Provide examples in Rustdoc when beneficial.
+
+------------------------------------------------------------------------
+
+📐 Patch Workflow Template (Use This Structure)
+
+Task Summary:
+<One-sentence description of the requested change>
 
 Details:
-- What to change: <short description of edits or behavior change>
- - Files to consider (optional): <comma-separated list, e.g., `app/src/app.rs, app/src/ui/panels.rs`>
-- Tests: <describe which tests to add/update or leave blank to auto-detect>
-- Constraints / do not modify: <list any files/behaviors that must remain unchanged>
-"""
+- Goal: <Behaviour change or refactor>
+- Relevant Files: <path1.rs, path2.rs>
+- Tests to Add/Update: <describe>
+- Must Not Change: <API, CLI flags, modules>
 
-Assistant instructions (use when generating the patch):
-"""
-You are an expert Rust developer working inside the fileZoom repository. Produce a minimal, well-tested change that implements the requested feature.
+------------------------------------------------------------------------
 
-Action steps you must follow:
-1. Explain the plan in 2–3 bullets. Keep it concise.
-2. Make the smallest possible code changes. Use the repository's style and conventions.
-3. Add or update unit/integration tests that validate the behavior change.
-4. Run `cargo test -p fileZoom` (or a specified `cargo test` command) and paste the full output.
-5. If tests fail, iterate up to 5 times to fix failures (explain each iteration briefly and show test outputs).
-6. When done, return:
-   - A short summary of changes with file paths.
-   - The exact patch(s) you would apply (prefer the `apply_patch` V4A diff format).
-   - The `cargo test` output showing passing tests.
-   - Suggested next steps or optional improvements.
+🧠 Assistant Instructions
 
-Constraints:
-- Do not change public CLI flags or outputs unless specifically requested.
-- Preserve behavior unless tests indicate an intentional change.
-"""
+When generating a patch:
 
-Example Prompts
----------------
-- Bug fix: "Task: Fix crash when opening empty directory. Details: guard against index-out-of-bounds in `App::enter` when a panel has no entries. Files: `app/src/app.rs`. Add unit test reproducing the crash."
--- Feature: "Task: Make top menu interactable via arrow keys and Enter. Details: add menu state, render highlight, and handle input in `main.rs`. Files: `app/src/ui/menu.rs`, `app/src/main.rs`. Add tests for menu helper functions and describe manual test steps for the interactive parts."
--- Refactor: "Task: Extract panel list rendering to `app/src/ui/panels.rs` (if not present). Details: move helper functions, add unit tests for formatting helpers. Files: `app/src/ui.rs` -> `app/src/ui/panels.rs`. Ensure `cargo test -p fileZoom` passes."
+1.  Provide a 2–3 bullet plan describing the intended modification.
+2.  Apply the smallest code change consistent with correctness and repo
+    style.
+3.  Add/update tests validating all behaviour.
+4.  Run cargo test -p fileZoom and paste full output.
+5.  If failures occur, iterate up to 5 times with brief reasoning each
+    time.
+6.  Final output must include:
+    -   Summary of changes
+    -   Exact patch(es) in apply_patch V4A diff format
+    -   Passing cargo test output
+    -   Optional follow‑up recommendations
 
-Usage Guidance for VS Code Copilot Prompt Files
-------------------------------------------------
-- Place this file under `.github/instructions/` or use `*.prompt.md` for quick access in the Copilot UI.
-- When invoking the prompt in the editor, paste the filled Task/Details sections. The assistant should return an actionable patch and test outputs.
+Constraints: - Do not modify CLI arguments or terminal-facing output
+unless explicitly authorised.
+- Do not silently alter semantics.
+- All behaviour changes must be test‑driven and documented.
 
-Notes
------
-- Keep critical rules (hard constraints) at the top of prompts where possible — Copilot Code Review reads only the first ~4,000 characters of custom instruction files.
-- If a requested change affects shared public API, include a short migration note and tests demonstrating the new behavior.
+------------------------------------------------------------------------
+
+🧾 Example Prompt Snippets
+
+Bug fix
+
+    Task: Prevent crash when opening empty directories.
+    Details:
+    - Fix out‑of‑bounds access in `App::enter`.
+    - Files: app/src/app.rs
+    - Tests: add integration test reproducing empty‑directory case.
+
+Feature
+
+    Task: Add arrow‑key navigation for top menu.
+    Details:
+    - Add menu state + rendering.
+    - Files: app/src/ui/menu.rs, app/src/main.rs
+    - Tests: menu state unit tests. Describe manual test steps for TUI.
+
+Refactor
+
+    Task: Extract panel rendering helpers to their own module.
+    Details:
+    - Move helpers from ui/mod.rs → ui/panels.rs.
+    - Tests: add formatting helper tests.
+
+------------------------------------------------------------------------
+
+🔧 Usage for VS Code / Copilot
+
+-   Place in .github/instructions/ or as a .prompt.md file for quick
+    recall in Copilot.
+-   When requesting changes, fill in the <Task> block, paste it, and
+    Copilot will generate a patch.
+
+------------------------------------------------------------------------
+
+⚠ Important Notes
+
+-   Copilot Code Review reads only the first ~4,000 chars — keep
+    critical rules at the top.
+-   Public API changes require a migration note + dedicated tests.

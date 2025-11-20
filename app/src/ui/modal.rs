@@ -1,7 +1,6 @@
-use tui::backend::Backend;
-use tui::layout::Rect;
-use tui::widgets::{Block, Borders, Paragraph};
-use tui::Frame;
+use ratatui::layout::Rect;
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::Frame;
 
 use crate::ui::colors::current as theme_current;
 
@@ -15,7 +14,7 @@ pub fn centered_rect(area: Rect, w: u16, h: u16) -> Rect {
 }
 
 /// Draw a centered modal dialog with a prompt title and content.
-pub fn draw_modal<B: Backend>(f: &mut Frame<B>, area: Rect, prompt: &str, content: &str) {
+pub fn draw_modal(f: &mut Frame, area: Rect, prompt: &str, content: &str) {
     let rect = centered_rect(area, 80, 10);
     let theme = theme_current();
     let p = Paragraph::new(content.to_string()).block(

@@ -4,8 +4,8 @@ use crossterm::terminal::{
 };
 use std::fmt;
 use std::io;
-use tui::backend::CrosstermBackend;
-use tui::Terminal;
+use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
 
 /// Errors returned by terminal initialization/restore helpers.
 #[derive(Debug)]

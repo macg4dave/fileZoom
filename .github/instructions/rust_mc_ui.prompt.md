@@ -1,43 +1,108 @@
----
-name: fileZoom_ui
-description: "Prompt template for UI/UX changes in the fileZoom TUI (panels, menu, modal, main event loop)."
----
 
-Scope
------
--- Typical files: `app/src/ui/*`, `app/src/main.rs`, `app/src/lib.rs` (if re-exports are needed). (crate: `fileZoom`)
 
-Hard constraints
-----------------
--- Run `cargo test -p fileZoom` and paste the full output in your response.
-- Keep changes minimal and focused to UI code only unless core changes are required.
-- Do not change CLI flags or machine-facing outputs.
+Improved rust_mc_ui.prompt.md
 
-Prompt template
----------------
-Task:
-"""
-<Short one-line summary of the UI change>
+🎯 Scope
 
-Details:
-- What to change: <description of rendering/input/behavior change>
-- Files: <list e.g., `app/src/ui/panels.rs, app/src/ui/menu.rs`>
-- Tests: <which helper functions to unit test>
-"""
+UI-specific tasks only.
+Typical files: - app/src/ui/* - app/src/main.rs - app/src/app.rs (if UI
+state requires adjustment) - app/src/lib.rs (only for re‑exports)
 
-Assistant instructions
----------------------
-1. State a 2–3 bullet plan.
-2. Implement a minimal patch that compiles.
-3. Add unit tests for pure helpers (formatting, layout helpers) and update integration tests only if UI contract changed.
-4. Run `cargo test -p fileZoom` and include the full output.
-5. If tests fail, iterate and fix up to 5 times.
+All changes apply to crate fileZoom.
 
-Example prompts
----------------
--- "Make top menu keyboard-navigable. Files: `app/src/ui/menu.rs`, `app/src/main.rs`. Add unit tests for menu label helpers." 
--- "Fix list scrolling so selection remains visible after refresh. Files: `app/src/app.rs`, `app/src/ui/panels.rs`. Add unit test for `ensure_selection_visible` behavior." 
+------------------------------------------------------------------------
 
-Usage
------
-- Paste the filled Task and Details sections when invoking Copilot in VS Code. The assistant should return a concise patch and `cargo test` output.
+🔥 Hard Constraints
+
+-   Run full tests: cargo test -p fileZoom and paste full output.
+-   Keep the patch minimal and tightly scoped to UI behaviour unless
+    deeper changes are unavoidable.
+-   Do not alter CLI flags, public API semantics, or machine-facing
+    output.
+-   Preserve behaviour unless tests or the task explicitly call for
+    change.
+-   No unsafe.
+
+------------------------------------------------------------------------
+
+🧱 UI Standards & Expectations
+
+-   Follow idiomatic Rust + Ratatui/Crossterm patterns.
+-   Pure helpers (formatting, layout, state logic) should be isolated
+    and unit tested.
+-   Keep rendering code simple, predictable, and side‑effect‑free.
+-   Maintain clear separation between:
+    -   State (owned by App)
+    -   Rendering (ui/*)
+    -   Input handling (main.rs or UI state helpers)
+
+When adding features: - Avoid monolithic render functions.
+- Introduce small helpers and test them.
+- Keep event handling deterministic and order‑safe.
+
+------------------------------------------------------------------------
+
+🧩 Prompt Template
+
+Use this when requesting a UI change.
+
+Task
+
+    <One-sentence summary of the UI change>
+
+Details
+
+    - Change: <description of new behaviour / rendering / input change>
+    - Files: <list of target files, e.g. ui/panels.rs, ui/menu.rs>
+    - Tests: <which helpers to test, or “auto-detect”>
+    - Constraints: <anything that must NOT be touched>
+
+------------------------------------------------------------------------
+
+🧠 Assistant Instructions
+
+When generating the patch:
+
+1.  Provide a 2–3 bullet plan describing the approach.
+2.  Implement the smallest functional patch consistent with repo style.
+3.  Add unit tests for any pure helper logic.
+4.  Only update integration tests if the external UI contract
+    (observable behaviour) changes.
+5.  Run cargo test -p fileZoom and include complete test output.
+6.  If failures occur:
+    -   Fix and retry up to 5 iterations
+    -   Briefly explain each fix
+
+Final response must include: - Summary of changes
+- One or more apply_patch-formatted diffs
+- Passing test output
+- Optional small improvements follow-up
+
+------------------------------------------------------------------------
+
+🧪 Example Requests
+
+Menu interaction
+
+    Task: Make the top menu keyboard-navigable.
+    Details:
+    - Change: add menu state + highlight, handle arrow keys + Enter.
+    - Files: ui/menu.rs, main.rs
+    - Tests: unit-test menu label helpers.
+
+Panel scroll fix
+
+    Task: Keep selection visible after list refresh.
+    Details:
+    - Change: adjust logic in ensure_selection_visible.
+    - Files: app/src/app.rs, ui/panels.rs
+    - Tests: add targeted unit tests for visibility math.
+
+------------------------------------------------------------------------
+
+🛠 Usage Notes
+
+-   Paste the Task + Details block into Copilot Chat / VSCode prompt.
+-   The assistant will return a patch + test results.
+-   Keep UI tasks focused; if deep architectural issues arise, escalate
+    to a general Rust prompt instead.

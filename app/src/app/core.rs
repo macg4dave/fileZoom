@@ -170,10 +170,10 @@ impl App {
     // `update_preview_for` implemented in the `preview` submodule.
 }
 
-/// Read directory entries and return a vector of `Entry`s populated with
-/// the common metadata fields. This is a small helper extracted from
-/// `refresh_panel` to make the filesystem-detection and tests easier to
-/// reason about and to keep IO-related code in one place.
+// Read directory entries and return a vector of `Entry`s populated with
+// the common metadata fields. This is a small helper extracted from
+// `refresh_panel` to make the filesystem-detection and tests easier to
+// reason about and to keep IO-related code in one place.
 // read_entries moved to `Panel::read_entries` in `panel.rs`.
 
 #[cfg(test)]

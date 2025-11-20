@@ -1,9 +1,9 @@
-use tui::backend::Backend;
-use tui::layout::Rect;
-use tui::style::Style;
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, List, ListItem, Paragraph};
-use tui::Frame;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::Style;
+use ratatui::text::{Span, Line, Text};
+use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, ListState, Scrollbar};
+use ratatui::widgets::{ScrollbarState, ScrollbarOrientation};
+use ratatui::Frame;
 
 use crate::app::{Entry, Panel};
 use std::path::PathBuf;
@@ -60,7 +60,7 @@ impl UiEntry {
 use crate::ui::colors::current as theme_current;
 // PathBuf is intentionally not used here — keep imports minimal
 
-pub fn draw_list<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel, active: bool) {
+pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool) {
     let theme = theme_current();
 
     let list_height = (area.height as usize).saturating_sub(2); // account for borders/title
@@ -79,26 +79,76 @@ pub fn draw_list<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel, active
         &[]
     };
 
-    let items: Vec<ListItem> = visible
-        .iter()
-        .map(|e| {
-            // Special header row: show full path across the line with distinct style
-            if is_entry_header(e) {
-                // Render header row via dedicated helper
-                return crate::ui::header::render_header(&e.entry.name);
-            }
+    // Split area into the list and a 1-cell vertical scrollbar area; we need
+    // the panel width to compute column sizes for the list rows.
+    let cols = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(0), Constraint::Length(1)].as_ref())
+        .split(area);
 
-            let text = e.display.clone();
-            let style = if is_entry_parent(e) {
-                theme.parent_style
-            } else if e.entry.is_dir {
-                theme.dir_style
-            } else {
-                Style::default()
-            };
-            ListItem::new(Spans::from(vec![Span::styled(text, style)]))
-        })
-        .collect();
+    let panel_width = cols[0].width as usize;
+    let size_col = 10usize;
+    let modified_col = 16usize;
+    let perms_col = 4usize;
+    let separators_width = 3usize * 3; // ' | ' between columns
+    let name_col = panel_width.saturating_sub(size_col + modified_col + perms_col + separators_width + 2);
+
+    let mut items: Vec<ListItem> = Vec::new();
+    // Build a column header item
+    let mut header_spans: Vec<Span> = Vec::new();
+    header_spans.push(Span::styled(format!("{:<width$}", "Name", width = name_col), theme.header_style));
+    header_spans.push(Span::raw(" | "));
+    header_spans.push(Span::styled(format!("{:<width$}", "Size", width = size_col), theme.header_style));
+    header_spans.push(Span::raw(" | "));
+    header_spans.push(Span::styled(format!("{:<width$}", "Modified", width = modified_col), theme.header_style));
+    header_spans.push(Span::raw(" | "));
+    header_spans.push(Span::styled(format!("{:<width$}", "rwx", width = perms_col), theme.header_style));
+    // We'll construct the columns header from `header_spans` when needed.
+
+    for e in visible.iter() {
+        if is_entry_header(e) {
+            items.push(crate::ui::header::render_header(&e.entry.name));
+            items.push(ListItem::new(Text::from(Line::from(header_spans.clone()))));
+            continue;
+        }
+        let style = if is_entry_parent(e) {
+            theme.parent_style
+        } else if e.entry.is_dir {
+            theme.dir_style
+        } else {
+            Style::default()
+        };
+        // Build spans for columns: name | size | modified | perms
+        let icon = if e.entry.is_dir { "📁 " } else { "   " };
+        let name_text = format!("{}{}", icon, e.display);
+        let name_field = if name_text.len() > name_col {
+            name_text[..name_col].to_string()
+        } else {
+            format!("{:<width$}", name_text, width = name_col)
+        };
+        let size_field = if e.entry.is_dir {
+            format!("{:<width$}", "<DIR>", width = size_col)
+        } else {
+            format!("{:>width$}", e.entry.size, width = size_col)
+        };
+        let mtime = e.entry.modified.map(|d| d.format("%Y-%m-%d %H:%M").to_string()).unwrap_or_else(|| "-".to_string());
+        let mtime_field = if mtime.len() > modified_col {
+            mtime[..modified_col].to_string()
+        } else {
+            format!("{:>width$}", mtime, width = modified_col)
+        };
+        let perms_field = "rwx".to_string();
+
+        let mut spans: Vec<Span> = Vec::new();
+        spans.push(Span::styled(name_field, style));
+        spans.push(Span::raw(" | "));
+        spans.push(Span::styled(size_field, theme.help_block_style));
+        spans.push(Span::raw(" | "));
+        spans.push(Span::styled(mtime_field, theme.help_block_style));
+        spans.push(Span::raw(" | "));
+        spans.push(Span::styled(perms_field, theme.help_block_style));
+        items.push(ListItem::new(Text::from(Line::from(spans))));
+    }
 
     let title = format!("{}", panel.cwd.display());
     let border_style = if active {
@@ -115,16 +165,24 @@ pub fn draw_list<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel, active
         )
         .highlight_style(theme.highlight_style);
 
-    let mut state = tui::widgets::ListState::default();
+    let mut state = ListState::default();
     if panel.selected >= panel.offset && panel.selected < panel.offset + list_height {
         state.select(Some(panel.selected - panel.offset));
     } else {
         state.select(None);
     }
-    f.render_stateful_widget(list, area, &mut state);
+    f.render_stateful_widget(list, cols[0], &mut state);
+
+    // Render vertical scrollbar at right-side column using ratatui::widgets::Scrollbar
+    let total = ui_rows.len();
+    let mut sb_state = ScrollbarState::new(total).position(panel.offset).viewport_content_length(list_height);
+    let sb = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+        .thumb_style(theme.scrollbar_thumb_style)
+        .track_style(theme.scrollbar_style);
+    f.render_stateful_widget(sb, cols[1], &mut sb_state);
 }
 
-pub fn draw_preview<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel) {
+pub fn draw_preview(f: &mut Frame, area: Rect, panel: &Panel) {
     let max_lines = (area.height as usize).saturating_sub(2);
     let lines: Vec<&str> = panel.preview.lines().collect();
     let visible = if panel.preview_offset < lines.len() {
@@ -144,7 +202,37 @@ pub fn draw_preview<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel) {
             .title("Preview")
             .style(theme.preview_block_style),
     );
-    f.render_widget(preview, area);
+    // split area into main preview and a vertical scrollbar
+    let cols = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(0), Constraint::Length(1)].as_ref())
+        .split(area);
+    f.render_widget(preview, cols[0]);
+    let max_lines = (cols[0].height as usize).saturating_sub(2);
+    // Render scrollbar for preview using ratatui::widgets::Scrollbar
+    let mut sb_state = ScrollbarState::new(lines.len()).position(panel.preview_offset).viewport_content_length(max_lines);
+    let sb = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+        .thumb_style(theme.scrollbar_thumb_style)
+        .track_style(theme.scrollbar_style);
+    f.render_stateful_widget(sb, cols[1], &mut sb_state);
+}
+
+/// Compute the scrollbar thumb start position and size for a given viewport height
+/// and scrollable content characteristics.
+pub fn compute_scrollbar_thumb(height: usize, total: usize, visible: usize, offset: usize) -> (usize, usize) {
+    if total == 0 || visible == 0 || total <= visible || height == 0 {
+        return (0, 0);
+    }
+    let thumb_size = std::cmp::max(1, (visible * height) / total);
+    let mut start = if total > 0 { (offset * height) / total } else { 0 };
+    if start + thumb_size > height {
+        if thumb_size >= height {
+            start = 0;
+        } else {
+            start = height - thumb_size;
+        }
+    }
+    (start, thumb_size)
 }
 
 /// Format a directory entry into the fixed-width textual line used by the list.

@@ -1,5 +1,5 @@
 use fileZoom::ui::modal::centered_rect;
-use tui::layout::Rect;
+use ratatui::layout::Rect;
 
 #[test]
 fn centered_rect_within_bounds() {

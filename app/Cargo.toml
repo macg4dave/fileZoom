@@ -1,6 +1,6 @@
 [package]
 name = "fileZoom"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 
@@ -8,7 +8,7 @@ license = "MIT"
 clap = { version = "4", features = ["derive"] }
 anyhow = "1.0"
 crossterm = "0.29.0"
-tui = "0.19"
+ratatui = "0.29.0"
 chrono = { version = "0.4", features = ["alloc"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.9.8"
@@ -23,7 +23,9 @@ tracing-subscriber = "0.3"
 serde-saphyr = "0.0.8"
 indicatif = "0.18.3"
 dialoguer = "0.12.0"
-unicode-width = "0.2.2"
+# Let dependent crates (ratatui, console, etc.) choose a compatible unicode-width
+# version to avoid conflicts with other transitive dependencies.
+# unicode-width = "0.2.2"
 unicode-segmentation = "1.10.0"
 textwrap = "0.16"
 console = "0.16.1"

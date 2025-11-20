@@ -118,7 +118,7 @@ mod tests {
     fn build_file_preview_detects_binary() {
         let temp = assert_fs::TempDir::new().unwrap();
         let f = temp.child("b.bin");
-        std::fs::write(f.path(), &[0u8, 1u8, 2u8]).unwrap();
+        std::fs::write(f.path(), [0u8, 1u8, 2u8]).unwrap();
         let r = build_file_preview(f.path(), 1024);
         assert!(r.is_err(), "expected binary preview to return Err");
     }
@@ -130,7 +130,7 @@ mod tests {
         // BOM + text
         let mut v = vec![0xEFu8, 0xBB, 0xBF];
         v.extend_from_slice(b"hello");
-        std::fs::write(f.path(), &v).unwrap();
+        std::fs::write(f.path(), v).unwrap();
         let r = build_file_preview(f.path(), 1024).unwrap();
         assert!(r.contains("hello"));
     }

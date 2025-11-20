@@ -1,7 +1,6 @@
-use tui::backend::Backend;
-use tui::layout::{Constraint, Direction, Layout};
-use tui::widgets::{Block, Borders, Paragraph};
-use tui::Frame;
+use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::Frame;
 
 use crate::app::App;
 use crate::app::Mode;
@@ -19,7 +18,7 @@ pub use menu::*;
 pub use modal::*;
 pub use panels::*;
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+pub fn ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -30,7 +29,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             ]
             .as_ref(),
         )
-        .split(f.size());
+        .split(f.area());
 
     let main_chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -62,9 +61,9 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     // Modal
     match &app.mode {
         Mode::Confirm { msg, selected, .. } => {
-            dialogs::draw_confirm(f, f.size(), "Confirm", msg, &["Yes", "No"], *selected)
+            dialogs::draw_confirm(f, f.area(), "Confirm", msg, &["Yes", "No"], *selected)
         }
-        Mode::Input { prompt, buffer, .. } => modal::draw_modal(f, f.size(), prompt, buffer),
+        Mode::Input { prompt, buffer, .. } => modal::draw_modal(f, f.area(), prompt, buffer),
         Mode::Message {
             title,
             content,
@@ -74,9 +73,9 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             // Render as error if title contains "Error", otherwise info
             let btn_refs: Vec<&str> = buttons.iter().map(|s| s.as_str()).collect();
             if title.to_lowercase().contains("error") {
-                dialogs::draw_error(f, f.size(), title, content, &btn_refs, *selected);
+                dialogs::draw_error(f, f.area(), title, content, &btn_refs, *selected);
             } else {
-                dialogs::draw_info(f, f.size(), title, content, &btn_refs, *selected);
+                dialogs::draw_info(f, f.area(), title, content, &btn_refs, *selected);
             }
         }
         Mode::Normal => {}
