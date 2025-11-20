@@ -1,6 +1,6 @@
-use ratatui::layout::Rect;
+use ratatui::layout::{Rect, Layout, Constraint, Direction};
 use ratatui::text::{Span, Line};
-use ratatui::widgets::{Block, Tabs, Borders};
+use ratatui::widgets::{Block, Tabs, Borders, Paragraph};
 use ratatui::Frame;
 
 use crate::app::App;
@@ -12,9 +12,38 @@ pub fn menu_labels() -> Vec<&'static str> {
 }
 
 /// Draw the top menu bar. The menu is currently static and non-interactive.
-pub fn draw_menu(f: &mut Frame, area: Rect, app: &App) {
+/// Draw a combined header containing a small logo area, the menu tabs,
+/// and a right-aligned status area. The header is responsive and will
+/// allocate space from `area` using a horizontal layout.
+pub fn draw_menu(f: &mut Frame, area: Rect, status: &str, app: &App) {
     let labels = menu_labels();
     let theme = theme_current();
+
+    // Optionally render a small single-line header above the menu when there's room
+    let menu_area = if area.height >= 2 {
+        let v = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+            .split(area);
+        // render a compact header line with application name + status
+        let header_para = Paragraph::new(format!("fileZoom — {}", status)).block(Block::default()).style(theme.help_block_style);
+        f.render_widget(header_para, v[0]);
+        v[1]
+    } else {
+        area
+    };
+
+    // Split the menu area into three: logo, tabs, status.
+    // The status region is fixed so the tabs area remains responsive.
+    let h = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Length(14), Constraint::Min(0), Constraint::Length(30)].as_ref())
+        .split(menu_area);
+
+    // Left: small app label/logo
+    let logo = Paragraph::new("fileZoom")
+        .block(Block::default().borders(Borders::NONE).style(theme.help_block_style));
+    f.render_widget(logo, h[0]);
 
     // Use Tabs to render a top menu; selection is driven by app.menu_index
     // Build display labels with small icons so tests can still assert
@@ -56,5 +85,11 @@ pub fn draw_menu(f: &mut Frame, area: Rect, app: &App) {
     } else {
         tabs = tabs.highlight_style(theme.help_block_style);
     }
-    f.render_widget(tabs, area);
+    // Center: render the tabs into the main chunk
+    f.render_widget(tabs, h[1]);
+
+    // Right: render status text (no borders to keep it compact)
+    let status_p = Paragraph::new(status.to_string())
+        .block(Block::default().borders(Borders::NONE).style(theme.help_block_style));
+    f.render_widget(status_p, h[2]);
 }

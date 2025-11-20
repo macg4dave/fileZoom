@@ -1,4 +1,4 @@
-use ratatui::layout::Rect;
+use ratatui::layout::{Rect, Layout, Constraint, Direction};
 use ratatui::style::Color;
 use ratatui::widgets::{Block, Borders, Paragraph, Wrap, Clear};
 use ratatui::Frame;
@@ -38,6 +38,7 @@ pub fn draw_settings(
     lines.push(line0);
     lines.push(line1);
 
+    let line_count = lines.len();
     let body = Paragraph::new(lines)
         .block(Block::default().borders(Borders::NONE))
         .wrap(Wrap { trim: true });
@@ -56,7 +57,21 @@ pub fn draw_settings(
         rect.width.saturating_sub(2),
         rect.height.saturating_sub(3),
     );
-    f.render_widget(body, content_rect);
+    // Split content area into a compact 1-line header and the remaining body
+    if content_rect.height >= 2 {
+        let vchunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+            .split(content_rect);
+        let header_rect = vchunks[0];
+        let body_rect = vchunks[1];
+        let header_text = format!("Settings — {} items", line_count);
+        let header_para = Paragraph::new(header_text).block(Block::default()).style(theme.help_block_style);
+        f.render_widget(header_para, header_rect);
+        f.render_widget(body, body_rect);
+    } else {
+        f.render_widget(body, content_rect);
+    }
 
     // Footer buttons Save / Cancel. Highlight according to selection index 2/3
     let buttons = ["Save", "Cancel"];
@@ -239,7 +254,21 @@ impl<'a> Dialog<'a> {
             rect.width.saturating_sub(2),
             rect.height.saturating_sub(3),
         );
-        f.render_widget(body, content_rect);
+        // Split content into a compact header and remaining body when space permits
+        if content_rect.height >= 2 {
+            let vchunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+                .split(content_rect);
+            let header_rect = vchunks[0];
+            let body_rect = vchunks[1];
+            let header_line = self.content.lines().next().unwrap_or("");
+            let header_para = Paragraph::new(header_line.to_string()).block(Block::default()).style(theme.help_block_style);
+            f.render_widget(header_para, header_rect);
+            f.render_widget(body, body_rect);
+        } else {
+            f.render_widget(body, content_rect);
+        }
 
         render_buttons(f, rect, &self.buttons, self.selected, theme.help_block_style);
     }

@@ -53,13 +53,33 @@ pub fn ui(f: &mut Frame, app: &App) {
             .split(chunks[2])
     };
 
-    panels::draw_list(f, main_chunks[0], &app.left, app.active == crate::app::Side::Left);
-    panels::draw_list(f, main_chunks[1], &app.right, app.active == crate::app::Side::Right);
+    // Use nested vertical layouts for each panel: a small header row and the list below.
+    let left_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+        .split(main_chunks[0]);
+    let right_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+        .split(main_chunks[1]);
+
+    // Draw panel headers (compact path display)
+    crate::ui::header::draw_panel_header(f, left_chunks[0], &app.left.cwd.display().to_string());
+    crate::ui::header::draw_panel_header(f, right_chunks[0], &app.right.cwd.display().to_string());
+
+    // Draw lists into the remaining area below each header.
+    panels::draw_list(f, left_chunks[1], &app.left, app.active == crate::app::Side::Left);
+    panels::draw_list(f, right_chunks[1], &app.right, app.active == crate::app::Side::Right);
 
     if app.preview_visible {
-        // Show preview for the active panel in the third column
+        // Show preview for the active panel in the third column. Split preview into header + content too.
+        let preview_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+            .split(main_chunks[2]);
         let active_panel = app.active_panel();
-        panels::draw_preview(f, main_chunks[2], active_panel);
+        crate::ui::header::draw_panel_header(f, preview_chunks[0], &active_panel.cwd.display().to_string());
+        panels::draw_preview(f, preview_chunks[1], active_panel);
     }
 
     // bottom help bar or command-line if active
@@ -78,18 +98,20 @@ pub fn ui(f: &mut Frame, app: &App) {
         f.render_widget(help, chunks[3]);
     }
 
-    // top menu bar
-    menu::draw_menu(f, chunks[0], app);
-
-    // status bar under top menu
+    // top header (menu + status combined)
+    // Combine the top two chunks (menu + status) into a single header rect
+    let header_area = ratatui::layout::Rect::new(
+        chunks[0].x,
+        chunks[0].y,
+        chunks[0].width,
+        chunks[0].height + chunks[1].height,
+    );
     let sort_order = if app.sort_desc { "(desc)" } else { "(asc)" };
     let status = format!(
         "Active: {}  |  Sort: {} {}  |  Menu: F1",
         app.active, app.sort, sort_order
     );
-    let status_p = Paragraph::new(status)
-        .block(Block::default().borders(Borders::BOTTOM).style(theme.help_block_style));
-    f.render_widget(status_p, chunks[1]);
+    menu::draw_menu(f, header_area, &status, app);
 
     // Modal
     match &app.mode {

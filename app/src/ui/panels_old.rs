@@ -66,6 +66,18 @@ use crate::ui::util::columns_for_file_list;
 pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool) {
     let theme = theme_current();
 
+    // Top header row + main area inspired by ratatui example layout
+    let vchunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+        .split(area);
+    let header_area = vchunks[0];
+    let area = vchunks[1];
+
+    // Small header showing path and counts (compact, single-line)
+    let header_text = format!("{} — {} entries", panel.cwd.display(), panel.entries.len());
+    crate::ui::header::draw_compact_header(f, header_area, &header_text);
+
     let list_height = (area.height as usize).saturating_sub(2); // account for borders/title
                                                                 // Build UI rows: header, optional parent, then domain entries formatted with `UiEntry`.
     let mut ui_rows: Vec<UiEntry> = Vec::new();
@@ -222,6 +234,17 @@ pub fn draw_preview(f: &mut Frame, area: Rect, panel: &Panel) {
     });
     let theme = theme_current();
     
+    // Add a compact header above the preview and split remaining area
+    let vchunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+        .split(area);
+    let header_area = vchunks[0];
+    let area = vchunks[1];
+
+    let header_text = format!("Preview — {} lines", lines.len());
+    crate::ui::header::draw_compact_header(f, header_area, &header_text);
+
     // split area into main preview and a vertical scrollbar
     let cols = Layout::default()
         .direction(Direction::Horizontal)
