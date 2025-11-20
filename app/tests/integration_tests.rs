@@ -29,7 +29,13 @@ fn test_basic_file_ops() -> Result<(), Box<dyn std::error::Error>> {
         .iter()
         .position(|e| e.name == "file1.txt")
         .unwrap();
-    app.left.selected = idx;
+    let header_count = 1usize;
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app.left.selected = header_count + parent_count + idx;
 
     let dest_dir = temp.path().join("copy_dest");
     std::fs::create_dir_all(&dest_dir)?;
@@ -53,14 +59,26 @@ fn test_basic_file_ops() -> Result<(), Box<dyn std::error::Error>> {
         .iter()
         .position(|e| e.name == "new_file.txt")
     {
-        app.left.selected = pos;
+        let header_count = 1usize;
+        let parent_count = if app.left.cwd.parent().is_some() {
+            1usize
+        } else {
+            0usize
+        };
+        app.left.selected = header_count + parent_count + pos;
         app.delete_selected()?;
         assert!(!temp.child("new_file.txt").exists());
     }
 
     // move dirA to moved_dir
     if let Some(pos) = app.left.entries.iter().position(|e| e.name == "dirA") {
-        app.left.selected = pos;
+        let header_count = 1usize;
+        let parent_count = if app.left.cwd.parent().is_some() {
+            1usize
+        } else {
+            0usize
+        };
+        app.left.selected = header_count + parent_count + pos;
         let moved_to = temp.path().join("moved_dir/");
         app.move_selected_to(moved_to.clone())?;
         assert!(moved_to.join("file2.txt").exists());

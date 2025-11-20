@@ -4,7 +4,7 @@ use std::io;
 // chrono imported in Panel (file metadata reading)
 
 use self::panel::Panel;
-use super::types::{Entry, Mode, Side, SortKey};
+use super::types::{Mode, Side, SortKey};
 
 pub struct App {
     pub left: Panel,
@@ -110,10 +110,22 @@ impl App {
     /// This is a small helper to avoid repeating the `match self.active` logic
     /// across methods that need to consult the selected entry index. The
     /// selection is stored on the panel and is clamped by `refresh_panel`.
-    pub(crate) fn selected_index(&self) -> usize {
-        // Use the `active_panel()` helper so this method never needs to
-        // duplicate matching on `self.active` and remains read-only.
-        self.active_panel().selected
+    /// Return the currently selected index within `panel.entries`, if the UI
+    /// selected index maps to a filesystem entry (i.e. not the header or parent row).
+    pub(crate) fn selected_index(&self) -> Option<usize> {
+        let panel = self.active_panel();
+        let header_count = 1usize;
+        let parent_count = if panel.cwd.parent().is_some() {
+            1usize
+        } else {
+            0usize
+        };
+        let sel = panel.selected;
+        if sel >= header_count + parent_count {
+            Some(sel - header_count - parent_count)
+        } else {
+            None
+        }
     }
 
     // `selected_entry` removed: not used and was producing a dead-code warning.
@@ -144,19 +156,14 @@ impl App {
             ents.reverse();
         }
 
-        // Prepend a header row showing the full path, and a `..` entry to go up a level.
-        // These are synthetic entries inserted at the front of the listing so the UI
-        // can display the current path and provide an easy way to navigate up.
-        let mut wrapped = Vec::new();
-        // Header: non-directory entry with the full path as the name. Not enterable.
-        wrapped.push(Entry::header(panel.cwd.clone()));
-        // Parent: `..` entry if there is a parent directory.
-        if let Some(parent) = panel.cwd.parent() {
-            wrapped.push(Entry::parent(parent.to_path_buf()));
-        }
-        wrapped.extend(ents);
-        panel.entries = wrapped;
-        panel.selected = min(panel.selected, panel.entries.len().saturating_sub(1));
+        // Keep `panel.entries` as a pure domain list: only filesystem
+        // entries (no synthetic header/parent). Store the read entries
+        // directly and clamp UI selection/offset against the UI row
+        // count (header + parent + entries).
+        panel.entries = ents;
+        let max_rows = 1 + if panel.cwd.parent().is_some() { 1 } else { 0 } + panel.entries.len();
+        panel.selected = min(panel.selected, max_rows.saturating_sub(1));
+        panel.offset = min(panel.offset, max_rows.saturating_sub(1));
         self.update_preview_for(side);
         Ok(())
     }
@@ -201,9 +208,16 @@ mod tests {
             }
         }
         assert!(left_idx.is_some());
-        app.left.selected = left_idx.unwrap();
+        let header_count = 1usize;
+        let parent_count = if app.left.cwd.parent().is_some() {
+            1usize
+        } else {
+            0usize
+        };
+        let ui_left_idx = header_count + parent_count + left_idx.unwrap();
+        app.left.selected = ui_left_idx;
         app.active = Side::Left;
-        assert_eq!(app.selected_index(), app.left.selected);
+        assert_eq!(app.selected_index(), Some(left_idx.unwrap()));
 
         // for right panel
         let mut right_idx = None;
@@ -214,9 +228,15 @@ mod tests {
             }
         }
         assert!(right_idx.is_some());
-        app.right.selected = right_idx.unwrap();
+        let parent_count_r = if app.right.cwd.parent().is_some() {
+            1usize
+        } else {
+            0usize
+        };
+        let ui_right_idx = header_count + parent_count_r + right_idx.unwrap();
+        app.right.selected = ui_right_idx;
         app.active = Side::Right;
-        assert_eq!(app.selected_index(), app.right.selected);
+        assert_eq!(app.selected_index(), Some(right_idx.unwrap()));
 
         temp.close().unwrap();
     }

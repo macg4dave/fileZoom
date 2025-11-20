@@ -6,6 +6,57 @@ use tui::widgets::{Block, Borders, List, ListItem, Paragraph};
 use tui::Frame;
 
 use crate::app::{Entry, Panel};
+use std::path::PathBuf;
+
+/// UI-only wrapper around a domain `Entry` that carries presentation
+/// metadata such as the preformatted display line and whether the row
+/// is synthetic (header or `..`). This keeps UI concerns out of the
+/// core `Entry` model.
+#[derive(Clone, Debug)]
+pub struct UiEntry {
+    pub entry: Entry,
+    pub display: String,
+    pub synthetic: bool,
+}
+
+impl UiEntry {
+    /// Create a UiEntry from a domain `Entry`, computing the display
+    /// line via the UI formatter.
+    pub fn from_entry(e: Entry) -> Self {
+        UiEntry {
+            display: format_entry_line(&e),
+            entry: e,
+            synthetic: false,
+        }
+    }
+
+    /// Create a header UiEntry that displays the full path.
+    pub fn header(path: PathBuf) -> Self {
+        let display = path.display().to_string();
+        UiEntry {
+            display: display.clone(),
+            entry: Entry::file(display, path, 0, None),
+            synthetic: true,
+        }
+    }
+
+    /// Create a parent (`..`) UiEntry pointing to `parent`.
+    pub fn parent(parent: PathBuf) -> Self {
+        UiEntry {
+            display: "..".to_string(),
+            entry: Entry::directory("..", parent, None),
+            synthetic: true,
+        }
+    }
+
+    pub fn is_header(&self) -> bool {
+        self.synthetic && !self.entry.is_dir
+    }
+
+    pub fn is_parent(&self) -> bool {
+        self.synthetic && self.entry.is_dir && self.entry.name == ".."
+    }
+}
 use crate::ui::colors::current as theme_current;
 // PathBuf is intentionally not used here — keep imports minimal
 
@@ -13,8 +64,17 @@ pub fn draw_list<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel, active
     let theme = theme_current();
 
     let list_height = (area.height as usize).saturating_sub(2); // account for borders/title
-    let visible = if panel.entries.len() > panel.offset {
-        &panel.entries[panel.offset..std::cmp::min(panel.offset + list_height, panel.entries.len())]
+                                                                // Build UI rows: header, optional parent, then domain entries formatted with `UiEntry`.
+    let mut ui_rows: Vec<UiEntry> = Vec::new();
+    ui_rows.push(UiEntry::header(panel.cwd.clone()));
+    if let Some(parent) = panel.cwd.parent() {
+        ui_rows.push(UiEntry::parent(parent.to_path_buf()));
+    }
+    for e in panel.entries.iter().cloned() {
+        ui_rows.push(UiEntry::from_entry(e));
+    }
+    let visible = if ui_rows.len() > panel.offset {
+        &ui_rows[panel.offset..std::cmp::min(panel.offset + list_height, ui_rows.len())]
     } else {
         &[]
     };
@@ -24,23 +84,14 @@ pub fn draw_list<B: Backend>(f: &mut Frame<B>, area: Rect, panel: &Panel, active
         .map(|e| {
             // Special header row: show full path across the line with distinct style
             if is_entry_header(e) {
-                return crate::ui::header::render_header(&e.name);
+                // Render header row via dedicated helper
+                return crate::ui::header::render_header(&e.entry.name);
             }
 
-            let name = &e.name;
-            let size = if e.is_dir {
-                "<dir>".to_string()
-            } else {
-                format!("{}", e.size)
-            };
-            let mtime = e
-                .modified
-                .map(|d| d.format("%Y-%m-%d %H:%M").to_string())
-                .unwrap_or_else(|| "-".to_string());
-            let text = format!("{:<40.40} {:>10} {:>16}", name, size, mtime);
+            let text = e.display.clone();
             let style = if is_entry_parent(e) {
                 theme.parent_style
-            } else if e.is_dir {
+            } else if e.entry.is_dir {
                 theme.dir_style
             } else {
                 Style::default()
@@ -119,10 +170,10 @@ pub fn format_entry_line(e: &Entry) -> String {
 /// data type does not need to carry presentation methods. Callers that are
 /// concerned with presentation should use these helpers instead of adding
 /// methods to `Entry` itself.
-pub fn is_entry_header(e: &Entry) -> bool {
-    e.synthetic && !e.is_dir
+pub fn is_entry_header(e: &UiEntry) -> bool {
+    e.is_header()
 }
 
-pub fn is_entry_parent(e: &Entry) -> bool {
-    e.synthetic && e.is_dir && e.name == ".."
+pub fn is_entry_parent(e: &UiEntry) -> bool {
+    e.is_parent()
 }

@@ -37,11 +37,14 @@ fn select_next_prev_and_clamp() {
     for _ in 0..10 {
         p.select_next();
     }
-    assert_eq!(p.selected, 4);
+    // With UI indices (header + entries), the last selectable UI row is
+    // header + entries.len() - 1 => 1 + 5 - 1 = 5
+    assert_eq!(p.selected, 5);
     // clamp down when entries shrink
     p.entries.truncate(2);
     p.clamp_selected();
-    assert_eq!(p.selected, 1);
+    // After truncating to 2 entries, max UI row is 1 + 2 - 1 = 2
+    assert_eq!(p.selected, 2);
 }
 
 #[test]

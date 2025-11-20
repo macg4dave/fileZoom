@@ -28,34 +28,43 @@ fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Resu
         KeyCode::PageUp => app.page_up(page_size),
         KeyCode::Enter => {
             let panel = app.active_panel_mut();
-            let e_opt = panel.entries.get(panel.selected).cloned();
-
-            if let Some(e) = e_opt {
-                if crate::ui::panels::is_entry_header(&e) {
-                    let prompt = format!("Change path (current: {}):", e.path.display());
-                    app.mode = Mode::Input {
-                        prompt,
-                        buffer: String::new(),
-                        kind: InputKind::ChangePath,
-                    };
-                } else if let Err(err) = app.enter() {
-                    let path_s = e.path.display().to_string();
-                    let msg = errors::render_io_error(&err, Some(&path_s), None, None);
-                    app.mode = Mode::Message {
-                        title: "Error".to_string(),
-                        content: msg,
-                        buttons: vec!["OK".to_string()],
-                        selected: 0,
-                    };
-                }
-            } else if let Err(err) = app.enter() {
-                let msg = errors::render_io_error(&err, None, None, None);
-                app.mode = Mode::Message {
-                    title: "Error".to_string(),
-                    content: msg,
-                    buttons: vec!["OK".to_string()],
-                    selected: 0,
+            // Header row
+            if panel.selected == 0 {
+                let prompt = format!("Change path (current: {}):", panel.cwd.display());
+                app.mode = Mode::Input {
+                    prompt,
+                    buffer: String::new(),
+                    kind: InputKind::ChangePath,
                 };
+            } else {
+                // Parent row (if exists)
+                let parent_count = if panel.cwd.parent().is_some() {
+                    1usize
+                } else {
+                    0usize
+                };
+                if panel.selected == 1 && parent_count == 1 {
+                    if let Err(err) = app.go_up() {
+                        let msg = errors::render_io_error(&err, None, None, None);
+                        app.mode = Mode::Message {
+                            title: "Error".to_string(),
+                            content: msg,
+                            buttons: vec!["OK".to_string()],
+                            selected: 0,
+                        };
+                    }
+                } else if let Some(e) = panel.selected_entry().cloned() {
+                    if let Err(err) = app.enter() {
+                        let path_s = e.path.display().to_string();
+                        let msg = errors::render_io_error(&err, Some(&path_s), None, None);
+                        app.mode = Mode::Message {
+                            title: "Error".to_string(),
+                            content: msg,
+                            buttons: vec!["OK".to_string()],
+                            selected: 0,
+                        };
+                    }
+                }
             }
         }
         KeyCode::Backspace => {
@@ -82,7 +91,7 @@ fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Resu
         }
         KeyCode::Char('d') => {
             let panel = app.active_panel_mut();
-            let e_opt = panel.entries.get(panel.selected);
+            let e_opt = panel.selected_entry();
             if let Some(e) = e_opt {
                 let msg = format!("Delete {}? (y/n)", e.name);
                 app.mode = Mode::Confirm {
@@ -94,7 +103,7 @@ fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Resu
         }
         KeyCode::Char('c') => {
             let panel = app.active_panel_mut();
-            let e_opt = panel.entries.get(panel.selected);
+            let e_opt = panel.selected_entry();
             if let Some(e) = e_opt {
                 let prompt = format!("Copy {} to:", e.name);
                 app.mode = Mode::Input {
@@ -106,7 +115,7 @@ fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Resu
         }
         KeyCode::Char('m') => {
             let panel = app.active_panel_mut();
-            let e_opt = panel.entries.get(panel.selected);
+            let e_opt = panel.selected_entry();
             if let Some(e) = e_opt {
                 let prompt = format!("Move {} to:", e.name);
                 app.mode = Mode::Input {
@@ -163,7 +172,14 @@ fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Resu
         KeyCode::End => {
             let panel = app.active_panel_mut();
             if !panel.entries.is_empty() {
-                panel.selected = panel.entries.len() - 1;
+                let header_count = 1usize;
+                let parent_count = if panel.cwd.parent().is_some() {
+                    1usize
+                } else {
+                    0usize
+                };
+                panel.selected =
+                    header_count + parent_count + panel.entries.len().saturating_sub(1);
             }
         }
         KeyCode::Char('p') => { /* toggle preview behavior */ }

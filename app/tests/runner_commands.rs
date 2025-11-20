@@ -65,7 +65,13 @@ fn copy_move_rename_delete_actions_work() -> Result<(), Box<dyn std::error::Erro
             panic!("src.txt entry not found, entries={:?}", names);
         }
     };
-    app.left.selected = idx;
+    let header_count = 1usize;
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app.left.selected = header_count + parent_count + idx;
 
     // copy to subdir 'out'
     let out = temp.child("out");
@@ -77,7 +83,13 @@ fn copy_move_rename_delete_actions_work() -> Result<(), Box<dyn std::error::Erro
     temp.child("mv.txt").write_str("mv")?;
     let mut app2 = App::new()?;
     let idx2 = find_index(&app2, "mv.txt").expect("mv.txt entry not found");
-    app2.left.selected = idx2;
+    let header_count = 1usize;
+    let parent_count = if app2.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app2.left.selected = header_count + parent_count + idx2;
     let dest = temp.child("moved");
     dest.create_dir_all()?;
     perform_action(&mut app2, Action::MoveTo(dest.path().to_path_buf()))?;
@@ -87,7 +99,13 @@ fn copy_move_rename_delete_actions_work() -> Result<(), Box<dyn std::error::Erro
     temp.child("rnm.txt").write_str("r")?;
     let mut app3 = App::new()?;
     let idx3 = find_index(&app3, "rnm.txt").expect("rnm.txt not found");
-    app3.left.selected = idx3;
+    let header_count = 1usize;
+    let parent_count = if app3.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app3.left.selected = header_count + parent_count + idx3;
     perform_action(&mut app3, Action::RenameTo("renamed.txt".to_string()))?;
     assert!(temp.child("renamed.txt").exists());
 
@@ -95,7 +113,13 @@ fn copy_move_rename_delete_actions_work() -> Result<(), Box<dyn std::error::Erro
     temp.child("del.txt").write_str("d")?;
     let mut app4 = App::new()?;
     let idx4 = find_index(&app4, "del.txt").expect("del.txt not found");
-    app4.left.selected = idx4;
+    let header_count = 1usize;
+    let parent_count = if app4.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app4.left.selected = header_count + parent_count + idx4;
     perform_action(&mut app4, Action::DeleteSelected)?;
     assert!(!temp.child("del.txt").exists());
 

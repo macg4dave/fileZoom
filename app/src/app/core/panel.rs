@@ -11,11 +11,14 @@ use std::path::PathBuf;
 pub struct Panel {
     /// Current working directory shown by this panel.
     pub cwd: PathBuf,
-    /// Listing of entries (first entries may be synthetic header/parent).
+    /// Listing of filesystem entries in the directory. This vector
+    /// is domain-only (contains no UI synthetic rows like the header or `..`).
     pub entries: Vec<Entry>,
-    /// Index of the currently selected entry within `entries`.
+    /// UI selection index including any synthetic header/parent rows.
+    /// This keeps the visual selection intuitive without coupling the
+    /// panel data model to presentation details.
     pub selected: usize,
-    /// Scroll offset (index of the top-most visible entry).
+    /// UI scroll offset (index of the top-most visible UI row).
     pub offset: usize,
     /// File preview text for the selected entry (if any).
     pub preview: String,
@@ -37,34 +40,60 @@ impl Panel {
     }
 
     /// Return a reference to the currently selected entry, if present.
+    /// Return a reference to the currently selected filesystem entry,
+    /// if the UI selected index refers to an actual item (i.e. not the
+    /// header or the parent row).
     pub fn selected_entry(&self) -> Option<&Entry> {
-        self.entries.get(self.selected)
+        let header_count = 1usize;
+        let parent_count = if self.cwd.parent().is_some() {
+            1usize
+        } else {
+            0usize
+        };
+        // Compute whether `selected` refers to an entry
+        if self.selected >= header_count + parent_count {
+            let idx = self.selected - header_count - parent_count;
+            self.entries.get(idx)
+        } else {
+            None
+        }
     }
 
-    /// Move selection down by one, clamping at the last entry.
+    /// Move selection down by one, clamping at the last UI row.
     pub fn select_next(&mut self) {
-        if self.selected + 1 < self.entries.len() {
+        let max_rows = 1 + if self.cwd.parent().is_some() { 1 } else { 0 } + self.entries.len();
+        if self.selected + 1 < max_rows {
             self.selected += 1;
         }
     }
 
-    /// Move selection up by one, clamping at zero.
+    /// Move selection up by one, clamping at zero (makes header selectable).
     pub fn select_prev(&mut self) {
         if self.selected > 0 {
             self.selected -= 1;
         }
     }
 
-    /// Ensure `selected` is within bounds of `entries`.
+    /// Ensure `selected` is within bounds of the UI rows (header +
+    /// maybe parent + entries).
     pub fn clamp_selected(&mut self) {
-        self.selected = std::cmp::min(self.selected, self.entries.len().saturating_sub(1));
+        let max_rows = 1 + if self.cwd.parent().is_some() { 1 } else { 0 } + self.entries.len();
+        if max_rows == 0 {
+            self.selected = 0;
+        } else {
+            self.selected = std::cmp::min(self.selected, max_rows.saturating_sub(1));
+        }
     }
 
-    /// Adjust `offset` so the selected entry is visible within a viewport of
-    /// `height` rows. This keeps the UI logic outside the renderer while
-    /// providing a reusable behaviour for different panel sizes.
+    /// Adjust `offset` so the selected row is visible within a viewport of
+    /// `height` rows. Note that UI rows include synthetic header and parent rows.
     pub fn ensure_selected_visible(&mut self, height: usize) {
-        if height == 0 || self.entries.is_empty() {
+        if height == 0 {
+            self.offset = 0;
+            return;
+        }
+        let total_rows = 1 + if self.cwd.parent().is_some() { 1 } else { 0 } + self.entries.len();
+        if total_rows == 0 {
             self.offset = 0;
             return;
         }
@@ -74,7 +103,7 @@ impl Panel {
             return;
         }
         // If selected is below the visible area, move offset down so it is visible.
-        let max_offset = self.entries.len().saturating_sub(height);
+        let max_offset = total_rows.saturating_sub(height);
         if self.selected >= self.offset + height {
             self.offset = std::cmp::min(self.selected + 1 - height, max_offset);
         } else if self.offset > max_offset {

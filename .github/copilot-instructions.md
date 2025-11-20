@@ -4,8 +4,8 @@
 Purpose: quick, actionable guidance to get an AI coding agent productive in this repo.
 
 **Project Overview**
-- **What**: a single binary Rust CLI file-manager (TUI) in the `app` crate.
-- **Why**: small, dependency-light TUI focused on usability and mouse support for interactive demos and tests.
+- **What**: a single binary Rust CLI file-manager using Ratatui for terminal UI with crossterm in the `app` crate.
+- **Why**: small, dependency-light focused on usability and mouse support file manager for crossplatform use in any terminal.
 
 **Important Paths**
 - `app/` : main crate (source, scripts, tests, fixtures).
@@ -26,7 +26,7 @@ Purpose: quick, actionable guidance to get an AI coding agent productive in this
 - Tests and fixtures: integration tests copy/operate on `app/tests/fixtures/` into temp dirs. When adding tests, use `assert_fs`/`tempfile` dev-deps and avoid touching the real filesystem.
 
 **Dependencies & Tooling**
-- See `app/Cargo.toml` for runtime (`clap`, `crossterm`, `tui`, `anyhow`) and dev (`assert_fs`, `tempfile`) dependencies.
+- See `app/Cargo.toml` for runtime and dev (`assert_fs`, `tempfile`) dependencies.
 - Use `rust-analyzer`, `cargo fmt`, and `cargo clippy` for local checks.
 
 **What agents should do (practical rules)**

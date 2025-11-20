@@ -37,18 +37,8 @@ fn sort_name_puts_dirs_first() {
     };
     app.refresh().unwrap();
 
-    // entries: [header, parent(if exists), ...actual entries]
-    let start = 1 + if app
-        .left
-        .entries
-        .get(1)
-        .map(|e| fileZoom::ui::panels::is_entry_parent(e))
-        .unwrap_or(false)
-    {
-        1
-    } else {
-        0
-    };
+    // `entries` is domain-only after refactor; start at 0.
+    let start = 0usize;
     // expected dirs first
     assert_eq!(app.left.entries[start].name, "b_dir");
     assert_eq!(app.left.entries[start + 1].name, "a.txt");
@@ -83,7 +73,14 @@ fn preview_truncates_large_file() {
         }
     }
     assert!(idx.is_some());
-    app.left.selected = idx.unwrap();
+    // Update selection to the UI index (header + parent + entry index).
+    let header_count = 1usize;
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app.left.selected = header_count + parent_count + idx.unwrap();
     app.update_preview_for(Side::Left);
     assert!(app.left.preview.contains("(truncated)"));
 
@@ -121,7 +118,14 @@ fn preview_shows_directory_entries_limited() {
         }
     }
     assert!(idx.is_some());
-    app.left.selected = idx.unwrap();
+    // Update selection to the UI index (header + parent + entry index).
+    let header_count = 1usize;
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app.left.selected = header_count + parent_count + idx.unwrap();
     // precondition: set non-zero preview to ensure update overwrites it
     app.left.preview = "old".to_string();
     app.update_preview_for(Side::Left);
@@ -161,7 +165,14 @@ fn preview_resets_preview_offset() {
         }
     }
     assert!(idx.is_some());
-    app.left.selected = idx.unwrap();
+    // Update selection to the UI index (header + parent + entry index).
+    let header_count = 1usize;
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app.left.selected = header_count + parent_count + idx.unwrap();
     app.left.preview_offset = 10; // set non-zero offset
     app.update_preview_for(Side::Left);
     assert_eq!(app.left.preview_offset, 0);
@@ -200,7 +211,14 @@ fn preview_handles_very_long_filename() {
         }
     }
     assert!(idx.is_some());
-    app.left.selected = idx.unwrap();
+    // Update selection to the UI index (header + parent + entry index).
+    let header_count = 1usize;
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app.left.selected = header_count + parent_count + idx.unwrap();
     app.update_preview_for(Side::Left);
     assert!(app.left.preview.contains("hello"));
 
@@ -243,8 +261,16 @@ fn preview_unreadable_file_shows_message() {
         }
     }
     assert!(idx.is_some());
-    app.left.selected = idx.unwrap();
+    // Update selection to the UI index (header + parent + entry index).
+    let header_count = 1usize;
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
+    app.left.selected = header_count + parent_count + idx.unwrap();
     app.update_preview_for(Side::Left);
+    // (no debug) ensure unreadable file preview is handled
     assert!(app.left.preview.contains("Cannot preview file"));
 
     // restore perms so cleanup can occur

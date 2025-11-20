@@ -20,11 +20,11 @@ fn entry_equality() {
 #[test]
 fn synthetic_header_and_parent_detection() {
     let cwd = PathBuf::from("/tmp");
-    let h = fileZoom::app::Entry::header(cwd.clone());
+    let h = fileZoom::ui::panels::UiEntry::header(cwd.clone());
     assert!(fileZoom::ui::panels::is_entry_header(&h));
     assert!(!fileZoom::ui::panels::is_entry_parent(&h));
 
-    let parent = fileZoom::app::Entry::parent(PathBuf::from("/"));
+    let parent = fileZoom::ui::panels::UiEntry::parent(PathBuf::from("/"));
     assert!(fileZoom::ui::panels::is_entry_parent(&parent));
     assert!(!fileZoom::ui::panels::is_entry_header(&parent));
 }

@@ -8,8 +8,8 @@ use std::path::PathBuf;
 /// stores a `PathBuf` and a precomputed `name` to avoid repeated allocations
 /// while rendering.
 ///
-/// Additionally `synthetic` distinguishes entries synthesized by the UI
-/// logic (header and parent entries) from real filesystem entries.
+/// This is a domain-only type. Presentation concerns (headers, parent
+/// rows, and synthetic UI rows) are owned by the UI module.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entry {
     /// Display name for the entry (filename or `..` or the full path in the
@@ -23,8 +23,6 @@ pub struct Entry {
     pub size: u64,
     /// Optional last-modified timestamp.
     pub modified: Option<DateTime<Local>>,
-    /// True for entries that are synthesized by the UI (header and parent).
-    pub synthetic: bool,
 }
 
 impl Entry {
@@ -41,7 +39,6 @@ impl Entry {
             is_dir: false,
             size,
             modified,
-            synthetic: false,
         }
     }
 
@@ -57,35 +54,10 @@ impl Entry {
             is_dir: true,
             size: 0,
             modified,
-            synthetic: false,
         }
     }
 
-    /// Construct the header entry shown at the top of a panel. The `name`
-    /// will contain the full path and `synthetic` is set to `true`.
-    pub fn header(path: PathBuf) -> Self {
-        let display = path.display().to_string();
-        Entry {
-            name: display,
-            path: path.clone(),
-            is_dir: false,
-            size: 0,
-            modified: None,
-            synthetic: true,
-        }
-    }
-
-    /// Construct a parent (`..`) entry pointing to `parent`.
-    pub fn parent(parent: PathBuf) -> Self {
-        Entry {
-            name: "..".to_string(),
-            path: parent,
-            is_dir: true,
-            size: 0,
-            modified: None,
-            synthetic: true,
-        }
-    }
+    // Header/parent are UI concerns implemented in `ui::panels::UiEntry`.
 
     // NOTE: UI-only helpers like `is_header` and `is_parent` were intentionally
     // moved into the UI layer. This keeps `Entry` as a domain struct and
