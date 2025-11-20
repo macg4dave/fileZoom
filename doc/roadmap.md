@@ -2,7 +2,6 @@ Dual Panels: Two side-by-side panels with independent directories, quick copy/mo
 Quick View: F3-style viewer/preview pane showing file contents without opening editor.
 Built-in Editor Integration: F4 to open a simple internal editor (fast edits without launching external editor).
 VFS (Virtual File System): Transparent access to archives, FTP, SFTP, SMB, etc., via a VFS abstraction.
-Archive Browsing: Treat archives as directories (zip/tar/rar), allowing copy/move in/out.
 Command Line + Menu Bar: Integrated command line and context-sensitive menu bar (keys + mouse).
 Operation Queue & Progress: Modal/queue for long ops with progress and ability to suspend/cancel.
 Batch Operations (Rename/Filter): Multi-file rename, regex filters, and selection patterns.
