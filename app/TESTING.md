@@ -115,3 +115,35 @@ Running the single test is faster than the full suite and is useful when
 iterating on CLI/startup-related code. If you prefer to run the full test
 suite (including this test) use `cargo test -p fileZoom -- --nocapture`.
 
+
+
+## Test Helpers
+
+Use the shared test helpers to isolate the user environment (HOME/XDG) when
+running tests that touch config or cache directories. The crate exposes a
+small set of helpers available during test builds:
+
+- `fileZoom::test_helpers::set_up_temp_home()` — creates a `tempfile::TempDir`,
+  sets `HOME`, `XDG_CONFIG_HOME` and `XDG_DATA_HOME` to that temp directory,
+  and returns the `TempDir`. Keep the returned value alive for the duration of
+  the test to preserve the temporary directories (the directory is removed on
+  drop).
+- `fileZoom::test_helpers::set_up_temp_xdg_config()` — creates a `TempDir` and
+  sets only `XDG_CONFIG_HOME` to it.
+
+Example usage:
+
+```rust
+#[test]
+fn my_test_uses_isolated_home() {
+    // Keep the TempDir value so it isn't deleted until the end of the test.
+    let _td = fileZoom::test_helpers::set_up_temp_home();
+
+    // Now run code that reads/writes config or cache locations; they will
+    // be redirected to the temporary directory above.
+    // ... test logic ...
+}
+```
+
+These helpers are compiled for test builds and re-exported by the crate root
+so tests can call them as shown without enabling extra features.
