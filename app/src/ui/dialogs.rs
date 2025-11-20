@@ -1,6 +1,6 @@
 use ratatui::layout::Rect;
 use ratatui::style::Color;
-use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
+use ratatui::widgets::{Block, Borders, Paragraph, Wrap, Clear};
 use ratatui::Frame;
 
 use crate::ui::colors::current as theme_current;
@@ -26,6 +26,8 @@ pub fn draw_confirm(
         .title(prompt)
         .style(theme.preview_block_style);
 
+    // clear background then render dialog block so popup stands out
+    f.render_widget(Clear, rect);
     f.render_widget(title_block, rect);
 
     // content area inside the block (leave 1 cell margin)
@@ -83,6 +85,7 @@ pub fn draw_info(
         .borders(Borders::ALL)
         .title(title)
         .style(theme.preview_block_style);
+    f.render_widget(Clear, rect);
     f.render_widget(title_block, rect);
 
     let content_rect = Rect::new(
@@ -140,6 +143,7 @@ pub fn draw_error(
         .borders(Borders::ALL)
         .title(title)
         .style(title_style);
+    f.render_widget(Clear, rect);
     f.render_widget(title_block, rect);
 
     let content_rect = Rect::new(

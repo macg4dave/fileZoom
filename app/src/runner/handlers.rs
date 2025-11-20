@@ -26,9 +26,61 @@ pub fn handle_key(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Res
 /// and clicks on the top menu to focus/activate menu tabs.
 pub fn handle_mouse(app: &mut App, me: MouseEvent, term_rect: Rect) -> anyhow::Result<bool> {
     use crate::ui::menu;
-    // Only handle left-button down for now
-    if !matches!(me.kind, crate::input::mouse::MouseEventKind::Down(crate::input::mouse::MouseButton::Left)) {
-        return Ok(false);
+    use crate::input::mouse::{MouseEventKind};
+    // Handle scroll and left-button down
+    match me.kind {
+        MouseEventKind::Down(crate::input::mouse::MouseButton::Left) => {
+            // proceed to click handling below
+        }
+        MouseEventKind::ScrollUp | MouseEventKind::ScrollDown => {
+            // Determine which main panel the cursor is over and scroll selection
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(1),
+                    Constraint::Length(1),
+                    Constraint::Min(0),
+                    Constraint::Length(1),
+                ].as_ref())
+                .split(term_rect);
+
+            let main_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+                .split(chunks[2]);
+
+            // Helper to compute list height for a panel area
+            let list_height = |area: Rect| -> usize { (area.height as usize).saturating_sub(2) };
+
+            // If cursor over left panel
+            if me.column >= main_chunks[0].x && me.column < main_chunks[0].x + main_chunks[0].width &&
+               me.row >= main_chunks[0].y && me.row < main_chunks[0].y + main_chunks[0].height {
+                app.active = Side::Left;
+                let lh = list_height(main_chunks[0]);
+                if matches!(me.kind, MouseEventKind::ScrollDown) {
+                    app.next(lh);
+                } else {
+                    app.previous(lh);
+                }
+                return Ok(false);
+            }
+
+            // If cursor over right panel
+            if me.column >= main_chunks[1].x && me.column < main_chunks[1].x + main_chunks[1].width &&
+               me.row >= main_chunks[1].y && me.row < main_chunks[1].y + main_chunks[1].height {
+                app.active = Side::Right;
+                let lh = list_height(main_chunks[1]);
+                if matches!(me.kind, MouseEventKind::ScrollDown) {
+                    app.next(lh);
+                } else {
+                    app.previous(lh);
+                }
+                return Ok(false);
+            }
+
+            return Ok(false);
+        }
+        _ => return Ok(false),
     }
 
     // Recompute the same layout used by `ui::ui` so clicks map to areas.
