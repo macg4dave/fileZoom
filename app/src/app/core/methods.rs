@@ -36,6 +36,57 @@ impl App {
         Ok(app)
     }
 
+    /// Create an App with explicit startup options (for example a start
+    /// directory or initial mouse setting). This mirrors `new` but uses
+    /// `StartOptions` when provided so callers can control initial state
+    /// without mutating global process state.
+    pub fn with_options(opts: &crate::app::StartOptions) -> io::Result<Self> {
+        let cwd = if let Some(d) = &opts.start_dir {
+            d.clone()
+        } else {
+            std::env::current_dir()?
+        };
+        let mut app = App {
+            left: Panel::new(cwd.clone()),
+            right: Panel::new(cwd),
+            active: Side::Left,
+            mode: Mode::Normal,
+            sort: SortKey::Name,
+            sort_desc: false,
+            menu_index: 0,
+            menu_focused: false,
+            preview_visible: false,
+            command_line: None,
+            settings: crate::app::settings::write_settings::Settings::default(),
+            op_progress_rx: None,
+            op_cancel_flag: None,
+            op_decision_tx: None,
+            last_mouse_click_time: None,
+            last_mouse_click_pos: None,
+            drag_active: false,
+            drag_start: None,
+            drag_current: None,
+            drag_button: None,
+        };
+        // Apply any immediate overrides requested by CLI options. Persisted
+        // settings (loaded later) will be applied afterwards; callers that
+        // want CLI to override persisted settings should reapply after
+        // loading settings (event loop does this).
+        if let Some(m) = opts.mouse_enabled {
+            app.settings.mouse_enabled = m;
+        }
+        if let Some(s) = opts.show_hidden {
+            app.settings.show_hidden = s;
+        }
+        if let Some(ref theme) = opts.theme {
+            // Update persisted-in-memory setting and apply theme to UI
+            app.settings.theme = theme.clone();
+            crate::ui::colors::set_theme(theme.as_str());
+        }
+        app.refresh()?;
+        Ok(app)
+    }
+
     /// Toggle the preview pane visibility.
     pub fn toggle_preview(&mut self) {
         self.preview_visible = !self.preview_visible;

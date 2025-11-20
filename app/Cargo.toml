@@ -31,6 +31,8 @@ textwrap = "0.16"
 console = "0.16.1"
 regex = "1"
 atty = "0.2"
+ctrlc = "3"
+futures-util = { version = "0.3", optional = true }
 [dev-dependencies]
 assert_fs = "1.0"
 tempfile = "3.6"
@@ -46,3 +48,4 @@ path = "src/test_helpers/make_fakefs/make_fakefs.rs"
 
 [features]
 test-helpers = []
+async-input = ["crossterm/event-stream", "futures-util"]

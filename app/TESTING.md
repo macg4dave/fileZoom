@@ -95,3 +95,23 @@ Adjusting generator behavior
 If you want to change fixture defaults (counts, multilingual variance, depth), I
 can modify `app/src/test_helpers/make_fakefs/fixtures.rs` to use different defaults
 or add CLI flags to the `make_fakefs` binary to parameterize generation.
+
+## Running the `start_options` test
+
+This repository includes a focused test that verifies CLI-derived startup
+options are applied to the `App` at initialization (`App::with_options`). To
+run just that test from the `app` directory use either of these commands:
+
+```bash
+cd app
+# Run the single test by test-name/file (prints detailed output)
+cargo test -p fileZoom start_options -- --nocapture
+
+# Or run the specific unit/integration test function by name:
+# cargo test -p fileZoom app_with_options_applies_settings -- --nocapture
+```
+
+Running the single test is faster than the full suite and is useful when
+iterating on CLI/startup-related code. If you prefer to run the full test
+suite (including this test) use `cargo test -p fileZoom -- --nocapture`.
+

@@ -1,19 +1,36 @@
 use crate::app::App;
 use crate::input::{poll, read_event, InputEvent};
 use crate::runner::handlers;
-use crate::runner::terminal::{init_terminal, restore_terminal};
+use crate::runner::terminal::{restore_terminal, TerminalGuard};
+use std::sync::mpsc::Receiver;
 use crate::ui;
 
 use std::time::Duration;
 
-pub fn run_app() -> anyhow::Result<()> {
-    let mut terminal = init_terminal()?;
+pub fn run_app(
+    mut terminal: TerminalGuard,
+    shutdown_rx: Receiver<()>,
+    start_opts: crate::app::StartOptions,
+) -> anyhow::Result<()> {
 
-    // Initialize app using the current working directory.
-    let mut app = App::new()?;
+    // Initialize app using provided start options (may include a start
+    // directory or initial mouse setting).
+    let mut app = App::with_options(&start_opts)?;
     // Load persisted settings from disk if available and apply.
     if let Ok(s) = crate::app::settings::load_settings() {
         app.settings = s;
+    }
+
+    // Re-apply CLI-provided startup overrides (CLI should win over persisted settings).
+    if let Some(m) = start_opts.mouse_enabled {
+        app.settings.mouse_enabled = m;
+    }
+    if let Some(s) = start_opts.show_hidden {
+        app.settings.show_hidden = s;
+    }
+    if let Some(ref theme) = start_opts.theme {
+        app.settings.theme = theme.clone();
+        crate::ui::colors::set_theme(theme.as_str());
     }
 
     // Track current mouse capture state so we can toggle it at runtime when
@@ -26,6 +43,12 @@ pub fn run_app() -> anyhow::Result<()> {
 
     // Main event loop
     loop {
+        // If a shutdown signal has been received (e.g. ctrl-c), break so
+        // we can restore the terminal cleanly in the outer scope.
+        if let Ok(_) = shutdown_rx.try_recv() {
+            break;
+        }
+
         // Draw once at the top of the loop. Resize events will also trigger
         // an immediate redraw below when detected in the aggregated events.
         terminal.draw(|f| ui::ui(f, &app))?;

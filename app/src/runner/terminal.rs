@@ -1,4 +1,5 @@
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use crossterm::cursor::{Hide, Show};
 use crossterm::queue;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
@@ -79,7 +80,9 @@ impl TerminalGuard {
     pub fn new() -> Result<Self, TerminalError> {
         let mut stdout = io::stdout();
         // Enter alternate screen and enable mouse capture (queued then flushed).
-        queue!(stdout, EnterAlternateScreen, EnableMouseCapture).map_err(TerminalError::from)?;
+        // Also hide the cursor and enable bracketed paste if available.
+        queue!(stdout, EnterAlternateScreen, EnableMouseCapture, Hide)
+            .map_err(TerminalError::from)?;
         stdout.flush().map_err(TerminalError::from)?;
         let backend = CrosstermBackend::new(stdout);
         let terminal = Terminal::new(backend).map_err(TerminalError::from)?;
@@ -101,7 +104,8 @@ impl TerminalGuard {
             queue!(
                 self.terminal.backend_mut(),
                 DisableMouseCapture,
-                LeaveAlternateScreen
+                LeaveAlternateScreen,
+                Show
             )
             .map_err(TerminalError::from)?;
             // flush backend if possible
@@ -126,7 +130,8 @@ impl Drop for TerminalGuard {
         let _ = queue!(
             self.terminal.backend_mut(),
             DisableMouseCapture,
-            LeaveAlternateScreen
+            LeaveAlternateScreen,
+            Show
         );
         let _ = self.terminal.backend_mut().flush();
         let _ = self.terminal.show_cursor();
@@ -164,4 +169,30 @@ pub fn disable_mouse_capture_on_terminal(
 /// Restore terminal state (leave alternate screen + disable raw mode) and show cursor.
 pub fn restore_terminal(terminal: TerminalGuard) -> Result<(), TerminalError> {
     terminal.restore()
+}
+
+/// Best-effort force restore of the terminal state without owning a `TerminalGuard`.
+/// This is intended for use from signal handlers or panic hooks where ownership of the
+/// application's `TerminalGuard` is not available. It performs the same steps as
+/// `TerminalGuard::restore` but uses `stdout` directly and ignores most errors.
+pub fn force_restore() {
+    // Attempt to disable raw mode first.
+    let _ = disable_raw_mode();
+    // Try to leave alternate screen, disable mouse capture and show cursor.
+    let mut stdout = io::stdout();
+    let _ = queue!(stdout, DisableMouseCapture, LeaveAlternateScreen, Show);
+    let _ = stdout.flush();
+    let _ = crossterm::execute!(io::stdout(), crossterm::cursor::Show);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn force_restore_runs() {
+        // Should not panic and should be idempotent.
+        force_restore();
+        force_restore();
+    }
 }

@@ -98,6 +98,45 @@ cargo run --release
 Use the arrow keys or page keys to scroll and confirm the vertical scrollbars
 appear at the right hand side of panels and in the preview.
 
+CLI Usage
+---------
+
+You can start `fileZoom` with a few helpful CLI flags that override persisted
+settings for the current run. CLI-provided values take precedence over saved
+settings.
+
+Examples:
+
+- Start in `/tmp` and show hidden files:
+
+```bash
+cd app
+cargo run -- --dir /tmp --show-hidden
+```
+
+- Start with the dark theme and increased verbosity:
+
+```bash
+cd app
+cargo run -- --theme dark -vv
+```
+
+- Disable mouse capture at startup (you can toggle it later from Settings):
+
+```bash
+cd app
+cargo run -- --no-mouse
+```
+
+Notes:
+
+- `--theme` accepts `default` or `dark` (case-sensitive). If omitted the
+  persisted theme or the built-in default is used.
+- The `-v`/`--verbose` flag can be passed multiple times to increase logging
+  verbosity: `-v` (info), `-vv` (debug), `-vvv` (trace).
+- CLI flags only affect the current run; use the in-app Settings menu to
+  persist changes to disk.
+
 Top menu usage
 --------------
 
