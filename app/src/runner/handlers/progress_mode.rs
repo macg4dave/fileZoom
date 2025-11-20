@@ -8,9 +8,22 @@ pub fn handle_progress(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
             if let Some(flag) = app.op_cancel_flag.take() {
                 flag.store(true, Ordering::SeqCst);
             }
-            if let Mode::Progress { title, processed, total, message, .. } = &mut app.mode {
+            if let Mode::Progress {
+                title,
+                processed,
+                total,
+                message,
+                ..
+            } = &mut app.mode
+            {
                 *message = "Cancelling...".to_string();
-                app.mode = Mode::Progress { title: title.clone(), processed: *processed, total: *total, message: message.clone(), cancelled: true };
+                app.mode = Mode::Progress {
+                    title: title.clone(),
+                    processed: *processed,
+                    total: *total,
+                    message: message.clone(),
+                    cancelled: true,
+                };
             }
         }
         _ => {}

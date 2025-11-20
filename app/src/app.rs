@@ -3,8 +3,8 @@
 // Existing code that imports `crate::app::path` will continue to work,
 // but use `fileZoom::fs_op::path` directly for new code.
 pub mod core;
-pub mod types;
 pub mod settings;
+pub mod types;
 
 pub use core::panel::Panel;
 pub use core::App;

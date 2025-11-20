@@ -1,8 +1,8 @@
 use assert_fs::prelude::*;
-use fileZoom::app::core::App;
 use fileZoom::app::core::panel::Panel;
-use fileZoom::app::types::{Mode, Side, SortKey};
+use fileZoom::app::core::App;
 use fileZoom::app::settings::write_settings::Settings;
+use fileZoom::app::types::{Mode, Side, SortKey};
 
 #[test]
 fn selected_index_reflects_active_panel_unit() {

@@ -1,7 +1,7 @@
 use fileZoom::app::App;
+use fileZoom::input::mouse::{MouseEvent, MouseEventKind};
 use fileZoom::runner::handlers;
 use fileZoom::Entry;
-use fileZoom::input::mouse::{MouseEvent, MouseEventKind};
 use ratatui::layout::Rect;
 use std::path::PathBuf;
 
@@ -39,15 +39,31 @@ fn drag_to_select_left_panel() {
 
     let term = Rect::new(0, 0, 80, 24);
     // Start drag at the first visible entry (row 4), drag to the third entry (row 6)
-    let down = MouseEvent { column: 2, row: 4, kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left) };
+    let down = MouseEvent {
+        column: 2,
+        row: 4,
+        kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, down, term).unwrap();
-    let drag = MouseEvent { column: 2, row: 6, kind: MouseEventKind::Drag(fileZoom::input::mouse::MouseButton::Left) };
+    let drag = MouseEvent {
+        column: 2,
+        row: 6,
+        kind: MouseEventKind::Drag(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, drag, term).unwrap();
-    let up = MouseEvent { column: 2, row: 6, kind: MouseEventKind::Up(fileZoom::input::mouse::MouseButton::Left) };
+    let up = MouseEvent {
+        column: 2,
+        row: 6,
+        kind: MouseEventKind::Up(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, up, term).unwrap();
 
     // Expect selections for domain indices 0..=2
     for i in 0..=2usize {
-        assert!(app.left.selections.contains(&i), "expected selection to contain {}", i);
+        assert!(
+            app.left.selections.contains(&i),
+            "expected selection to contain {}",
+            i
+        );
     }
 }

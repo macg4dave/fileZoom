@@ -1,6 +1,6 @@
 use ratatui::backend::TestBackend;
-use ratatui::Terminal;
 use ratatui::layout::Rect;
+use ratatui::Terminal;
 
 use fileZoom::ui::dialogs::Dialog;
 

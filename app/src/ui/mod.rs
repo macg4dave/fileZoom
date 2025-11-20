@@ -5,22 +5,22 @@ use ratatui::Frame;
 use crate::app::App;
 use crate::app::Mode;
 
+pub mod bar_ui;
 pub mod colors;
+pub mod command_line;
 pub mod dialogs;
 pub mod header;
-pub mod bar_ui;
 pub mod menu;
-pub mod command_line;
 pub mod modal;
 pub mod panels;
 pub mod util;
 
+pub use bar_ui::*;
 pub use dialogs::*;
 pub use header::*;
 pub use menu::*;
 pub use modal::*;
 pub use panels::*;
-pub use bar_ui::*;
 
 pub fn ui(f: &mut Frame, app: &App) {
     // Top menu (1), status (1), main panes (min), bottom help (1)
@@ -41,12 +41,14 @@ pub fn ui(f: &mut Frame, app: &App) {
     let main_chunks = if app.preview_visible {
         Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Percentage(40),
-                Constraint::Percentage(40),
-                Constraint::Percentage(20),
-            ]
-            .as_ref())
+            .constraints(
+                [
+                    Constraint::Percentage(40),
+                    Constraint::Percentage(40),
+                    Constraint::Percentage(20),
+                ]
+                .as_ref(),
+            )
             .split(chunks[2])
     } else {
         Layout::default()
@@ -70,8 +72,18 @@ pub fn ui(f: &mut Frame, app: &App) {
     crate::ui::header::draw_panel_header(f, right_chunks[0], &app.right.cwd.display().to_string());
 
     // Draw lists into the remaining area below each header.
-    panels::draw_list(f, left_chunks[1], &app.left, app.active == crate::app::Side::Left);
-    panels::draw_list(f, right_chunks[1], &app.right, app.active == crate::app::Side::Right);
+    panels::draw_list(
+        f,
+        left_chunks[1],
+        &app.left,
+        app.active == crate::app::Side::Left,
+    );
+    panels::draw_list(
+        f,
+        right_chunks[1],
+        &app.right,
+        app.active == crate::app::Side::Right,
+    );
 
     if app.preview_visible {
         // Show preview for the active panel in the third column. Split preview into header + content too.
@@ -80,7 +92,11 @@ pub fn ui(f: &mut Frame, app: &App) {
             .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
             .split(main_chunks[2]);
         let active_panel = app.active_panel();
-        crate::ui::header::draw_panel_header(f, preview_chunks[0], &active_panel.cwd.display().to_string());
+        crate::ui::header::draw_panel_header(
+            f,
+            preview_chunks[0],
+            &active_panel.cwd.display().to_string(),
+        );
         panels::draw_preview(f, preview_chunks[1], active_panel);
     }
 
@@ -136,7 +152,13 @@ pub fn ui(f: &mut Frame, app: &App) {
                 dialogs::draw_info(f, f.area(), title, content, &btn_refs, *selected);
             }
         }
-        Mode::Progress { title, processed, total, message, cancelled } => {
+        Mode::Progress {
+            title,
+            processed,
+            total,
+            message,
+            cancelled,
+        } => {
             crate::ui::bar_ui::draw_progress_modal(
                 f,
                 f.area(),
@@ -147,17 +169,41 @@ pub fn ui(f: &mut Frame, app: &App) {
                 *cancelled,
             );
         }
-        Mode::Conflict { path, selected, apply_all } => {
+        Mode::Conflict {
+            path,
+            selected,
+            apply_all,
+        } => {
             // Render a compact conflict dialog with a checkbox for "Apply to all"
-            let checkbox = if *apply_all { "[x] Apply to all" } else { "[ ] Apply to all" };
-            let content = format!("Target exists: {}\n\n{}\n\nChoose an action:", path.display(), checkbox);
+            let checkbox = if *apply_all {
+                "[x] Apply to all"
+            } else {
+                "[ ] Apply to all"
+            };
+            let content = format!(
+                "Target exists: {}\n\n{}\n\nChoose an action:",
+                path.display(),
+                checkbox
+            );
             let buttons = ["Overwrite", "Skip", "Cancel"];
             dialogs::draw_confirm(f, f.area(), "Conflict", &content, &buttons, *selected);
         }
-        Mode::ContextMenu { title, options, selected, path } => {
+        Mode::ContextMenu {
+            title,
+            options,
+            selected,
+            path,
+        } => {
             // Reuse the confirm dialog for a small action menu. Convert options to &str slices.
             let btn_refs: Vec<&str> = options.iter().map(|s| s.as_str()).collect();
-            dialogs::draw_confirm(f, f.area(), title, &format!("{}", path.display()), &btn_refs, *selected);
+            dialogs::draw_confirm(
+                f,
+                f.area(),
+                title,
+                &format!("{}", path.display()),
+                &btn_refs,
+                *selected,
+            );
         }
         Mode::Settings { selected } => {
             dialogs::draw_settings(f, f.area(), app, *selected);

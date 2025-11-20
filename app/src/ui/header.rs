@@ -1,7 +1,7 @@
 use ratatui::layout::Rect;
-use ratatui::text::{Span, Line};
 use ratatui::text::Text;
-use ratatui::widgets::{ListItem, Paragraph, Block, Borders};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Block, Borders, ListItem, Paragraph};
 use ratatui::Frame;
 
 use crate::ui::colors::current as theme_current;
@@ -17,8 +17,11 @@ pub fn render_header(path_display: &str) -> ListItem<'_> {
 /// Draw a compact panel header into `area` showing the current path.
 pub fn draw_panel_header(f: &mut Frame, area: Rect, path_display: &str) {
     let theme = theme_current();
-    let p = Paragraph::new(format!("{}", path_display))
-        .block(Block::default().borders(Borders::BOTTOM).style(theme.preview_block_style));
+    let p = Paragraph::new(format!("{}", path_display)).block(
+        Block::default()
+            .borders(Borders::BOTTOM)
+            .style(theme.preview_block_style),
+    );
     f.render_widget(p, area);
 }
 
@@ -27,8 +30,11 @@ pub fn draw_panel_header(f: &mut Frame, area: Rect, path_display: &str) {
 /// UI modules so the appearance is consistent.
 pub fn draw_compact_header(f: &mut Frame, area: Rect, text: &str) {
     let theme = theme_current();
-    let p = Paragraph::new(text.to_string())
-        .block(Block::default().borders(Borders::NONE).style(theme.help_block_style));
+    let p = Paragraph::new(text.to_string()).block(
+        Block::default()
+            .borders(Borders::NONE)
+            .style(theme.help_block_style),
+    );
     f.render_widget(p, area);
 }
 

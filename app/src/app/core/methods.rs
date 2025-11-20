@@ -60,13 +60,17 @@ impl App {
                 }
             }
             if let Some(upd) = last {
-                    if upd.conflict.is_some() {
-                        // Present conflict modal to user and leave decision channel
-                        if let Some(p) = &upd.conflict {
-                            self.mode = Mode::Conflict { path: p.clone(), selected: 0, apply_all: false };
-                            return;
-                        }
+                if upd.conflict.is_some() {
+                    // Present conflict modal to user and leave decision channel
+                    if let Some(p) = &upd.conflict {
+                        self.mode = Mode::Conflict {
+                            path: p.clone(),
+                            selected: 0,
+                            apply_all: false,
+                        };
+                        return;
                     }
+                }
                 if upd.done {
                     // Operation finished: clear receiver and show a message or error
                     self.op_progress_rx = None;
@@ -99,7 +103,10 @@ impl App {
                 } else {
                     // Update progress mode
                     self.mode = Mode::Progress {
-                        title: upd.message.clone().unwrap_or_else(|| "Progress".to_string()),
+                        title: upd
+                            .message
+                            .clone()
+                            .unwrap_or_else(|| "Progress".to_string()),
                         processed: upd.processed,
                         total: upd.total,
                         message: upd.message.unwrap_or_default(),
@@ -119,14 +126,18 @@ impl App {
     /// Switches the menu selection to the next tab (wraps around).
     pub fn menu_next(&mut self) {
         let n = crate::ui::menu::menu_labels().len();
-        if n == 0 { return; }
+        if n == 0 {
+            return;
+        }
         self.menu_index = (self.menu_index + 1) % n;
     }
 
     /// Switches the menu selection to the previous tab (wraps around).
     pub fn menu_prev(&mut self) {
         let n = crate::ui::menu::menu_labels().len();
-        if n == 0 { return; }
+        if n == 0 {
+            return;
+        }
         self.menu_index = (self.menu_index + n - 1) % n;
     }
 

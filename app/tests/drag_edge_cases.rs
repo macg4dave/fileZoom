@@ -1,19 +1,22 @@
 use fileZoom::app::App;
+use fileZoom::input::mouse::{MouseEvent, MouseEventKind};
 use fileZoom::runner::handlers;
 use fileZoom::Entry;
-use fileZoom::input::mouse::{MouseEvent, MouseEventKind};
-use ratatui::layout::{Rect, Layout, Constraint, Direction};
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use std::path::PathBuf;
 
 fn main_chunks(term_rect: Rect) -> [ratatui::layout::Rect; 2] {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(1),
-            Constraint::Length(1),
-            Constraint::Min(0),
-            Constraint::Length(1),
-        ].as_ref())
+        .constraints(
+            [
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Min(0),
+                Constraint::Length(1),
+            ]
+            .as_ref(),
+        )
         .split(term_rect);
 
     let main_chunks = Layout::default()
@@ -70,20 +73,39 @@ fn drag_does_not_select_across_panels() {
 
     // compute a row that corresponds to a domain entry in left panel
     let header_count = 1usize;
-    let parent_count = if app.left.cwd.parent().is_some() { 1usize } else { 0usize };
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
     let first_domain_row = left_area.y + 1 + (header_count + parent_count) as u16;
 
-    let down = MouseEvent { column: left_area.x + 2, row: first_domain_row, kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left) };
+    let down = MouseEvent {
+        column: left_area.x + 2,
+        row: first_domain_row,
+        kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, down, term).unwrap();
 
     // Drag into the right panel (should NOT select items in right panel)
-    let drag = MouseEvent { column: right_area.x + 2, row: first_domain_row + 2, kind: MouseEventKind::Drag(fileZoom::input::mouse::MouseButton::Left) };
+    let drag = MouseEvent {
+        column: right_area.x + 2,
+        row: first_domain_row + 2,
+        kind: MouseEventKind::Drag(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, drag, term).unwrap();
-    let up = MouseEvent { column: right_area.x + 2, row: first_domain_row + 2, kind: MouseEventKind::Up(fileZoom::input::mouse::MouseButton::Left) };
+    let up = MouseEvent {
+        column: right_area.x + 2,
+        row: first_domain_row + 2,
+        kind: MouseEventKind::Up(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, up, term).unwrap();
 
     // right panel should have no selections
-    assert!(app.right.selections.is_empty(), "right panel should not be selected by cross-panel drag");
+    assert!(
+        app.right.selections.is_empty(),
+        "right panel should not be selected by cross-panel drag"
+    );
 }
 
 #[test]
@@ -123,21 +145,41 @@ fn drag_with_parent_row_present_selects_correct_domain_indices() {
     let left_area = main_chunks(term)[0];
 
     let header_count = 1usize;
-    let parent_count = if app.left.cwd.parent().is_some() { 1usize } else { 0usize };
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
     // first domain row (after header + parent)
     let first_domain_row = left_area.y + 1 + (header_count + parent_count) as u16;
 
     // click and drag down two domain rows
-    let down = MouseEvent { column: left_area.x + 2, row: first_domain_row, kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left) };
+    let down = MouseEvent {
+        column: left_area.x + 2,
+        row: first_domain_row,
+        kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, down, term).unwrap();
-    let drag = MouseEvent { column: left_area.x + 2, row: first_domain_row + 2, kind: MouseEventKind::Drag(fileZoom::input::mouse::MouseButton::Left) };
+    let drag = MouseEvent {
+        column: left_area.x + 2,
+        row: first_domain_row + 2,
+        kind: MouseEventKind::Drag(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, drag, term).unwrap();
-    let up = MouseEvent { column: left_area.x + 2, row: first_domain_row + 2, kind: MouseEventKind::Up(fileZoom::input::mouse::MouseButton::Left) };
+    let up = MouseEvent {
+        column: left_area.x + 2,
+        row: first_domain_row + 2,
+        kind: MouseEventKind::Up(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, up, term).unwrap();
 
     // Expect selections to cover domain indices 0..=2
     for i in 0..=2usize {
-        assert!(app.left.selections.contains(&i), "expected selection to contain {}", i);
+        assert!(
+            app.left.selections.contains(&i),
+            "expected selection to contain {}",
+            i
+        );
     }
 }
 
@@ -179,20 +221,40 @@ fn drag_with_panel_offset_respects_offset() {
     let left_area = main_chunks(term)[0];
 
     let header_count = 1usize;
-    let parent_count = if app.left.cwd.parent().is_some() { 1usize } else { 0usize };
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
     // choose the first visible displayed domain row (clicked = 0 visible domain)
     let clicked = 0usize;
     let click_row = left_area.y + 1 + (header_count + parent_count) as u16 + (clicked as u16);
 
-    let down = MouseEvent { column: left_area.x + 2, row: click_row, kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left) };
+    let down = MouseEvent {
+        column: left_area.x + 2,
+        row: click_row,
+        kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, down, term).unwrap();
-    let drag = MouseEvent { column: left_area.x + 2, row: click_row + 2, kind: MouseEventKind::Drag(fileZoom::input::mouse::MouseButton::Left) };
+    let drag = MouseEvent {
+        column: left_area.x + 2,
+        row: click_row + 2,
+        kind: MouseEventKind::Drag(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, drag, term).unwrap();
-    let up = MouseEvent { column: left_area.x + 2, row: click_row + 2, kind: MouseEventKind::Up(fileZoom::input::mouse::MouseButton::Left) };
+    let up = MouseEvent {
+        column: left_area.x + 2,
+        row: click_row + 2,
+        kind: MouseEventKind::Up(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, up, term).unwrap();
 
     // Calculate expected domain indices selected given offset
     // According to the handler logic the selected domain index equals offset + clicked
     let expected_first = app.left.offset + clicked;
-    assert!(app.left.selections.contains(&expected_first), "expected selection to contain offset-adjusted domain index {}", expected_first);
+    assert!(
+        app.left.selections.contains(&expected_first),
+        "expected selection to contain offset-adjusted domain index {}",
+        expected_first
+    );
 }

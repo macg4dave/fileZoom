@@ -1,5 +1,5 @@
-use std::sync::{OnceLock, RwLock};
 use ratatui::style::{Color, Modifier, Style};
+use std::sync::{OnceLock, RwLock};
 
 #[derive(Clone, Debug)]
 pub struct Theme {
@@ -136,7 +136,7 @@ pub fn toggle() {
 }
 
 pub fn color_samples() -> Vec<(String, Style)> {
-    let named: &[( &str, Color )] = &[
+    let named: &[(&str, Color)] = &[
         ("Black", Color::Black),
         ("DarkGray", Color::DarkGray),
         ("Red", Color::Red),
@@ -166,14 +166,8 @@ pub fn modifier_samples() -> Vec<(String, Style)> {
 
     let samples = vec![
         ("Normal".to_string(), base),
-        (
-            "Bold".to_string(),
-            base.add_modifier(Modifier::BOLD),
-        ),
-        (
-            "Italic".to_string(),
-            base.add_modifier(Modifier::ITALIC),
-        ),
+        ("Bold".to_string(), base.add_modifier(Modifier::BOLD)),
+        ("Italic".to_string(), base.add_modifier(Modifier::ITALIC)),
         (
             "Underlined".to_string(),
             base.add_modifier(Modifier::UNDERLINED),
@@ -186,10 +180,7 @@ pub fn modifier_samples() -> Vec<(String, Style)> {
             "CrossedOut".to_string(),
             base.add_modifier(Modifier::CROSSED_OUT),
         ),
-        (
-            "Dim".to_string(),
-            base.add_modifier(Modifier::DIM),
-        ),
+        ("Dim".to_string(), base.add_modifier(Modifier::DIM)),
     ];
 
     samples
@@ -225,17 +216,8 @@ fn sample_style_for_color(bg: Color) -> Style {
 
     let fg = match bg {
         Black | DarkGray | Red | Blue | Magenta => Color::White,
-        LightRed
-        | LightGreen
-        | LightYellow
-        | LightBlue
-        | LightMagenta
-        | LightCyan
-        | White
-        | Gray
-        | Green
-        | Yellow
-        | Cyan => Color::Black,
+        LightRed | LightGreen | LightYellow | LightBlue | LightMagenta | LightCyan | White
+        | Gray | Green | Yellow | Cyan => Color::Black,
         _ => Color::White,
     };
 
@@ -256,7 +238,9 @@ mod tests {
     fn apply_modifiers_sets_expected() {
         let base = Style::default();
         let got = apply_modifiers(base, &["bold", "italic"]);
-        let expected = base.add_modifier(Modifier::BOLD).add_modifier(Modifier::ITALIC);
+        let expected = base
+            .add_modifier(Modifier::BOLD)
+            .add_modifier(Modifier::ITALIC);
         assert_eq!(got, expected);
     }
 }

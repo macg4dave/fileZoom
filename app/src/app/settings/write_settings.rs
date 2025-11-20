@@ -27,7 +27,12 @@ impl Default for Settings {
             show_hidden: false,
             left_panel_width: 40,
             right_panel_width: 40,
-            context_actions: vec!["View".to_string(), "Edit".to_string(), "Permissions".to_string(), "Cancel".to_string()],
+            context_actions: vec![
+                "View".to_string(),
+                "Edit".to_string(),
+                "Permissions".to_string(),
+                "Cancel".to_string(),
+            ],
             mouse_enabled: true,
             mouse_double_click_ms: 500,
         }

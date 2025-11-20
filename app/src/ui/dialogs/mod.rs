@@ -1,6 +1,6 @@
-use ratatui::layout::{Rect, Layout, Constraint, Direction};
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::Color;
-use ratatui::widgets::{Block, Borders, Paragraph, Wrap, Clear};
+use ratatui::widgets::{Block, Borders, Clear, Paragraph, Wrap};
 use ratatui::Frame;
 
 use crate::ui::colors::current as theme_current;
@@ -8,19 +8,18 @@ use crate::ui::colors::current as theme_current;
 /// Draw the settings dialog. Shows a simple list of settings and footer
 /// buttons Save/Cancel. `selected` indexes the currently focused row:
 /// 0 = mouse_enabled, 1 = mouse_double_click_ms, 2 = Save, 3 = Cancel.
-pub fn draw_settings(
-    f: &mut Frame,
-    area: Rect,
-    app: &crate::app::App,
-    selected: usize,
-) {
+pub fn draw_settings(f: &mut Frame, area: Rect, app: &crate::app::App, selected: usize) {
     let rect = crate::ui::modal::centered_rect(area, 60, 10);
     let theme = theme_current();
 
     // Build body lines showing current settings; use styling to highlight the
     // currently focused row rather than a simple marker character.
-    use ratatui::text::{Span, Line};
-    let mouse_on = if app.settings.mouse_enabled { "On" } else { "Off" };
+    use ratatui::text::{Line, Span};
+    let mouse_on = if app.settings.mouse_enabled {
+        "On"
+    } else {
+        "Off"
+    };
     let ms = app.settings.mouse_double_click_ms;
 
     let mut lines: Vec<Line> = Vec::new();
@@ -29,11 +28,25 @@ pub fn draw_settings(
 
     let line0 = Line::from(vec![
         Span::raw("Mouse support: "),
-        Span::styled(mouse_on, if selected == 0 { highlight_style } else { normal_style }),
+        Span::styled(
+            mouse_on,
+            if selected == 0 {
+                highlight_style
+            } else {
+                normal_style
+            },
+        ),
     ]);
     let line1 = Line::from(vec![
         Span::raw("Double-click timeout (ms): "),
-        Span::styled(format!("{}", ms), if selected == 1 { highlight_style } else { normal_style }),
+        Span::styled(
+            format!("{}", ms),
+            if selected == 1 {
+                highlight_style
+            } else {
+                normal_style
+            },
+        ),
     ]);
     lines.push(line0);
     lines.push(line1);
@@ -66,7 +79,9 @@ pub fn draw_settings(
         let header_rect = vchunks[0];
         let body_rect = vchunks[1];
         let header_text = format!("Settings — {} items", line_count);
-        let header_para = Paragraph::new(header_text).block(Block::default()).style(theme.help_block_style);
+        let header_para = Paragraph::new(header_text)
+            .block(Block::default())
+            .style(theme.help_block_style);
         f.render_widget(header_para, header_rect);
         f.render_widget(body, body_rect);
     } else {
@@ -76,7 +91,11 @@ pub fn draw_settings(
     // Footer buttons Save / Cancel. Highlight according to selection index 2/3
     let buttons = ["Save", "Cancel"];
     // Map selection index into footer button index (2 -> 0, 3 -> 1). If selected < 2, no footer focus.
-    let footer_selected = if selected >= 2 { selected - 2 } else { buttons.len() };
+    let footer_selected = if selected >= 2 {
+        selected - 2
+    } else {
+        buttons.len()
+    };
     render_buttons_with_options(
         f,
         rect,
@@ -90,19 +109,31 @@ pub fn draw_settings(
 
 /// Move focus to the next element in a circular fashion.
 pub fn move_focus_right(selected: usize, count: usize) -> usize {
-    if count == 0 { 0 } else { (selected + 1) % count }
+    if count == 0 {
+        0
+    } else {
+        (selected + 1) % count
+    }
 }
 
 /// Move focus to the previous element in a circular fashion.
 pub fn move_focus_left(selected: usize, count: usize) -> usize {
-    if count == 0 { 0 } else { (selected + count - 1) % count }
+    if count == 0 {
+        0
+    } else {
+        (selected + count - 1) % count
+    }
 }
 
 /// Return the index that represents "accept" action (default: current selection).
-pub fn accept_index(selected: usize) -> usize { selected }
+pub fn accept_index(selected: usize) -> usize {
+    selected
+}
 
 /// Return the index that represents "cancel" action (default: last button).
-pub fn cancel_index(buttons_len: usize) -> usize { buttons_len.saturating_sub(1) }
+pub fn cancel_index(buttons_len: usize) -> usize {
+    buttons_len.saturating_sub(1)
+}
 
 /// Render buttons with optional per-button styles and multiline support.
 pub fn render_buttons_with_options(
@@ -126,9 +157,15 @@ pub fn render_buttons_with_options(
         let idx = i as u16;
         let y = rect.y + rect.height.saturating_sub(2) - footer_height + idx;
         let mut btn_text = String::new();
-        if i == selected { btn_text.push_str(&format!("[{}]", b)); } else { btn_text.push_str(&format!(" {} ", b)); }
+        if i == selected {
+            btn_text.push_str(&format!("[{}]", b));
+        } else {
+            btn_text.push_str(&format!(" {} ", b));
+        }
         let btn_style = styles.and_then(|s| s.get(i)).cloned().unwrap_or(style);
-        let para = Paragraph::new(btn_text).block(Block::default()).style(btn_style);
+        let para = Paragraph::new(btn_text)
+            .block(Block::default())
+            .style(btn_style);
         let btn_rect = Rect::new(rect.x + 1, y, rect.width.saturating_sub(2), 1);
         f.render_widget(para, btn_rect);
     }
@@ -136,7 +173,10 @@ pub fn render_buttons_with_options(
 
 /// Translate a selected button index into an application `Action` if a mapping
 /// is provided.
-pub fn selection_to_action(selected: usize, actions: Option<&[crate::app::Action]>) -> Option<crate::app::Action> {
+pub fn selection_to_action(
+    selected: usize,
+    actions: Option<&[crate::app::Action]>,
+) -> Option<crate::app::Action> {
     actions.and_then(|a| a.get(selected)).cloned()
 }
 
@@ -149,7 +189,9 @@ pub fn draw_confirm(
     buttons: &[&str],
     selected: usize,
 ) {
-    let dlg = Dialog::new(prompt, content, buttons, selected).width_percent(60).height(8);
+    let dlg = Dialog::new(prompt, content, buttons, selected)
+        .width_percent(60)
+        .height(8);
     dlg.draw(f, area, false);
 }
 
@@ -162,7 +204,9 @@ pub fn draw_info(
     buttons: &[&str],
     selected: usize,
 ) {
-    let dlg = Dialog::new(title, content, buttons, selected).width_percent(60).height(8);
+    let dlg = Dialog::new(title, content, buttons, selected)
+        .width_percent(60)
+        .height(8);
     dlg.draw(f, area, false);
 }
 
@@ -175,7 +219,9 @@ pub fn draw_error(
     buttons: &[&str],
     selected: usize,
 ) {
-    let dlg = Dialog::new(title, content, buttons, selected).width_percent(60).height(8);
+    let dlg = Dialog::new(title, content, buttons, selected)
+        .width_percent(60)
+        .height(8);
     dlg.draw(f, area, true);
 }
 
@@ -201,11 +247,21 @@ impl<'a> Dialog<'a> {
         }
     }
 
-    pub fn width_percent(mut self, p: u16) -> Self { self.width_percent = p; self }
-    pub fn height(mut self, h: u16) -> Self { self.height = h; self }
+    pub fn width_percent(mut self, p: u16) -> Self {
+        self.width_percent = p;
+        self
+    }
+    pub fn height(mut self, h: u16) -> Self {
+        self.height = h;
+        self
+    }
 
     pub fn draw(&self, f: &mut Frame, area: Rect, is_error: bool) {
-        let rect = crate::ui::modal::centered_percent(area, self.width_percent, self.height as u16 * 100 / area.height.max(1));
+        let rect = crate::ui::modal::centered_percent(
+            area,
+            self.width_percent,
+            self.height as u16 * 100 / area.height.max(1),
+        );
         let theme = theme_current();
 
         let title_style = if is_error {
@@ -240,24 +296,51 @@ impl<'a> Dialog<'a> {
             let header_rect = vchunks[0];
             let body_rect = vchunks[1];
             let header_line = self.content.lines().next().unwrap_or("");
-            let header_para = Paragraph::new(header_line.to_string()).block(Block::default()).style(theme.help_block_style);
+            let header_para = Paragraph::new(header_line.to_string())
+                .block(Block::default())
+                .style(theme.help_block_style);
             f.render_widget(header_para, header_rect);
             f.render_widget(body, body_rect);
         } else {
             f.render_widget(body, content_rect);
         }
 
-        render_buttons(f, rect, &self.buttons, self.selected, theme.help_block_style);
+        render_buttons(
+            f,
+            rect,
+            &self.buttons,
+            self.selected,
+            theme.help_block_style,
+        );
     }
 }
 
-fn render_buttons(f: &mut Frame, rect: Rect, buttons: &[&str], selected: usize, style: ratatui::style::Style) {
+fn render_buttons(
+    f: &mut Frame,
+    rect: Rect,
+    buttons: &[&str],
+    selected: usize,
+    style: ratatui::style::Style,
+) {
     let mut btn_text = String::new();
     for (i, b) in buttons.iter().enumerate() {
-        if i > 0 { btn_text.push_str("    "); }
-        if i == selected { btn_text.push_str(&format!("[{}]", b)); } else { btn_text.push_str(&format!(" {} ", b)); }
+        if i > 0 {
+            btn_text.push_str("    ");
+        }
+        if i == selected {
+            btn_text.push_str(&format!("[{}]", b));
+        } else {
+            btn_text.push_str(&format!(" {} ", b));
+        }
     }
-    let buttons_para = Paragraph::new(btn_text).block(Block::default()).style(style);
-    let buttons_rect = Rect::new(rect.x + 1, rect.y + rect.height.saturating_sub(2), rect.width.saturating_sub(2), 1);
+    let buttons_para = Paragraph::new(btn_text)
+        .block(Block::default())
+        .style(style);
+    let buttons_rect = Rect::new(
+        rect.x + 1,
+        rect.y + rect.height.saturating_sub(2),
+        rect.width.saturating_sub(2),
+        1,
+    );
     f.render_widget(buttons_para, buttons_rect);
 }

@@ -112,9 +112,7 @@ pub enum Mode {
         actions: Option<Vec<Action>>,
     },
     /// Settings dialog allowing toggling mouse and editing numeric timeout.
-    Settings {
-        selected: usize,
-    },
+    Settings { selected: usize },
     Progress {
         title: String,
         processed: usize,

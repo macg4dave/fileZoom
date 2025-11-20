@@ -1,13 +1,15 @@
-use crossterm::queue;
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
-use std::fmt;
-use std::io;
+use crossterm::queue;
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
+use std::fmt;
+use std::io;
 use std::io::Stdout;
-use std::ops::{Deref, DerefMut};
 use std::io::Write;
+use std::ops::{Deref, DerefMut};
 
 /// Errors returned by terminal initialization/restore helpers.
 #[derive(Debug)]
@@ -41,6 +43,11 @@ impl From<io::Error> for TerminalError {
     }
 }
 
+impl From<anyhow::Error> for TerminalError {
+    fn from(e: anyhow::Error) -> Self {
+        TerminalError::Other(format!("error: {}", e))
+    }
+}
 
 // Note: `Terminal::new` returns an `io::Error` on failure in current `tui`.
 // If this changes, add a dedicated variant and `From` impl.
@@ -78,7 +85,10 @@ impl TerminalGuard {
         let terminal = Terminal::new(backend).map_err(TerminalError::from)?;
         // Only enable raw mode after Terminal::new succeeds so failures don't leave raw mode enabled.
         enable_raw_mode().map_err(TerminalError::from)?;
-        Ok(TerminalGuard { terminal, restored: false })
+        Ok(TerminalGuard {
+            terminal,
+            restored: false,
+        })
     }
 
     /// Consume the guard and explicitly restore terminal state. This is
@@ -88,8 +98,12 @@ impl TerminalGuard {
             // Try to disable raw mode first; ignore errors on subsequent steps but return if raw mode disable fails.
             disable_raw_mode().map_err(TerminalError::from)?;
             // Leave alternate screen and disable mouse capture (queued then flushed).
-            queue!(self.terminal.backend_mut(), DisableMouseCapture, LeaveAlternateScreen)
-                .map_err(TerminalError::from)?;
+            queue!(
+                self.terminal.backend_mut(),
+                DisableMouseCapture,
+                LeaveAlternateScreen
+            )
+            .map_err(TerminalError::from)?;
             // flush backend if possible
             if let Err(e) = self.terminal.backend_mut().flush() {
                 // best effort: report as Io error
@@ -109,7 +123,11 @@ impl Drop for TerminalGuard {
         }
         // Best-effort restore on drop. Errors are ignored here to avoid panics during unwinding.
         let _ = disable_raw_mode();
-        let _ = queue!(self.terminal.backend_mut(), DisableMouseCapture, LeaveAlternateScreen);
+        let _ = queue!(
+            self.terminal.backend_mut(),
+            DisableMouseCapture,
+            LeaveAlternateScreen
+        );
         let _ = self.terminal.backend_mut().flush();
         let _ = self.terminal.show_cursor();
         self.restored = true;
@@ -124,14 +142,22 @@ pub fn init_terminal() -> Result<TerminalGuard, TerminalError> {
 /// Enable mouse capture on an existing terminal instance.
 pub fn enable_mouse_capture_on_terminal(terminal: &mut TerminalGuard) -> Result<(), TerminalError> {
     queue!(terminal.backend_mut(), EnableMouseCapture).map_err(TerminalError::from)?;
-    terminal.backend_mut().flush().map_err(TerminalError::from)?;
+    terminal
+        .backend_mut()
+        .flush()
+        .map_err(TerminalError::from)?;
     Ok(())
 }
 
 /// Disable mouse capture on an existing terminal instance.
-pub fn disable_mouse_capture_on_terminal(terminal: &mut TerminalGuard) -> Result<(), TerminalError> {
+pub fn disable_mouse_capture_on_terminal(
+    terminal: &mut TerminalGuard,
+) -> Result<(), TerminalError> {
     queue!(terminal.backend_mut(), DisableMouseCapture).map_err(TerminalError::from)?;
-    terminal.backend_mut().flush().map_err(TerminalError::from)?;
+    terminal
+        .backend_mut()
+        .flush()
+        .map_err(TerminalError::from)?;
     Ok(())
 }
 

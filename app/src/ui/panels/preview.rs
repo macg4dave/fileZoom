@@ -1,6 +1,6 @@
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::widgets::{Scrollbar, ScrollbarState, ScrollbarOrientation};
+use ratatui::widgets::{Scrollbar, ScrollbarOrientation, ScrollbarState};
 use ratatui::Frame;
 
 use crate::app::Panel;
@@ -18,7 +18,7 @@ pub fn draw_preview(f: &mut Frame, area: Rect, panel: &Panel) {
         acc
     });
     let theme = theme_current();
-    
+
     // Add a compact header above the preview and split remaining area
     let vchunks = Layout::default()
         .direction(Direction::Vertical)
@@ -55,7 +55,9 @@ pub fn draw_preview(f: &mut Frame, area: Rect, panel: &Panel) {
     f.render_widget(preview, cols[0]);
     let max_lines = (cols[0].height as usize).saturating_sub(2);
     // Render scrollbar for preview using ratatui::widgets::Scrollbar
-    let mut sb_state = ScrollbarState::new(lines.len()).position(panel.preview_offset).viewport_content_length(max_lines);
+    let mut sb_state = ScrollbarState::new(lines.len())
+        .position(panel.preview_offset)
+        .viewport_content_length(max_lines);
     let sb = Scrollbar::new(ScrollbarOrientation::VerticalRight)
         .thumb_style(theme.scrollbar_thumb_style)
         .track_style(theme.scrollbar_style);

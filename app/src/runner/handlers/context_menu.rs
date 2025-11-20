@@ -3,13 +3,22 @@ use crate::input::KeyCode;
 
 pub fn handle_context_menu(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
     match &mut app.mode {
-        Mode::ContextMenu { title: _, options, selected, path: _ } => {
+        Mode::ContextMenu {
+            title: _,
+            options,
+            selected,
+            path: _,
+        } => {
             match code {
                 KeyCode::Left | KeyCode::Up => {
-                    if *selected > 0 { *selected -= 1; }
+                    if *selected > 0 {
+                        *selected -= 1;
+                    }
                 }
                 KeyCode::Right | KeyCode::Down => {
-                    if *selected + 1 < options.len() { *selected += 1; }
+                    if *selected + 1 < options.len() {
+                        *selected += 1;
+                    }
                 }
                 KeyCode::Char('q') | KeyCode::Esc => {
                     app.mode = Mode::Normal;
@@ -26,29 +35,34 @@ pub fn handle_context_menu(app: &mut App, code: KeyCode) -> anyhow::Result<bool>
                             }
                             "Edit" => {
                                 if let Some(e) = app.active_panel().selected_entry() {
-                                    let editor = std::env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
+                                    let editor = std::env::var("EDITOR")
+                                        .unwrap_or_else(|_| "vi".to_string());
                                     let cmd = format!("{} \"{}\"", editor, e.path.display());
-                                    match std::process::Command::new("sh").arg("-c").arg(cmd).spawn() {
+                                    match std::process::Command::new("sh")
+                                        .arg("-c")
+                                        .arg(cmd)
+                                        .spawn()
+                                    {
                                         Ok(_) => {
-                                                app.mode = Mode::Message {
-                                                    title: "Edit".to_string(),
-                                                    content: format!("Launched editor: {}", editor),
-                                                    buttons: vec!["OK".to_string()],
-                                                    selected: 0,
-                                                    actions: None,
-                                                };
-                                            }
-                                            Err(_) => {
-                                                app.mode = Mode::Message {
-                                                    title: "Edit".to_string(),
-                                                    content: "Failed to launch editor".to_string(),
-                                                    buttons: vec!["OK".to_string()],
-                                                    selected: 0,
-                                                    actions: None,
-                                                };
-                                            }
+                                            app.mode = Mode::Message {
+                                                title: "Edit".to_string(),
+                                                content: format!("Launched editor: {}", editor),
+                                                buttons: vec!["OK".to_string()],
+                                                selected: 0,
+                                                actions: None,
+                                            };
+                                        }
+                                        Err(_) => {
+                                            app.mode = Mode::Message {
+                                                title: "Edit".to_string(),
+                                                content: "Failed to launch editor".to_string(),
+                                                buttons: vec!["OK".to_string()],
+                                                selected: 0,
+                                                actions: None,
+                                            };
+                                        }
                                     }
-                                    } else {
+                                } else {
                                     app.mode = Mode::Message {
                                         title: "Edit".to_string(),
                                         content: "No entry selected".to_string(),
@@ -67,18 +81,21 @@ pub fn handle_context_menu(app: &mut App, code: KeyCode) -> anyhow::Result<bool>
                                                 use std::os::unix::fs::PermissionsExt;
                                                 let mode = md.permissions().mode();
                                                 app.mode = Mode::Message {
-                                                        title: "Permissions".to_string(),
-                                                        content: format!("{}: {:o}", e.name, mode),
-                                                        buttons: vec!["OK".to_string()],
-                                                        selected: 0,
-                                                        actions: None,
-                                                    };
+                                                    title: "Permissions".to_string(),
+                                                    content: format!("{}: {:o}", e.name, mode),
+                                                    buttons: vec!["OK".to_string()],
+                                                    selected: 0,
+                                                    actions: None,
+                                                };
                                             }
                                             #[cfg(not(unix))]
                                             {
                                                 app.mode = Mode::Message {
                                                     title: "Permissions".to_string(),
-                                                    content: format!("{}: (platform-specific metadata)", e.name),
+                                                    content: format!(
+                                                        "{}: (platform-specific metadata)",
+                                                        e.name
+                                                    ),
                                                     buttons: vec!["OK".to_string()],
                                                     selected: 0,
                                                     actions: None,
@@ -95,7 +112,7 @@ pub fn handle_context_menu(app: &mut App, code: KeyCode) -> anyhow::Result<bool>
                                             };
                                         }
                                     }
-                                    } else {
+                                } else {
                                     app.mode = Mode::Message {
                                         title: "Permissions".to_string(),
                                         content: "No entry selected".to_string(),

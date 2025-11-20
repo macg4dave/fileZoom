@@ -1,7 +1,7 @@
 use fileZoom::app::{App, Mode, Side};
+use fileZoom::input::mouse::{MouseEvent, MouseEventKind};
 use fileZoom::runner::handlers;
 use fileZoom::Entry;
-use fileZoom::input::mouse::{MouseEvent, MouseEventKind};
 use ratatui::layout::Rect;
 use std::path::PathBuf;
 
@@ -15,7 +15,11 @@ fn left_click_selects_entry_in_left_panel() {
 
     let term = Rect::new(0, 0, 80, 24);
     // row 4 -> clicked index = row - (chunks[2].y + 1) == 4 - 3 == 1
-    let me = MouseEvent { column: 2, row: 4, kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left) };
+    let me = MouseEvent {
+        column: 2,
+        row: 4,
+        kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left),
+    };
     handlers::handle_mouse(&mut app, me, term).unwrap();
     assert_eq!(app.active, Side::Left);
     assert_eq!(app.left.selected, 1);
@@ -31,10 +35,19 @@ fn right_click_opens_context_menu_for_selected_entry() {
 
     let term = Rect::new(0, 0, 80, 24);
     // right-click the second item (account for parent row; click row 5)
-    let me = MouseEvent { column: 2, row: 5, kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Right) };
+    let me = MouseEvent {
+        column: 2,
+        row: 5,
+        kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Right),
+    };
     handlers::handle_mouse(&mut app, me, term).unwrap();
     match &app.mode {
-        Mode::ContextMenu { title: _, options, selected: sel, path: _ } => {
+        Mode::ContextMenu {
+            title: _,
+            options,
+            selected: sel,
+            path: _,
+        } => {
             assert_eq!(*sel, 0);
             assert!(!options.is_empty());
         }
@@ -47,7 +60,11 @@ fn clicking_top_menu_activates_menu_item() {
     let mut app = App::new().unwrap();
     // click near left side of top menu to select first label
     let term = Rect::new(0, 0, 80, 24);
-    let me = MouseEvent { column: 2, row: 0, kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left) };
+    let me = MouseEvent {
+        column: 2,
+        row: 0,
+        kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left),
+    };
     // handler returns Ok(true) when menu activation occurs
     let res = handlers::handle_mouse(&mut app, me, term).unwrap();
     assert!(res);
@@ -56,7 +73,10 @@ fn clicking_top_menu_activates_menu_item() {
             // menu_labels()[0] == "File"
             assert_eq!(title, "File");
         }
-        other => panic!("expected Message mode after menu activation, got: {:?}", other),
+        other => panic!(
+            "expected Message mode after menu activation, got: {:?}",
+            other
+        ),
     }
 }
 
@@ -72,7 +92,11 @@ fn double_click_enters_directory_in_left_panel() {
 
     let term = Rect::new(0, 0, 80, 24);
     // click the first item: account for header+parent synthetic rows (row 5)
-    let me = MouseEvent { column: 2, row: 5, kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left) };
+    let me = MouseEvent {
+        column: 2,
+        row: 5,
+        kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left),
+    };
     // first click selects
     handlers::handle_mouse(&mut app, me.clone(), term).unwrap();
     // second click within timeout should trigger enter()

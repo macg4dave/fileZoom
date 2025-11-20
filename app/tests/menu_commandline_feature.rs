@@ -1,9 +1,9 @@
+use assert_fs::prelude::*;
 use fileZoom::app::{App, Panel};
 use fileZoom::app::{Mode, Side};
-use fileZoom::ui::panels::{compute_scrollbar_thumb, format_entry_line};
-use fileZoom::runner::handlers::context_menu;
 use fileZoom::input::KeyCode;
-use assert_fs::prelude::*;
+use fileZoom::runner::handlers::context_menu;
+use fileZoom::ui::panels::{compute_scrollbar_thumb, format_entry_line};
 use std::path::PathBuf;
 
 #[test]

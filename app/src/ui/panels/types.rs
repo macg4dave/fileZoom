@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use crate::app::Entry;
+use std::path::PathBuf;
 
 /// UI-only wrapper around a domain `Entry` that carries presentation
 /// metadata such as the preformatted display line and whether the row

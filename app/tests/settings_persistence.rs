@@ -1,8 +1,8 @@
+use fileZoom::app::settings::read_settings::load_settings;
+use fileZoom::app::settings::write_settings::save_settings;
+use fileZoom::app::settings::write_settings::Settings;
 use std::env;
 use tempfile::tempdir;
-use fileZoom::app::settings::write_settings::save_settings;
-use fileZoom::app::settings::read_settings::load_settings;
-use fileZoom::app::settings::write_settings::Settings;
 
 #[test]
 fn save_and_load_settings_roundtrip() {

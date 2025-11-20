@@ -60,6 +60,12 @@ pub fn run_app() -> anyhow::Result<()> {
                 }
             }
 
+            // Safety: avoid unbounded growth if input is being flooded.
+            const MAX_EVENTS: usize = 1024;
+            if events.len() > MAX_EVENTS {
+                events.truncate(MAX_EVENTS);
+            }
+
             // Coalesce collected events:
             // - keep all key events (processed in order)
             // - keep non-move mouse events in order
@@ -93,8 +99,7 @@ pub fn run_app() -> anyhow::Result<()> {
             // Track whether handlers requested exit so we can break the outer loop
             // and run the normal restore path once.
             let mut should_exit = false;
-            for key in key_events {
-                let code = key.code;
+            for code in key_events {
                 if handlers::handle_key(&mut app, code, page_size)? {
                     should_exit = true;
                     break;
@@ -128,9 +133,11 @@ pub fn run_app() -> anyhow::Result<()> {
             if app.settings.mouse_enabled != mouse_capture_enabled {
                 mouse_capture_enabled = app.settings.mouse_enabled;
                 if mouse_capture_enabled {
-                    let _ = crate::runner::terminal::enable_mouse_capture_on_terminal(&mut terminal);
+                    let _ =
+                        crate::runner::terminal::enable_mouse_capture_on_terminal(&mut terminal);
                 } else {
-                    let _ = crate::runner::terminal::disable_mouse_capture_on_terminal(&mut terminal);
+                    let _ =
+                        crate::runner::terminal::disable_mouse_capture_on_terminal(&mut terminal);
                 }
             }
             if should_exit {

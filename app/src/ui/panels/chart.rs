@@ -1,8 +1,8 @@
-use ratatui::widgets::canvas::{Canvas, Points as CanvasPoints, Line as CanvasLine};
-use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::style::Color;
-use ratatui::Frame;
 use ratatui::layout::Rect;
+use ratatui::style::Color;
+use ratatui::widgets::canvas::{Canvas, Line as CanvasLine, Points as CanvasPoints};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::Frame;
 
 use crate::app::Panel;
 
@@ -22,7 +22,10 @@ pub fn draw_chart(f: &mut Frame, area: Rect, panel: &Panel) {
 
     if points.is_empty() {
         let p = Paragraph::new("No numeric data for chart").block(
-            Block::default().borders(Borders::ALL).title("Chart").style(theme.preview_block_style),
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Chart")
+                .style(theme.preview_block_style),
         );
         f.render_widget(p, area);
         return;
@@ -45,16 +48,28 @@ pub fn draw_chart(f: &mut Frame, area: Rect, panel: &Panel) {
         .x_bounds([x_min, x_max])
         .y_bounds([y_min_plot, y_max_plot]);
 
-    f.render_widget(canvas.paint(|ctx| {
-        // Draw points
-        ctx.draw(&CanvasPoints { coords: &points, color: Color::Cyan });
-        // Draw connecting line segments between consecutive points
-        for pair in points.windows(2) {
-            if let [(x1, y1), (x2, y2)] = pair {
-                ctx.draw(&CanvasLine { x1: *x1, y1: *y1, x2: *x2, y2: *y2, color: Color::Yellow });
+    f.render_widget(
+        canvas.paint(|ctx| {
+            // Draw points
+            ctx.draw(&CanvasPoints {
+                coords: &points,
+                color: Color::Cyan,
+            });
+            // Draw connecting line segments between consecutive points
+            for pair in points.windows(2) {
+                if let [(x1, y1), (x2, y2)] = pair {
+                    ctx.draw(&CanvasLine {
+                        x1: *x1,
+                        y1: *y1,
+                        x2: *x2,
+                        y2: *y2,
+                        color: Color::Yellow,
+                    });
+                }
             }
-        }
-    }), area);
+        }),
+        area,
+    );
 }
 
 /// Draw a compact sparkline-like visualization of file sizes.
@@ -73,7 +88,10 @@ pub fn draw_sparkline(f: &mut Frame, area: Rect, panel: &Panel) {
 
     if values.is_empty() {
         let p = Paragraph::new("No data").block(
-            Block::default().borders(Borders::ALL).title("Sparkline").style(theme.preview_block_style),
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Sparkline")
+                .style(theme.preview_block_style),
         );
         f.render_widget(p, area);
         return;
@@ -96,15 +114,18 @@ pub fn draw_sparkline(f: &mut Frame, area: Rect, panel: &Panel) {
             if start >= end {
                 buckets.push(0.0);
             } else {
-                let max = values[start..end].iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+                let max = values[start..end]
+                    .iter()
+                    .cloned()
+                    .fold(f64::NEG_INFINITY, f64::max);
                 buckets.push(if max.is_finite() { max } else { 0.0 });
             }
         }
     }
 
     // Normalize buckets to 0..(BLOCKS.len()-1)
-    let max_v = buckets.iter().cloned().fold(0./0., f64::max);
-    let min_v = buckets.iter().cloned().fold(0./0., f64::min);
+    let max_v = buckets.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let min_v = buckets.iter().cloned().fold(f64::INFINITY, f64::min);
     let max_v = if max_v.is_finite() { max_v } else { 0.0 };
     let min_v = if min_v.is_finite() { min_v } else { 0.0 };
     let range = (max_v - min_v).max(1.0);
@@ -122,7 +143,10 @@ pub fn draw_sparkline(f: &mut Frame, area: Rect, panel: &Panel) {
     // Build paragraph with the sparkline and footer stacked vertically
     let text = format!("{}\n{}", spark, footer);
     let p = Paragraph::new(text).block(
-        Block::default().borders(Borders::ALL).title("Sparkline").style(theme.preview_block_style),
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Sparkline")
+            .style(theme.preview_block_style),
     );
     f.render_widget(p, area);
 }

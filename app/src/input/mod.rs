@@ -33,7 +33,7 @@ use std::time::Duration;
 /// Unified, cross-platform input event for the app.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InputEvent {
-    Key(KeyEvent),
+    Key(crate::input::keyboard::KeyCode),
     Mouse(MouseEvent),
     Resize(u16, u16),
     Other,
@@ -48,7 +48,7 @@ pub fn poll(timeout: Duration) -> anyhow::Result<bool> {
 /// into crate-local `MouseEvent` types via `From<crossterm::event::MouseEvent>`.
 pub fn read_event() -> anyhow::Result<InputEvent> {
     match crossterm::event::read()? {
-        crossterm::event::Event::Key(k) => Ok(InputEvent::Key(k)),
+        crossterm::event::Event::Key(k) => Ok(InputEvent::Key(k.into())),
         crossterm::event::Event::Mouse(m) => Ok(InputEvent::Mouse(m.into())),
         crossterm::event::Event::Resize(w, h) => Ok(InputEvent::Resize(w, h)),
         _ => Ok(InputEvent::Other),

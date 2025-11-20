@@ -1,10 +1,10 @@
 use assert_fs::prelude::*;
 use fileZoom::app::{App, Panel, Side, SortKey};
 // `PathBuf` not required by name here; remove explicit import to avoid warning
+use fileZoom::input::KeyCode;
+use fileZoom::runner::handlers;
 use predicates::prelude::*;
 use std::time::Duration;
-use fileZoom::runner::handlers;
-use fileZoom::input::KeyCode;
 
 #[test]
 fn multi_select_copy_background() {
@@ -50,8 +50,12 @@ fn multi_select_copy_background() {
     let mut a_idx = None;
     let mut b_idx = None;
     for (i, e) in app.left.entries.iter().enumerate() {
-        if e.name == "a.txt" { a_idx = Some(i); }
-        if e.name == "b.txt" { b_idx = Some(i); }
+        if e.name == "a.txt" {
+            a_idx = Some(i);
+        }
+        if e.name == "b.txt" {
+            b_idx = Some(i);
+        }
     }
     assert!(a_idx.is_some() && b_idx.is_some());
     app.left.selections.insert(a_idx.unwrap());
@@ -65,7 +69,9 @@ fn multi_select_copy_background() {
         loop {
             match rx.recv_timeout(Duration::from_secs(2)) {
                 Ok(upd) => {
-                    if upd.done { break; }
+                    if upd.done {
+                        break;
+                    }
                 }
                 Err(_) => break,
             }

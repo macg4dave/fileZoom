@@ -18,11 +18,18 @@ fn f3_opens_context_menu_and_view_shows_preview() {
     // find index of file.txt
     let mut idx = None;
     for (i, e) in app.left.entries.iter().enumerate() {
-        if e.name == "file.txt" { idx = Some(i); break; }
+        if e.name == "file.txt" {
+            idx = Some(i);
+            break;
+        }
     }
     assert!(idx.is_some());
     let header_count = 1usize;
-    let parent_count = if app.left.cwd.parent().is_some() { 1usize } else { 0usize };
+    let parent_count = if app.left.cwd.parent().is_some() {
+        1usize
+    } else {
+        0usize
+    };
     app.left.selected = header_count + parent_count + idx.unwrap();
 
     // Press F3 to open context menu
@@ -44,7 +51,7 @@ fn f3_opens_context_menu_and_view_shows_preview() {
 
 #[test]
 fn right_click_opens_context_menu() {
-    use fileZoom::input::mouse::{MouseEvent, MouseEventKind, MouseButton};
+    use fileZoom::input::mouse::{MouseButton, MouseEvent, MouseEventKind};
     use ratatui::layout::Rect;
 
     let temp = assert_fs::TempDir::new().unwrap();
@@ -58,7 +65,11 @@ fn right_click_opens_context_menu() {
 
     // right-click near left panel first entry (column 2, row 5 to hit the actual file row)
     let term = Rect::new(0, 0, 80, 24);
-    let me = MouseEvent { column: 2, row: 5, kind: MouseEventKind::Down(MouseButton::Right) };
+    let me = MouseEvent {
+        column: 2,
+        row: 5,
+        kind: MouseEventKind::Down(MouseButton::Right),
+    };
     fileZoom::runner::handlers::handle_mouse(&mut app, me, term).unwrap();
     match app.mode {
         fileZoom::app::Mode::ContextMenu { .. } => {}
