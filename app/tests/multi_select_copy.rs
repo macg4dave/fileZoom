@@ -31,6 +31,7 @@ fn multi_select_copy_background() {
         menu_index: 0,
         menu_focused: false,
         preview_visible: false,
+        command_line: None,
         settings: fileZoom::app::settings::write_settings::Settings::default(),
         op_progress_rx: None,
         op_cancel_flag: None,

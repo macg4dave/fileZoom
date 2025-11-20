@@ -75,6 +75,13 @@ pub fn handle_mouse(app: &mut App, me: MouseEvent, term_rect: Rect) -> anyhow::R
             let idx = (me.column as usize * labels.len()) / width;
             app.menu_index = std::cmp::min(idx, labels.len().saturating_sub(1));
             app.menu_focused = true;
+            use crate::input::mouse::MouseButton;
+            use crate::input::mouse::MouseEventKind;
+            if matches!(me.kind, MouseEventKind::Down(MouseButton::Left)) {
+                // Activate the selected menu item on left-click
+                app.menu_activate();
+                return Ok(true);
+            }
         }
         return Ok(false);
     }

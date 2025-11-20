@@ -9,6 +9,7 @@ pub mod colors;
 pub mod dialogs;
 pub mod header;
 pub mod menu;
+pub mod command_line;
 pub mod modal;
 pub mod panels;
 pub mod util;
@@ -61,11 +62,21 @@ pub fn ui(f: &mut Frame, app: &App) {
         panels::draw_preview(f, main_chunks[2], active_panel);
     }
 
-    // bottom help bar
+    // bottom help bar or command-line if active
     let theme = crate::ui::colors::current();
-    let help = Paragraph::new("F1:menu  F3:actions/right-click  ?:help  ↑/↓:navigate  PgUp/PgDn:page  Enter:open  Backspace:up  Tab:switch panels  F5:copy  F6:move  d:delete  c:copy(to...)  m:move(to...)  R:rename  n:new file  N:new dir  s:sort  q:quit")
-        .block(Block::default().borders(Borders::ALL).style(theme.help_block_style));
-    f.render_widget(help, chunks[3]);
+    if let Some(cl) = &app.command_line {
+        if cl.visible {
+            crate::ui::command_line::draw_command_line(f, chunks[3], app);
+        } else {
+            let help = Paragraph::new("F1:menu  F3:actions/right-click  ?:help  ↑/↓:navigate  PgUp/PgDn:page  Enter:open  Backspace:up  Tab:switch panels  F5:copy  F6:move  d:delete  c:copy(to...)  m:move(to...)  R:rename  n:new file  N:new dir  s:sort  q:quit")
+                .block(Block::default().borders(Borders::ALL).style(theme.help_block_style));
+            f.render_widget(help, chunks[3]);
+        }
+    } else {
+        let help = Paragraph::new("F1:menu  F3:actions/right-click  ?:help  ↑/↓:navigate  PgUp/PgDn:page  Enter:open  Backspace:up  Tab:switch panels  F5:copy  F6:move  d:delete  c:copy(to...)  m:move(to...)  R:rename  n:new file  N:new dir  s:sort  q:quit")
+            .block(Block::default().borders(Borders::ALL).style(theme.help_block_style));
+        f.render_widget(help, chunks[3]);
+    }
 
     // top menu bar
     menu::draw_menu(f, chunks[0], app);

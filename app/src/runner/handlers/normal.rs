@@ -7,6 +7,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use crate::runner::progress::{ProgressUpdate, OperationDecision};
 
 pub fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Result<bool> {
+    // If command-line is active, route keys there first.
+    if app.command_line.is_some() {
+        return crate::ui::command_line::handle_input(app, code);
+    }
     match code {
         KeyCode::Char('q') => return Ok(true),
         KeyCode::Down => app.next(page_size),

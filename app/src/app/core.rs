@@ -17,6 +17,8 @@ pub struct App {
     pub menu_focused: bool,
     /// Whether the preview pane is visible in the UI.
     pub preview_visible: bool,
+    /// Optional command-line state when user opens the command input.
+    pub command_line: Option<crate::ui::command_line::CommandLineState>,
     /// User settings loaded from disk.
     pub settings: crate::app::settings::write_settings::Settings,
     /// Receiver for progress updates from background file operations.
@@ -110,6 +112,7 @@ impl App {
             menu_index: 0,
             menu_focused: false,
             preview_visible: false,
+            command_line: None,
             settings: crate::app::settings::write_settings::Settings::default(),
             op_progress_rx: None,
             op_cancel_flag: None,
@@ -319,6 +322,7 @@ mod tests {
             menu_index: 0,
             menu_focused: false,
             preview_visible: false,
+            command_line: None,
             settings: crate::app::settings::write_settings::Settings::default(),
             op_progress_rx: None,
             op_cancel_flag: None,
@@ -383,6 +387,7 @@ mod tests {
             menu_index: 0,
             menu_focused: false,
             preview_visible: false,
+            command_line: None,
             settings: crate::app::settings::write_settings::Settings::default(),
             op_progress_rx: None,
             op_cancel_flag: None,
