@@ -42,9 +42,18 @@ pub fn draw_progress_modal(
 		.split(content_rect);
 
 	// Header: show processed/total (left) and percent (right)
-	let percent = if total == 0 { 0.0 } else { (processed as f64) / (total as f64) };
-	let header_text = format!("{}/{}", processed, total);
-	let header_para = Paragraph::new(header_text).block(Block::default()).style(theme.header_style);
+	let indeterminate = total == 0;
+	let percent = if indeterminate { 0.0 } else { (processed as f64) / (total as f64) };
+	let header_text = if indeterminate {
+		format!("{}/?", processed)
+	} else {
+		format!("{}/{}", processed, total)
+	};
+	// Add an icon to indicate progress state
+	let icon = if cancelled { "⏸" } else { "⏳" };
+	let header_para = Paragraph::new(format!("{} {}", icon, header_text))
+		.block(Block::default())
+		.style(theme.header_style);
 	f.render_widget(header_para, vchunks[0]);
 
 	// Inline row: split horizontally into label and gauge
@@ -58,17 +67,53 @@ pub fn draw_progress_modal(
 	let left_para = Paragraph::new(msg.to_string()).block(Block::default());
 	f.render_widget(left_para, hchunks[0]);
 
-	// Right: gauge
-	let gauge = Gauge::default()
-		.block(Block::default().borders(Borders::NONE))
-		.ratio(percent)
-		.label(format_pct(percent));
-	f.render_widget(gauge, hchunks[1]);
+	// Right: gauge or animated spinner for indeterminate progress
+	if indeterminate {
+		// Compute a spinner frame from system time.
+		let spinner = spinner_frame();
+		// For indeterminate, show an animated pseudo-ratio to give motion.
+		let anim_ratio = animated_ratio();
+		let gauge = Gauge::default()
+			.block(Block::default().borders(Borders::NONE))
+			.ratio(anim_ratio)
+			.label(format!("{} {}", spinner, format_pct(anim_ratio)));
+		f.render_widget(gauge, hchunks[1]);
+	} else {
+		let gauge = Gauge::default()
+			.block(Block::default().borders(Borders::NONE))
+			.ratio(percent)
+			.label(format_pct(percent));
+		f.render_widget(gauge, hchunks[1]);
+	}
 
 	// Footer: show cancelling hint or usage
 	let footer = if cancelled { "Cancelling..." } else { "Press Esc to cancel." };
 	let footer_para = Paragraph::new(footer.to_string()).block(Block::default()).style(theme.help_block_style);
 	f.render_widget(footer_para, vchunks[2]);
+}
+
+fn spinner_frame() -> &'static str {
+	// Simple 10-frame braille spinner for smooth animation
+	const FRAMES: [&str; 10] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+	let idx = (current_millis() / 120) as usize % FRAMES.len();
+	FRAMES[idx]
+}
+
+fn animated_ratio() -> f64 {
+	// Return a smoothly changing ratio in [0.0, 1.0] based on system time.
+	let ms = current_millis() as f64;
+	let phase = (ms % 2000.0) / 2000.0; // 2s cycle
+	// Use a triangular wave to move back and forth
+	let tri = if phase < 0.5 { phase * 2.0 } else { 2.0 - phase * 2.0 };
+	tri.clamp(0.0, 1.0)
+}
+
+fn current_millis() -> u128 {
+	use std::time::{SystemTime, UNIX_EPOCH};
+	SystemTime::now()
+		.duration_since(UNIX_EPOCH)
+		.map(|d| d.as_millis())
+		.unwrap_or(0)
 }
 
 /// Simple helper to produce a percent string for tests and external use.
