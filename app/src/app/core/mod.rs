@@ -27,6 +27,10 @@ pub struct App {
     /// Sender for communicating user's decision back to the background worker
     /// when a file-exists conflict is presented.
     pub op_decision_tx: Option<std::sync::mpsc::Sender<crate::runner::progress::OperationDecision>>,
+    /// Last mouse click timestamp (used for double-click detection).
+    pub last_mouse_click_time: Option<std::time::Instant>,
+    /// Last mouse click position (column, row).
+    pub last_mouse_click_pos: Option<(u16, u16)>,
 }
 
 // submodules live in `app/src/app/core/`

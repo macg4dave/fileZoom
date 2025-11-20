@@ -16,6 +16,8 @@ fn save_and_load_settings_roundtrip() {
         left_panel_width: 30,
         right_panel_width: 50,
         context_actions: Settings::default().context_actions.clone(),
+        mouse_enabled: true,
+        mouse_double_click_ms: 500,
     };
 
     save_settings(&s).expect("save should succeed");

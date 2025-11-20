@@ -127,6 +127,9 @@ pub fn ui(f: &mut Frame, app: &App) {
             let btn_refs: Vec<&str> = options.iter().map(|s| s.as_str()).collect();
             dialogs::draw_confirm(f, f.area(), title, &format!("{}", path.display()), &btn_refs, *selected);
         }
+        Mode::Settings { selected } => {
+            dialogs::draw_settings(f, f.area(), app, *selected);
+        }
         Mode::Normal => {}
     }
 }

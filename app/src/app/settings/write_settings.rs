@@ -14,6 +14,10 @@ pub struct Settings {
     pub right_panel_width: u16,
     /// Ordered list of context actions shown in the context menu.
     pub context_actions: Vec<String>,
+    /// Whether mouse support is enabled.
+    pub mouse_enabled: bool,
+    /// Double-click timeout in milliseconds.
+    pub mouse_double_click_ms: u64,
 }
 
 impl Default for Settings {
@@ -24,6 +28,8 @@ impl Default for Settings {
             left_panel_width: 40,
             right_panel_width: 40,
             context_actions: vec!["View".to_string(), "Edit".to_string(), "Permissions".to_string(), "Cancel".to_string()],
+            mouse_enabled: true,
+            mouse_double_click_ms: 500,
         }
     }
 }

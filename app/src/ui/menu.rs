@@ -8,7 +8,7 @@ use crate::ui::colors::current as theme_current;
 
 /// Return the ordered labels used for the top menu.
 pub fn menu_labels() -> Vec<&'static str> {
-    vec!["File", "Copy", "Move", "New", "Sort", "Help"]
+    vec!["File", "Copy", "Move", "New", "Sort", "Settings", "Help"]
 }
 
 /// Draw the top menu bar. The menu is currently static and non-interactive.

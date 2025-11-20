@@ -27,6 +27,8 @@ fn selected_index_reflects_active_panel_unit() {
         op_progress_rx: None,
         op_cancel_flag: None,
         op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 
@@ -92,6 +94,8 @@ fn panel_mut_match() {
         op_progress_rx: None,
         op_cancel_flag: None,
         op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
     // modify left via panel_mut and check read through panel

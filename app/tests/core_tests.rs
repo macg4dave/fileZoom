@@ -41,7 +41,9 @@ fn sort_name_puts_dirs_first() {
         settings: fileZoom::app::settings::write_settings::Settings::default(),
         op_progress_rx: None,
         op_cancel_flag: None,
-            op_decision_tx: None,
+        op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 
@@ -76,7 +78,9 @@ fn preview_truncates_large_file() {
         settings: fileZoom::app::settings::write_settings::Settings::default(),
         op_progress_rx: None,
         op_cancel_flag: None,
-            op_decision_tx: None,
+        op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 
@@ -129,7 +133,9 @@ fn preview_shows_directory_entries_limited() {
         settings: fileZoom::app::settings::write_settings::Settings::default(),
         op_progress_rx: None,
         op_cancel_flag: None,
-            op_decision_tx: None,
+        op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 
@@ -185,7 +191,9 @@ fn preview_resets_preview_offset() {
         settings: fileZoom::app::settings::write_settings::Settings::default(),
         op_progress_rx: None,
         op_cancel_flag: None,
-            op_decision_tx: None,
+        op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 
@@ -239,7 +247,9 @@ fn preview_handles_very_long_filename() {
         settings: fileZoom::app::settings::write_settings::Settings::default(),
         op_progress_rx: None,
         op_cancel_flag: None,
-            op_decision_tx: None,
+        op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 
@@ -298,6 +308,8 @@ fn preview_unreadable_file_shows_message() {
         op_progress_rx: None,
         op_cancel_flag: None,
         op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 

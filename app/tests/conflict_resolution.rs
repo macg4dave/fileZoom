@@ -33,6 +33,8 @@ fn conflict_overwrite() {
         op_progress_rx: None,
         op_cancel_flag: None,
         op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 
@@ -96,6 +98,8 @@ fn conflict_skip() {
         op_progress_rx: None,
         op_cancel_flag: None,
         op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 

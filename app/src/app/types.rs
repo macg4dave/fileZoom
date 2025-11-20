@@ -107,6 +107,10 @@ pub enum Mode {
         buttons: Vec<String>,
         selected: usize,
     },
+    /// Settings dialog allowing toggling mouse and editing numeric timeout.
+    Settings {
+        selected: usize,
+    },
     Progress {
         title: String,
         processed: usize,

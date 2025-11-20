@@ -25,6 +25,8 @@ impl App {
             op_progress_rx: None,
             op_cancel_flag: None,
             op_decision_tx: None,
+            last_mouse_click_time: None,
+            last_mouse_click_pos: None,
         };
         app.refresh()?;
         Ok(app)
@@ -126,13 +128,17 @@ impl App {
     pub fn menu_activate(&mut self) {
         let labels = crate::ui::menu::menu_labels();
         if let Some(lbl) = labels.get(self.menu_index) {
-            let content = format!("Menu '{}' selected", lbl);
-            self.mode = Mode::Message {
-                title: lbl.to_string(),
-                content,
-                buttons: vec!["OK".to_string()],
-                selected: 0,
-            };
+            if *lbl == "Settings" {
+                self.mode = Mode::Settings { selected: 0 };
+            } else {
+                let content = format!("Menu '{}' selected", lbl);
+                self.mode = Mode::Message {
+                    title: lbl.to_string(),
+                    content,
+                    buttons: vec!["OK".to_string()],
+                    selected: 0,
+                };
+            }
         }
     }
 

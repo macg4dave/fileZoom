@@ -63,6 +63,8 @@ fn context_menu_enter_opens_preview() {
         op_progress_rx: None,
         op_cancel_flag: None,
         op_decision_tx: None,
+        last_mouse_click_time: None,
+        last_mouse_click_pos: None,
     };
     app.refresh().unwrap();
 

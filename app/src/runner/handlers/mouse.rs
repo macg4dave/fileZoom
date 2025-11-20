@@ -68,6 +68,59 @@ pub fn handle_mouse(app: &mut App, me: MouseEvent, term_rect: Rect) -> anyhow::R
         ].as_ref())
         .split(term_rect);
 
+    // If the settings modal is active, handle clicks inside it first.
+    if let crate::app::Mode::Settings { selected: _ } = &mut app.mode {
+        let rect = crate::ui::modal::centered_rect(term_rect, 60, 10);
+        // clicked inside dialog area?
+        if me.column >= rect.x && me.column < rect.x + rect.width && me.row >= rect.y && me.row < rect.y + rect.height {
+            // content rows start at rect.y + 1; footer buttons at rect.y + rect.height - 2
+            let content_start = rect.y + 1;
+            let footer_row = rect.y + rect.height.saturating_sub(2);
+            if me.row >= content_start && me.row < footer_row {
+                let clicked_line = (me.row - content_start) as usize;
+                // map click to selected index: 0 -> mouse_enabled, 1 -> timeout
+                if matches!(me.kind, MouseEventKind::Down(crate::input::mouse::MouseButton::Left)) {
+                    // update selection and possibly toggle
+                    let sel = match clicked_line {
+                        0 => 0usize,
+                        1 => 1usize,
+                        _ => 0usize,
+                    };
+                    app.mode = crate::app::Mode::Settings { selected: sel };
+                    if sel == 0 {
+                        app.settings.mouse_enabled = !app.settings.mouse_enabled;
+                    }
+                } else {
+                    // just move focus
+                    app.mode = crate::app::Mode::Settings { selected: clicked_line };
+                }
+                return Ok(true);
+            }
+            if me.row == footer_row {
+                // determine which footer button was clicked; assume two buttons roughly left/right halves
+                let mid = rect.x + rect.width / 2;
+                if matches!(me.kind, MouseEventKind::Down(crate::input::mouse::MouseButton::Left)) {
+                    if me.column < mid {
+                        // Save
+                        match crate::app::settings::save_settings(&app.settings) {
+                            Ok(_) => {
+                                app.mode = Mode::Message { title: "Settings Saved".to_string(), content: "Settings persisted".to_string(), buttons: vec!["OK".to_string()], selected: 0 };
+                            }
+                            Err(e) => {
+                                app.mode = Mode::Message { title: "Error".to_string(), content: format!("Failed to save settings: {}", e), buttons: vec!["OK".to_string()], selected: 0 };
+                            }
+                        }
+                    } else {
+                        // Cancel
+                        app.mode = Mode::Normal;
+                    }
+                    return Ok(true);
+                }
+            }
+            return Ok(false);
+        }
+    }
+
     if me.row >= chunks[0].y && me.row < chunks[0].y + chunks[0].height {
         let width = term_rect.width as usize;
         let labels = menu::menu_labels();
@@ -101,6 +154,29 @@ pub fn handle_mouse(app: &mut App, me: MouseEvent, term_rect: Rect) -> anyhow::R
                 panel_mut.selected = std::cmp::min(new_sel, max_rows.saturating_sub(1));
             }
             app.active = side;
+            // Double-click detection: if mouse support enabled and two left-clicks
+            // happened at same position within the configured timeout, treat as
+            // enter (open directory) action.
+            use std::time::Instant;
+            if matches!(me.kind, MouseEventKind::Down(MouseButton::Left)) {
+                if app.settings.mouse_enabled {
+                    let now = Instant::now();
+                    if let (Some(prev_t), Some((pc, pr))) = (app.last_mouse_click_time, app.last_mouse_click_pos) {
+                        let elapsed = now.saturating_duration_since(prev_t);
+                        if pc == me.column && pr == me.row && elapsed.as_millis() <= app.settings.mouse_double_click_ms as u128 {
+                            // Double-click detected: attempt to enter the selection
+                            let _ = app.enter();
+                            // Clear last click so a subsequent click won't re-trigger
+                            app.last_mouse_click_time = None;
+                            app.last_mouse_click_pos = None;
+                            return true;
+                        }
+                    }
+                    // Not a double-click, record this click for future detection.
+                    app.last_mouse_click_time = Some(Instant::now());
+                    app.last_mouse_click_pos = Some((me.column, me.row));
+                }
+            }
             use crate::input::mouse::MouseButton;
             use crate::input::mouse::MouseEventKind;
             if matches!(me.kind, MouseEventKind::Down(MouseButton::Right)) {

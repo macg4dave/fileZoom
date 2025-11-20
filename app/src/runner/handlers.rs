@@ -7,6 +7,7 @@ pub mod conflict;
 pub mod progress_mode;
 pub mod confirm;
 pub mod input_mode;
+pub mod settings;
 
 pub use normal::handle_normal;
 pub use mouse::handle_mouse;
@@ -15,6 +16,7 @@ pub use conflict::handle_conflict;
 pub use progress_mode::handle_progress;
 pub use confirm::handle_confirm;
 pub use input_mode::handle_input;
+pub use settings::handle_settings;
 
 use crate::app::{App, Mode};
 use crate::input::KeyCode;
@@ -35,5 +37,6 @@ pub fn handle_key(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Res
         }
         Mode::Confirm { .. } => handle_confirm(app, code),
         Mode::Input { .. } => handle_input(app, code),
+        Mode::Settings { .. } => handle_settings(app, code),
     }
 }
