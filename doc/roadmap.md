@@ -14,7 +14,6 @@ Safe Deletes / Trash: Option to move to trash or require confirmation for destru
 Localization & Accessibility: Multi-language support and clear keyboard navigation.
 Quick View / Preview Pane: High impact, small-to-medium effort. Improves navigation speed.
 Operation Progress Modal/Queue: UX improvement for long copies/moves; small-medium effort.
-Archive-as-Directory Support: Very useful; can leverage existing Rust crates (zip, tar). Medium effort.
 Bookmarks / Hotlist: Lightweight feature that greatly improves workflow; small effort.
 Batch Rename UI: Powerful user-facing feature; small-medium effort with new modal.
 VFS Abstraction (design, incremental): Long-term investment enabling SSH/FTP/archives; larger effort but high payoff.
