@@ -138,6 +138,7 @@ fn preview_shows_directory_entries_limited() {
 
     // header + at most MAX_DIR_PREVIEW_ENTRIES lines
     let lines: Vec<&str> = app.left.preview.lines().collect();
+
     assert!(lines.len() <= 1 + fileZoom::app::core::preview_helpers::MAX_DIR_PREVIEW_ENTRIES);
     // ensure at least one file name is present
     assert!(app.left.preview.contains("f0.txt"));

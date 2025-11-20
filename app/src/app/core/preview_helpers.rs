@@ -45,8 +45,14 @@ pub const MAX_DIR_PREVIEW_ENTRIES: usize = 50;
 pub fn build_directory_preview(path: &Path) -> String {
     let mut s = format!("Directory: {}\n", path.display());
     if let Ok(list) = std::fs::read_dir(path) {
-        for ent in list.flatten().take(MAX_DIR_PREVIEW_ENTRIES) {
-            s.push_str(&format!("{}\n", ent.file_name().to_string_lossy()));
+        // Collect and sort entries by filename for deterministic previews
+        let mut names: Vec<String> = list
+            .flatten()
+            .map(|ent| ent.file_name().to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        for name in names.into_iter().take(MAX_DIR_PREVIEW_ENTRIES) {
+            s.push_str(&format!("{}\n", name));
         }
     }
     s

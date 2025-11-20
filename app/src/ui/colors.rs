@@ -141,3 +141,150 @@ pub fn toggle() {
         }
     }
 }
+
+/// Return a small palette of named colors and a sample `Style` suitable for
+/// rendering a preview (background set to the color with a contrasting
+/// foreground). This is a lightweight helper inspired by the ratatui
+/// color-explorer example and intended for use in UI widgets that want to
+/// show color swatches.
+pub fn color_samples() -> Vec<(String, Style)> {
+    // A compact list of commonly useful colors.
+    let named: &[( &str, Color )] = &[
+        ("Black", Color::Black),
+        ("DarkGray", Color::DarkGray),
+        ("Red", Color::Red),
+        ("LightRed", Color::LightRed),
+        ("Green", Color::Green),
+        ("LightGreen", Color::LightGreen),
+        ("Yellow", Color::Yellow),
+        ("LightYellow", Color::LightYellow),
+        ("Blue", Color::Blue),
+        ("LightBlue", Color::LightBlue),
+        ("Magenta", Color::Magenta),
+        ("LightMagenta", Color::LightMagenta),
+        ("Cyan", Color::Cyan),
+        ("LightCyan", Color::LightCyan),
+        ("Gray", Color::Gray),
+        ("White", Color::White),
+    ];
+
+    named
+        .iter()
+        .map(|(name, color)| (name.to_string(), sample_style_for_color(*color)))
+        .collect()
+}
+
+/// Return a small set of styles demonstrating common `Modifier`s.
+/// Useful for widgets that want to preview how modifiers look (bold,
+/// italic, underlined, reversed, etc.). Each entry is (label, style).
+pub fn modifier_samples() -> Vec<(String, Style)> {
+    let base = Style::default().fg(Color::White).bg(Color::Black);
+
+    let samples = vec![
+        ("Normal".to_string(), base),
+        (
+            "Bold".to_string(),
+            base.add_modifier(Modifier::BOLD),
+        ),
+        (
+            "Italic".to_string(),
+            base.add_modifier(Modifier::ITALIC),
+        ),
+        (
+            "Underlined".to_string(),
+            base.add_modifier(Modifier::UNDERLINED),
+        ),
+        (
+            "Reversed".to_string(),
+            base.add_modifier(Modifier::REVERSED),
+        ),
+        (
+            "CrossedOut".to_string(),
+            base.add_modifier(Modifier::CROSSED_OUT),
+        ),
+        (
+            "Dim".to_string(),
+            base.add_modifier(Modifier::DIM),
+        ),
+    ];
+
+    samples
+}
+
+/// Apply a list of modifier names (case-insensitive) to a `Style`.
+/// Unknown names are ignored. This helper is convenient when parsing
+/// configuration or wiring UI controls that toggle modifiers by name.
+pub fn apply_modifiers(mut style: Style, mods: &[&str]) -> Style {
+    for m in mods {
+        match m.to_ascii_lowercase().as_str() {
+            "bold" => style = style.add_modifier(Modifier::BOLD),
+            "italic" => style = style.add_modifier(Modifier::ITALIC),
+            "underlined" | "underline" => style = style.add_modifier(Modifier::UNDERLINED),
+            "slow_blink" | "slowblink" | "slow-blink" => {
+                style = style.add_modifier(Modifier::SLOW_BLINK)
+            }
+            "rapid_blink" | "rapidblink" | "rapid-blink" => {
+                style = style.add_modifier(Modifier::RAPID_BLINK)
+            }
+            "reversed" | "reverse" => style = style.add_modifier(Modifier::REVERSED),
+            "crossed_out" | "crossedout" | "crossed-out" => {
+                style = style.add_modifier(Modifier::CROSSED_OUT)
+            }
+            "dim" => style = style.add_modifier(Modifier::DIM),
+            "hidden" => style = style.add_modifier(Modifier::HIDDEN),
+            _ => { /* ignore unknown */ }
+        }
+    }
+
+    style
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn modifier_samples_non_empty() {
+        let s = modifier_samples();
+        assert!(!s.is_empty());
+    }
+
+    #[test]
+    fn apply_modifiers_sets_expected() {
+        let base = Style::default();
+        let got = apply_modifiers(base, &["bold", "italic"]);
+        let expected = base.add_modifier(Modifier::BOLD).add_modifier(Modifier::ITALIC);
+        assert_eq!(got, expected);
+    }
+}
+
+/// Pick a contrasting foreground color for a given background color and
+/// return a `Style` that sets the background to `bg` and the foreground to
+/// that contrasting color. This uses a small heuristic over the known named
+/// colors so sample text remains readable.
+fn sample_style_for_color(bg: Color) -> Style {
+    use Color::*;
+
+    let fg = match bg {
+        // Treat these as dark backgrounds -> use white text
+        Black | DarkGray | Red | Blue | Magenta => Color::White,
+        // Treat these as light backgrounds -> use black text
+        LightRed
+        | LightGreen
+        | LightYellow
+        | LightBlue
+        | LightMagenta
+        | LightCyan
+        | White
+        | Gray
+        | Green
+        | Yellow
+        | Cyan => Color::Black,
+        // Default fallback: white text
+        _ => Color::White,
+    };
+
+    Style::default().bg(bg).fg(fg)
+}
+
