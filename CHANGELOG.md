@@ -198,4 +198,23 @@
     that exercises `execute_command` end-to-end (menu navigation, preview
     toggle and activation) and validates `App` state transitions.
   - Result: improved maintainability, clearer parsing/dispatch separation
+
+- Chore: reduce high-value Clippy warnings and tidy docs
+  - Convert numerous `io::Error::new(..., ...)` usages to `io::Error::other(...)`.
+  - Remove unnecessary .clone calls on Copy types and replace `map(|s| s.clone())` with `.cloned()`.
+  - Tidy a number of doc comments to resolve doc formatting warnings.
+  - No behaviour changes; all tests pass.
     and the test-suite passes after the change.
+
+  - Follow-up: additional Clippy-driven cleanups (this PR)
+    - Replace single-branch `match` with `if let` in several handler modules to reduce noise and clarify control flow.
+    - Collapse nested `if` statements where safe and clearer (e.g. `runner/handlers/mouse.rs`).
+    - Convert `loop { match rx.recv_timeout(...) { ... } }` patterns in tests to `while let Ok(upd) = rx.recv_timeout(...)` for clarity and concision.
+    - Add `Default` implementations where `new()` existed to satisfy `clippy::new_without_default` and reduce boilerplate.
+    - Replace `format!("{}", ...)` with `.to_string()` where appropriate and remove unnecessary casts.
+    - Flatten `WalkDir` iterator usage in tests to avoid nested `if let` patterns.
+    - Remove module inception and tidy up module-level docs.
+    - Small event loop pattern improvements (use `is_ok()` instead of `if let Ok(_)`).
+    - Tests: updated assertions and loop patterns to address lint suggestions without changing behaviour.
+
+  These additional edits are mechanical and low-risk; they reduce linter noise and improve readability while preserving all existing behaviour and test coverage.

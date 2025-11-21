@@ -52,13 +52,12 @@ pub fn handle_context_menu(app: &mut App, code: KeyCode) -> anyhow::Result<bool>
     // inspected.
     let mut pending_mode: Option<Mode> = None;
 
-    match &mut app.mode {
-        Mode::ContextMenu {
+    if let Mode::ContextMenu {
             title: _,
             options,
             selected,
             path: _,
-        } => {
+        } = &mut app.mode {
             // Navigation: move selection left/up or right/down.
             if keybinds::is_left(&code) || keybinds::is_up(&code) {
                 *selected = selected.saturating_sub(1);
@@ -71,7 +70,7 @@ pub fn handle_context_menu(app: &mut App, code: KeyCode) -> anyhow::Result<bool>
                 pending_mode = Some(Mode::Normal);
             } else if keybinds::is_enter(&code) {
                 // Snapshot the chosen option before we replace the mode.
-                let choice = options.get(*selected).map(|s| s.clone());
+                let choice = options.get(*selected).cloned();
                 // By default dismiss the context menu; specific actions may
                 // replace this with a message dialog.
                 pending_mode = Some(Mode::Normal);
@@ -81,7 +80,7 @@ pub fn handle_context_menu(app: &mut App, code: KeyCode) -> anyhow::Result<bool>
                     match ContextAction::from_label(ch.as_str()) {
                         ContextAction::View => {
                             app.preview_visible = true;
-                            let _ = app.update_preview_for(app.active);
+                            app.update_preview_for(app.active);
                         }
                         ContextAction::Edit => {
                             if let Some(e) = app.active_panel().selected_entry() {
@@ -131,8 +130,6 @@ pub fn handle_context_menu(app: &mut App, code: KeyCode) -> anyhow::Result<bool>
                     }
                 }
             }
-        }
-        _ => {}
     }
 
     if let Some(m) = pending_mode {
