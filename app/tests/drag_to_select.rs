@@ -14,7 +14,7 @@ fn drag_to_select_left_panel() {
         active: fileZoom::app::types::Side::Left,
         mode: fileZoom::app::types::Mode::Normal,
         sort: fileZoom::app::types::SortKey::Name,
-        sort_desc: false,
+        sort_order: fileZoom::app::types::SortOrder::Ascending,
         menu_index: 0,
         menu_focused: false,
         preview_visible: false,

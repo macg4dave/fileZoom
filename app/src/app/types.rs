@@ -73,6 +73,19 @@ pub enum SortKey {
     Modified,
 }
 
+/// Order direction for sorting operations.
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub enum SortOrder {
+    Ascending,
+    Descending,
+}
+
+impl Default for SortOrder {
+    fn default() -> Self {
+        SortOrder::Ascending
+    }
+}
+
 impl SortKey {
     /// Cycle to the next sorting key in the order Name -> Size -> Modified -> Name
     pub fn next(self) -> Self {

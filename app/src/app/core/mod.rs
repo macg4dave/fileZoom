@@ -11,7 +11,8 @@ pub struct App {
     pub active: Side,
     pub mode: Mode,
     pub sort: SortKey,
-    pub sort_desc: bool,
+    /// Order direction for the current sort key.
+    pub sort_order: crate::app::types::SortOrder,
     pub menu_index: usize,
     pub menu_focused: bool,
     /// Whether the preview pane is visible in the UI.
@@ -51,6 +52,8 @@ mod navigation;
 mod preview;
 pub mod preview_helpers;
 
+mod init;
+mod utils;
 mod methods;
 
 /// Maximum bytes to read for a file preview (100 KiB). Made public so

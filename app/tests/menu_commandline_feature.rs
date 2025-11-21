@@ -54,7 +54,7 @@ fn context_menu_enter_opens_preview() {
         active: Side::Left,
         mode: Mode::Normal,
         sort: fileZoom::app::SortKey::Name,
-        sort_desc: false,
+        sort_order: fileZoom::app::types::SortOrder::Ascending,
         menu_index: 0,
         menu_focused: false,
         preview_visible: false,

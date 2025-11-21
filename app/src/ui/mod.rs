@@ -124,7 +124,7 @@ pub fn ui(f: &mut Frame, app: &App) {
         chunks[0].width,
         chunks[0].height + chunks[1].height,
     );
-    let sort_order = if app.sort_desc { "(desc)" } else { "(asc)" };
+    let sort_order = if app.sort_order == crate::app::types::SortOrder::Descending { "(desc)" } else { "(asc)" };
     let status = format!(
         "Active: {}  |  Sort: {} {}  |  Menu: F1",
         app.active, app.sort, sort_order

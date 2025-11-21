@@ -1,5 +1,4 @@
 use super::*;
-use std::cmp::min;
 use std::io;
 
 impl App {
@@ -10,31 +9,17 @@ impl App {
 
     pub fn new() -> io::Result<Self> {
         let cwd = std::env::current_dir()?;
-        let mut app = App {
-            left: Panel::new(cwd.clone()),
-            right: Panel::new(cwd),
-            active: Side::Left,
-            mode: Mode::Normal,
-            sort: SortKey::Name,
-            sort_desc: false,
-            menu_index: 0,
-            menu_focused: false,
-            preview_visible: false,
-            command_line: None,
-            settings: crate::app::settings::write_settings::Settings::default(),
-            op_progress_rx: None,
-            op_cancel_flag: None,
-            op_decision_tx: None,
-            last_mouse_click_time: None,
-            last_mouse_click_pos: None,
-            drag_active: false,
-            drag_start: None,
-            drag_current: None,
-            drag_button: None,
-        };
+        let mut app = super::init::with_cwd(cwd);
         app.refresh()?;
         Ok(app)
     }
+
+    /// Construct an App instance with default initial values but without
+    /// performing filesystem I/O. This is useful for tests or callers that
+    /// want to initialise state and control when `refresh` runs.
+    // `with_cwd` moved to `app::core::init` to be reusable across core
+    // submodules and tests. Use `super::init::with_cwd` when constructing
+    // an App from a known working directory.
 
     /// Create an App with explicit startup options (for example a start
     /// directory or initial mouse setting). This mirrors `new` but uses
@@ -52,7 +37,7 @@ impl App {
             active: Side::Left,
             mode: Mode::Normal,
             sort: SortKey::Name,
-            sort_desc: false,
+            sort_order: crate::app::types::SortOrder::Ascending,
             menu_index: 0,
             menu_focused: false,
             preview_visible: false,
@@ -96,48 +81,45 @@ impl App {
     /// accordingly. This should be called periodically from the event loop so
     /// the UI can reflect progress updates and completion.
     pub fn poll_progress(&mut self) {
-        if let Some(rx) = &self.op_progress_rx {
-            // Drain available updates - keep the last one
+        // Poll and consume available progress updates, keeping only the
+        // most-recent one. If the channel closes we clear the receiver.
+        if let Some(rx) = self.op_progress_rx.as_ref() {
             let mut last: Option<crate::runner::progress::ProgressUpdate> = None;
-            loop {
-                match rx.try_recv() {
-                    Ok(u) => last = Some(u),
-                    Err(std::sync::mpsc::TryRecvError::Empty) => break,
-                    Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                        // Channel closed unexpectedly - clear receiver and exit
-                        self.op_progress_rx = None;
-                        break;
-                    }
-                }
+            while let Ok(update) = rx.try_recv() {
+                last = Some(update);
             }
-            if let Some(upd) = last {
-                if upd.conflict.is_some() {
-                    // Present conflict modal to user and leave decision channel
-                    if let Some(p) = &upd.conflict {
-                        self.mode = Mode::Conflict {
-                            path: p.clone(),
-                            selected: 0,
-                            apply_all: false,
-                        };
-                        return;
-                    }
+
+            // If channel is closed, ensure receiver is cleared and return.
+            if let Err(std::sync::mpsc::TryRecvError::Disconnected) = rx.try_recv() {
+                self.op_progress_rx = None;
+                return;
+            }
+
+            if let Some(update) = last {
+                if let Some(conflict_path) = update.conflict {
+                    self.mode = Mode::Conflict {
+                        path: conflict_path,
+                        selected: 0,
+                        apply_all: false,
+                    };
+                    return;
                 }
-                if upd.done {
-                    // Operation finished: clear receiver and show a message or error
+
+                if update.done {
                     self.op_progress_rx = None;
-                    // clear cancel flag as operation is complete
                     self.op_cancel_flag = None;
                     self.op_decision_tx = None;
-                    if let Some(err) = upd.error {
+
+                    if let Some(err_msg) = update.error {
                         self.mode = Mode::Message {
                             title: "Error".to_string(),
-                            content: err,
+                            content: err_msg,
                             buttons: vec!["OK".to_string()],
                             selected: 0,
                             actions: None,
                         };
                     } else {
-                        let content = format!("{} items processed", upd.processed);
+                        let content = format!("{} items processed", update.processed);
                         self.mode = Mode::Message {
                             title: "Done".to_string(),
                             content,
@@ -146,21 +128,17 @@ impl App {
                             actions: None,
                         };
                     }
-                    // Clear any multi-selections after successful/failed operation
+
                     self.left.clear_selections();
                     self.right.clear_selections();
-                    // Refresh panels after operation
                     let _ = self.refresh();
                 } else {
-                    // Update progress mode
+                    let message = update.message.unwrap_or_default();
                     self.mode = Mode::Progress {
-                        title: upd
-                            .message
-                            .clone()
-                            .unwrap_or_else(|| "Progress".to_string()),
-                        processed: upd.processed,
-                        total: upd.total,
-                        message: upd.message.unwrap_or_default(),
+                        title: if message.is_empty() { "Progress".to_string() } else { message.clone() },
+                        processed: update.processed,
+                        total: update.total,
+                        message,
                         cancelled: false,
                     };
                 }
@@ -225,31 +203,81 @@ impl App {
         };
         // Read directory entries once via a helper so the iteration and
         // filesystem interaction can be easily unit-tested or refactored.
-        let mut ents = panel.read_entries()?;
+        let mut entries = panel.read_entries()?;
+
         // Single sort pass. For `Name` sort, keep directories first (so dirs
         // appear before files) then compare by name. For other sorts compare
         // by the selected key. Apply `sort_desc` by reversing once to avoid
         // multiple reversals.
         match self.sort {
-            SortKey::Name => {
-                ents.sort_by_key(|e| (!e.is_dir, e.name.to_lowercase()));
-            }
-            SortKey::Size => ents.sort_by_key(|e| e.size),
-            SortKey::Modified => ents.sort_by_key(|e| e.modified),
+            SortKey::Name => entries.sort_by_key(|entry| (!entry.is_dir, entry.name.to_lowercase())),
+            SortKey::Size => entries.sort_by_key(|entry| entry.size),
+            SortKey::Modified => entries.sort_by_key(|entry| entry.modified),
         }
-        if self.sort_desc {
-            ents.reverse();
+
+        if self.sort_order == crate::app::types::SortOrder::Descending {
+            entries.reverse();
         }
 
         // Keep `panel.entries` as a pure domain list: only filesystem
         // entries (no synthetic header/parent). Store the read entries
         // directly and clamp UI selection/offset against the UI row
         // count (header + parent + entries).
-        panel.entries = ents;
-        let max_rows = 1 + if panel.cwd.parent().is_some() { 1 } else { 0 } + panel.entries.len();
-        panel.selected = min(panel.selected, max_rows.saturating_sub(1));
-        panel.offset = min(panel.offset, max_rows.saturating_sub(1));
+        panel.entries = entries;
+        let visible_rows = super::utils::ui_row_count(panel);
+        let last_index = visible_rows.saturating_sub(1);
+        if panel.selected > last_index {
+            panel.selected = last_index;
+        }
+        if panel.offset > last_index {
+            panel.offset = last_index;
+        }
         self.update_preview_for(side);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn with_cwd_initialises_panels() {
+        let tmp = tempdir().expect("tempdir");
+        let cwd = tmp.path().to_path_buf();
+        let app = super::init::with_cwd(cwd.clone());
+        assert_eq!(app.left.cwd, cwd);
+        assert_eq!(app.right.cwd, cwd);
+        assert!(!app.preview_visible);
+        assert!(matches!(app.mode, Mode::Normal));
+    }
+
+    #[test]
+    fn toggle_preview_changes_flag() {
+        let tmp = tempdir().expect("tempdir");
+        let cwd = tmp.path().to_path_buf();
+        let mut app = super::init::with_cwd(cwd);
+        assert!(!app.preview_visible);
+        app.toggle_preview();
+        assert!(app.preview_visible);
+        app.toggle_preview();
+        assert!(!app.preview_visible);
+    }
+
+    #[test]
+    fn menu_wraps_around() {
+        let tmp = tempdir().expect("tempdir");
+        let cwd = tmp.path().to_path_buf();
+        let mut app = super::init::with_cwd(cwd);
+        let n = crate::ui::menu::menu_labels().len();
+        if n == 0 {
+            return;
+        }
+        app.menu_index = n - 1;
+        app.menu_next();
+        assert_eq!(app.menu_index, 0);
+        app.menu_prev();
+        assert_eq!(app.menu_index, n - 1);
     }
 }

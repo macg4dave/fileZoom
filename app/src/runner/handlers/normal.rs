@@ -151,7 +151,10 @@ pub fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::
             app.refresh()?;
         }
         &KeyCode::Char('S') => {
-            app.sort_desc = !app.sort_desc;
+            app.sort_order = match app.sort_order {
+                crate::app::types::SortOrder::Ascending => crate::app::types::SortOrder::Descending,
+                crate::app::types::SortOrder::Descending => crate::app::types::SortOrder::Ascending,
+            };
             app.refresh()?;
         }
         &KeyCode::Char(' ') => {

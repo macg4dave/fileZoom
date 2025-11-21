@@ -45,19 +45,7 @@ impl Panel {
 
     /// Toggle selection of the currently selected entry (if any).
     pub fn toggle_selection(&mut self) {
-        if let Some(idx) = {
-            let header_count = 1usize;
-            let parent_count = if self.cwd.parent().is_some() {
-                1usize
-            } else {
-                0usize
-            };
-            if self.selected >= header_count + parent_count {
-                Some(self.selected - header_count - parent_count)
-            } else {
-                None
-            }
-        } {
+        if let Some(idx) = super::utils::ui_to_entry_index(self.selected, self) {
             if self.selections.contains(&idx) {
                 self.selections.remove(&idx);
             } else {
@@ -76,15 +64,7 @@ impl Panel {
     /// if the UI selected index refers to an actual item (i.e. not the
     /// header or the parent row).
     pub fn selected_entry(&self) -> Option<&Entry> {
-        let header_count = 1usize;
-        let parent_count = if self.cwd.parent().is_some() {
-            1usize
-        } else {
-            0usize
-        };
-        // Compute whether `selected` refers to an entry
-        if self.selected >= header_count + parent_count {
-            let idx = self.selected - header_count - parent_count;
+        if let Some(idx) = super::utils::ui_to_entry_index(self.selected, self) {
             self.entries.get(idx)
         } else {
             None
@@ -93,7 +73,7 @@ impl Panel {
 
     /// Move selection down by one, clamping at the last UI row.
     pub fn select_next(&mut self) {
-        let max_rows = 1 + if self.cwd.parent().is_some() { 1 } else { 0 } + self.entries.len();
+        let max_rows = super::utils::ui_row_count(self);
         if self.selected + 1 < max_rows {
             self.selected += 1;
         }
@@ -109,7 +89,7 @@ impl Panel {
     /// Ensure `selected` is within bounds of the UI rows (header +
     /// maybe parent + entries).
     pub fn clamp_selected(&mut self) {
-        let max_rows = 1 + if self.cwd.parent().is_some() { 1 } else { 0 } + self.entries.len();
+        let max_rows = super::utils::ui_row_count(self);
         if max_rows == 0 {
             self.selected = 0;
         } else {
@@ -124,7 +104,7 @@ impl Panel {
             self.offset = 0;
             return;
         }
-        let total_rows = 1 + if self.cwd.parent().is_some() { 1 } else { 0 } + self.entries.len();
+        let total_rows = super::utils::ui_row_count(self);
         if total_rows == 0 {
             self.offset = 0;
             return;

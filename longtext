@@ -27,3 +27,9 @@ Do not introduce breaking changes unless correcting incorrect behaviour.
 Delete the file if it’s obsolete or superseded.
 
 Apply all improvements directly.
+
+Update and improve all comments
+
+update and improve all usage infomation
+
+Make all vatiable names more verbose and easier to read
