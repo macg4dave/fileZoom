@@ -25,6 +25,7 @@ pub(crate) fn with_cwd(cwd: PathBuf) -> App {
         menu_focused: false,
         menu_state: crate::ui::menu_model::MenuState::default(),
         preview_visible: false,
+        file_stats_visible: false,
         command_line: None,
         settings: crate::app::settings::write_settings::Settings::default(),
         op_progress_rx: None,

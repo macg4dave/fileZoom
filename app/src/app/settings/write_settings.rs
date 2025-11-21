@@ -12,6 +12,10 @@ pub struct Settings {
     pub show_hidden: bool,
     pub left_panel_width: u16,
     pub right_panel_width: u16,
+    /// Whether the dedicated file-stats column is visible by default.
+    pub file_stats_visible: bool,
+    /// Width (percentage-like) hint for the file-stats column.
+    pub file_stats_width: u16,
     /// Ordered list of context actions shown in the context menu.
     pub context_actions: Vec<String>,
     /// Whether mouse support is enabled.
@@ -34,6 +38,9 @@ impl Default for Settings {
             show_hidden: false,
             left_panel_width: 40,
             right_panel_width: 40,
+            file_stats_visible: false,
+            // Percentage-style width when file-stats is visible (used as a hint by the UI layout).
+            file_stats_width: 10,
             context_actions: vec![
                 "View".to_string(),
                 "Edit".to_string(),
@@ -43,7 +50,8 @@ impl Default for Settings {
             mouse_enabled: true,
             mouse_double_click_ms: 500,
             prefer_integrated_vim: false,
-            show_cli_listing: false,
+            // Default to CLI-style listing to match the expected TUI look
+            show_cli_listing: true,
         }
     }
 }

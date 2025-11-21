@@ -48,6 +48,7 @@ impl App {
             menu_focused: false,
             menu_state: crate::ui::menu_model::MenuState::default(),
             preview_visible: false,
+            file_stats_visible: false,
             command_line: None,
             settings: crate::app::settings::write_settings::Settings::default(),
             op_progress_rx: None,
@@ -82,6 +83,11 @@ impl App {
     /// Toggle the preview pane visibility.
     pub fn toggle_preview(&mut self) {
         self.preview_visible = !self.preview_visible;
+    }
+
+    /// Toggle the dedicated file-stats column visibility.
+    pub fn toggle_file_stats(&mut self) {
+        self.file_stats_visible = !self.file_stats_visible;
     }
 
     /// Poll an active progress receiver and update the `Mode::Progress` state

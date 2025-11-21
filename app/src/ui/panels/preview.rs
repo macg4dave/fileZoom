@@ -46,9 +46,10 @@ pub fn draw_preview(f: &mut Frame, area: Rect, panel: &Panel) {
         acc.push('\n');
         acc
     });
-    // If we have textual preview content render it; otherwise fall back to a
-    // concise file-details view for the selected entry (if present) or a
-    // simple "no preview" placeholder.
+    // If we have textual preview content render it; otherwise render a
+    // simple "no preview" placeholder. The dedicated file-stats column (if
+    // enabled) now owns the compact metadata UI and preview no longer falls
+    // back to rendering file-stats itself.
     if !text.trim().is_empty() {
         let preview = Paragraph::new(text).block(
             Block::default()
@@ -57,9 +58,6 @@ pub fn draw_preview(f: &mut Frame, area: Rect, panel: &Panel) {
                 .style(theme.preview_block_style),
         );
         f.render_widget(preview, cols[0]);
-    } else if let Some(entry) = panel.selected_entry() {
-        // Draw a compact file details block into the preview region.
-        crate::ui::file_stats_ui::draw_file_stats(f, cols[0], entry);
     } else {
         let preview = Paragraph::new("No preview available").block(
             Block::default()
