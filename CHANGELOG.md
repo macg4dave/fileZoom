@@ -138,6 +138,9 @@
   - The hooks are enabled when running with the Cargo feature
     `test-helpers`; when the feature is not enabled the module provides
     safe no-op fallbacks so production builds are unaffected.
+  - Tidy: remove unused public re-exports from `crate::fs_op::test_helpers`
+    and reference the private `inner` helpers directly in tests to
+    eliminate dead-code / unused-import warnings during builds.
   - Enable the feature when running tests that rely on the hooks, e.g.:
 
     ```bash

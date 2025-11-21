@@ -73,6 +73,7 @@ mod inner {
 }
 
 #[cfg(not(feature = "test-helpers"))]
+#[allow(dead_code)]
 mod inner {
     use std::sync::{Mutex, MutexGuard, OnceLock};
 
@@ -104,26 +105,41 @@ mod inner {
 // Re-export the internal implementations with tightened visibility so
 // other modules inside the crate can use them while keeping the public
 // API surface minimal.
+// The `inner` module provides the test helpers (real implementations when
+// `test-helpers` feature enabled, no-op fallbacks otherwise). Re-export
+// the intended API at crate-internal visibility so other `fs_op` helpers
+// (and tests) can reference `crate::fs_op::test_helpers::{...}`.
+//
+// Some builds (tests without the feature enabled) can trigger ``unused
+// import`` lint noise for these re-exports; silence that lint here while
+// keeping the tidy internal API stable.
+#[allow(unused_imports)]
 pub(crate) use inner::acquire_test_lock;
+#[allow(unused_imports)]
 pub(crate) use inner::set_force_rename_fail_in_copy;
+#[allow(unused_imports)]
 pub(crate) use inner::set_force_rename_fail_in_rename_or_copy;
+#[allow(unused_imports)]
 pub(crate) use inner::set_force_rename_fail_in_write;
+#[allow(unused_imports)]
 pub(crate) use inner::should_force_rename_fail_in_copy;
+#[allow(unused_imports)]
 pub(crate) use inner::should_force_rename_fail_in_rename_or_copy;
+#[allow(unused_imports)]
 pub(crate) use inner::should_force_rename_fail_in_write;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::inner;
 
     #[test]
     fn acquire_lock_multiple_times() {
         // We can lock multiple times across scopes; dropping releases the lock.
         {
-            let _g = acquire_test_lock();
+            let _g = inner::acquire_test_lock();
         }
         // second acquire should succeed
-        let _g2 = acquire_test_lock();
+        let _g2 = inner::acquire_test_lock();
         drop(_g2);
     }
 
@@ -131,29 +147,29 @@ mod tests {
     #[test]
     fn feature_flags_toggle() {
         // Ensure each flag can be set and cleared.
-        set_force_rename_fail_in_copy(true);
-        assert!(should_force_rename_fail_in_copy());
-        set_force_rename_fail_in_copy(false);
-        assert!(!should_force_rename_fail_in_copy());
+        inner::set_force_rename_fail_in_copy(true);
+        assert!(inner::should_force_rename_fail_in_copy());
+        inner::set_force_rename_fail_in_copy(false);
+        assert!(!inner::should_force_rename_fail_in_copy());
 
-        set_force_rename_fail_in_write(true);
-        assert!(should_force_rename_fail_in_write());
-        set_force_rename_fail_in_write(false);
-        assert!(!should_force_rename_fail_in_write());
+        inner::set_force_rename_fail_in_write(true);
+        assert!(inner::should_force_rename_fail_in_write());
+        inner::set_force_rename_fail_in_write(false);
+        assert!(!inner::should_force_rename_fail_in_write());
 
-        set_force_rename_fail_in_rename_or_copy(true);
-        assert!(should_force_rename_fail_in_rename_or_copy());
-        set_force_rename_fail_in_rename_or_copy(false);
-        assert!(!should_force_rename_fail_in_rename_or_copy());
+        inner::set_force_rename_fail_in_rename_or_copy(true);
+        assert!(inner::should_force_rename_fail_in_rename_or_copy());
+        inner::set_force_rename_fail_in_rename_or_copy(false);
+        assert!(!inner::should_force_rename_fail_in_rename_or_copy());
     }
 
     #[cfg(not(feature = "test-helpers"))]
     #[test]
     fn non_feature_defaults() {
         // When the feature is disabled the query functions are stable no-ops.
-        assert!(!should_force_rename_fail_in_copy());
-        assert!(!should_force_rename_fail_in_write());
-        assert!(!should_force_rename_fail_in_rename_or_copy());
+        assert!(!inner::should_force_rename_fail_in_copy());
+        assert!(!inner::should_force_rename_fail_in_write());
+        assert!(!inner::should_force_rename_fail_in_rename_or_copy());
     }
 }
 
