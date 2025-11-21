@@ -65,19 +65,13 @@ fn clicking_top_menu_activates_menu_item() {
         row: 0,
         kind: MouseEventKind::Down(fileZoom::input::mouse::MouseButton::Left),
     };
-    // handler returns Ok(true) when menu activation occurs
+    // handler returns Ok(true) when menu activation occurs; File has a submenu
     let res = handlers::handle_mouse(&mut app, me, term).unwrap();
     assert!(res);
-    match &app.mode {
-        Mode::Message { title, .. } => {
-            // menu_labels()[0] == "File"
-            assert_eq!(title, "File");
-        }
-        other => panic!(
-            "expected Message mode after menu activation, got: {:?}",
-            other
-        ),
-    }
+    // File has a submenu in the new model so we expect the top menu to be open
+    assert!(app.menu_focused);
+    assert!(app.menu_state.open);
+    assert_eq!(app.menu_index, 0);
 }
 
 #[test]

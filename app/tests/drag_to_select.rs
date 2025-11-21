@@ -17,6 +17,7 @@ fn drag_to_select_left_panel() {
         sort_order: fileZoom::app::types::SortOrder::Ascending,
         menu_index: 0,
         menu_focused: false,
+        menu_state: fileZoom::ui::menu_model::MenuState::default(),
         preview_visible: false,
         command_line: None,
         settings: fileZoom::app::settings::write_settings::Settings::default(),

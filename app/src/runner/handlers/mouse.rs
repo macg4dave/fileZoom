@@ -28,16 +28,61 @@ pub fn handle_mouse(app: &mut App, me: MouseEvent, term_rect: Rect) -> Result<bo
         }
     }
 
+    // If a submenu is open allow clicks on the status row (below the menu)
+    // to activate submenu entries (header area only provides one extra
+    // row in the compact layout so map that row to the first item).
+    if app.menu_state.open && me.row >= chunks[1].y && me.row < chunks[1].y + chunks[1].height {
+        let labels = menu::menu_labels();
+        if !labels.is_empty() && me.column < term_rect.width {
+            let idx = crate::ui::menu_model::MenuState::index_for_x(me.column, term_rect.width as u16, &labels);
+            if idx == app.menu_index && matches!(me.kind, MouseEventKind::Down(MouseButton::Left)) {
+                if let Some(top) = crate::ui::menu_model::MenuModel::default_model().0.get(app.menu_index) {
+                    if top.submenu.is_some() {
+                        app.menu_state.submenu_index = Some(0usize);
+                        app.menu_activate();
+                        return Ok(true);
+                    }
+                }
+            }
+        }
+    }
+
     // Menu bar row
     if me.row >= chunks[0].y && me.row < chunks[0].y + chunks[0].height {
-        let width = term_rect.width as usize;
+        let width = term_rect.width as u16;
         let labels = menu::menu_labels();
         if !labels.is_empty() {
-            let idx = (me.column as usize * labels.len()).saturating_div(width.max(1));
+            // Map the click X coordinate to a label index using the model helper.
+            let idx = crate::ui::menu_model::MenuState::index_for_x(me.column, width, &labels);
             app.menu_index = std::cmp::min(idx, labels.len().saturating_sub(1));
             app.menu_focused = true;
+
+            // If submenu is open and the user clicked the row below the top
+            // row try to activate the submenu entry. (Header layout gives
+            // only one extra row so we map that to the first submenu item.)
+            if app.menu_state.open && me.row == chunks[0].y + 1 && matches!(me.kind, MouseEventKind::Down(MouseButton::Left)) {
+                if let Some(top) = crate::ui::menu_model::MenuModel::default_model().0.get(app.menu_index) {
+                    if top.submenu.is_some() {
+                        app.menu_state.submenu_index = Some(0usize);
+                        app.menu_activate();
+                        return Ok(true);
+                    }
+                }
+            }
+
             if matches!(me.kind, MouseEventKind::Down(MouseButton::Left)) {
-                app.menu_activate();
+                // If the clicked top label has a submenu, toggle it; otherwise
+                // activate immediately for backwards compatibility.
+                let model = crate::ui::menu_model::MenuModel::default_model();
+                if let Some(top) = model.0.get(app.menu_index) {
+                    if top.submenu.is_some() {
+                        app.toggle_menu(app.menu_index);
+                    } else {
+                        app.menu_activate();
+                    }
+                } else {
+                    app.menu_activate();
+                }
                 return Ok(true);
             }
         }

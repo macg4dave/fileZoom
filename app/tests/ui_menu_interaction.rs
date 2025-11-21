@@ -24,12 +24,18 @@ fn menu_click_activates_item() {
     };
     let rect = Rect::new(0, 0, width, 24);
     let _ = handle_mouse(&mut app, me, rect).unwrap();
-    // after activation the mode should be a Message with the menu title
-    match app.mode {
-        fileZoom::app::Mode::Message { ref title, .. } => {
-            assert_eq!(title, &labels[app.menu_index]);
+    // For items that have a submenu the click opens the menu; otherwise
+    // legacy behaviour returns a Message mode.
+    let mm = fileZoom::ui::menu_model::MenuModel::default_model();
+    if mm.0[app.menu_index].submenu.is_some() {
+        assert!(app.menu_state.open);
+    } else {
+        match app.mode {
+            fileZoom::app::Mode::Message { ref title, .. } => {
+                assert_eq!(title, &labels[app.menu_index]);
+            }
+            _ => panic!("Expected Message mode after menu activation"),
         }
-        _ => panic!("Expected Message mode after menu activation"),
     }
 }
 

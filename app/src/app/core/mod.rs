@@ -36,6 +36,8 @@ pub struct App {
     pub menu_index: usize,
     /// Whether the top-level menu has keyboard focus.
     pub menu_focused: bool,
+    /// UI state for dropdowns and submenu selection.
+    pub menu_state: crate::ui::menu_model::MenuState,
     /// Whether the preview pane is visible in the UI.
     pub preview_visible: bool,
     /// Optional command-line state when user opens the command input.

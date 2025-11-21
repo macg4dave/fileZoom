@@ -46,6 +46,7 @@ impl App {
             sort_order: crate::app::types::SortOrder::Ascending,
             menu_index: 0,
             menu_focused: false,
+            menu_state: crate::ui::menu_model::MenuState::default(),
             preview_visible: false,
             command_line: None,
             settings: crate::app::settings::write_settings::Settings::default(),
@@ -183,8 +184,53 @@ impl App {
         self.menu_index = (self.menu_index + n - 1) % n;
     }
 
-    /// Activate currently selected menu item (for now show a message).
+    /// Activate currently selected menu item. If a submenu is open select
+    /// the submenu action; otherwise behave like the historic `menu_activate`
+    /// (Settings -> Mode::Settings, otherwise a simple Message dialog).
     pub fn menu_activate(&mut self) {
+        use crate::ui::menu_model::{MenuModel, MenuAction};
+
+        // If a submenu is open try to dispatch the submenu action.
+        if self.menu_state.open {
+            if let Some(action) = self.menu_state.selected_action(&MenuModel::default_model()) {
+                match action {
+                    MenuAction::Settings => { self.mode = Mode::Settings { selected: 0 }; }
+                    MenuAction::NewFile => { self.mode = Mode::Input { prompt: "New file name:".to_string(), buffer: String::new(), kind: crate::app::InputKind::NewFile }; }
+                    MenuAction::NewDir => { self.mode = Mode::Input { prompt: "New dir name:".to_string(), buffer: String::new(), kind: crate::app::InputKind::NewDir }; }
+                    MenuAction::Copy => { let _ = crate::runner::handlers::handle_key(self, crate::input::KeyCode::F(5), 10); }
+                    MenuAction::Move => { let _ = crate::runner::handlers::handle_key(self, crate::input::KeyCode::F(6), 10); }
+                    MenuAction::Sort => { self.sort = self.sort.next(); let _ = self.refresh(); }
+                    MenuAction::Help => { let content = "See help ( ? )".to_string(); self.mode = Mode::Message { title: "Help".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None }; }
+                    MenuAction::Quit => { let content = "Quit the app with 'q'".to_string(); self.mode = Mode::Message { title: "Quit".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None }; }
+                    MenuAction::About | MenuAction::Noop => { /* fallthrough to label-based message below */ }
+                }
+                // Close submenu after activation
+                self.menu_state.close();
+                return;
+            }
+        }
+
+        // Fallback: check model-level direct actions first, then historic label behaviour.
+        let model = MenuModel::default_model();
+        if let Some(top) = model.0.get(self.menu_index) {
+            if let Some(act) = top.action {
+                match act {
+                    MenuAction::Copy => {
+                        // Reuse the top-level key handler for F5 so behavior is consistent.
+                        let _ = crate::runner::handlers::handle_key(self, crate::input::KeyCode::F(5), 10);
+                        return;
+                    }
+                    MenuAction::Move => { let _ = crate::runner::handlers::handle_key(self, crate::input::KeyCode::F(6), 10); return; }
+                    MenuAction::Sort => { self.sort = self.sort.next(); let _ = self.refresh(); return; }
+                    MenuAction::Settings => { self.mode = Mode::Settings { selected: 0 }; return; }
+                    MenuAction::Help => { let content = "See help ( ? )".to_string(); self.mode = Mode::Message { title: "Help".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None }; return; }
+                    MenuAction::Quit => { let content = "Quit the app with 'q'".to_string(); self.mode = Mode::Message { title: "Quit".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None }; return; }
+                    _ => { /* fall through to label message */ }
+                }
+            }
+        }
+
+        // Label fallback / legacy behavior
         let labels = crate::ui::menu::menu_labels();
         if let Some(lbl) = labels.get(self.menu_index) {
             if *lbl == "Settings" {
@@ -198,6 +244,41 @@ impl App {
                     selected: 0,
                     actions: None,
                 };
+            }
+        }
+    }
+
+    /// Toggle or open a top-level menu by index (used by mouse and keyboard flows)
+    pub fn toggle_menu(&mut self, idx: usize) {
+        self.menu_index = idx;
+        self.menu_state.toggle_top(idx);
+    }
+
+    pub fn open_menu(&mut self, idx: usize) {
+        self.menu_index = idx;
+        self.menu_state.open_top(idx);
+    }
+
+    pub fn close_menu(&mut self) {
+        self.menu_state.close();
+    }
+
+    pub fn menu_sub_next(&mut self) {
+        let model = crate::ui::menu_model::MenuModel::default_model();
+        if let Some(top) = model.0.get(self.menu_state.top_index) {
+            if let Some(sub) = &top.submenu {
+                let total = sub.len();
+                self.menu_state.select_next(total);
+            }
+        }
+    }
+
+    pub fn menu_sub_prev(&mut self) {
+        let model = crate::ui::menu_model::MenuModel::default_model();
+        if let Some(top) = model.0.get(self.menu_state.top_index) {
+            if let Some(sub) = &top.submenu {
+                let total = sub.len();
+                self.menu_state.select_prev(total);
             }
         }
     }
