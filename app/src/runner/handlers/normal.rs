@@ -15,10 +15,10 @@ pub fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::
     }
     match &code {
         &KeyCode::Char('q') => return Ok(true),
-        &KeyCode::Down => app.next(page_size),
-        &KeyCode::Up => app.previous(page_size),
-        &KeyCode::PageDown => app.page_down(page_size),
-        &KeyCode::PageUp => app.page_up(page_size),
+        &KeyCode::Down => app.select_next(page_size),
+        &KeyCode::Up => app.select_prev(page_size),
+        &KeyCode::PageDown => app.select_page_down(page_size),
+        &KeyCode::PageUp => app.select_page_up(page_size),
         &KeyCode::Enter if !app.menu_focused => {
             let panel = app.active_panel_mut();
             if panel.selected == 0 {

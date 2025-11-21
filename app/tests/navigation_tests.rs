@@ -35,16 +35,16 @@ fn app_navigation_next_prev_and_paging() {
 
     // initial selected should be 0
     assert_eq!(app.left.selected, 0);
-    app.next(3);
+    app.select_next(3);
     assert_eq!(app.left.selected, 1);
     // page down by 3 -> 1 + 3 == 4
-    app.page_down(3);
+    app.select_page_down(3);
     assert_eq!(app.left.selected, 4);
     // page up by 2 -> 4 - 2 == 2
-    app.page_up(2);
+    app.select_page_up(2);
     assert_eq!(app.left.selected, 2);
     // previous -> 1
-    app.previous(3);
+    app.select_prev(3);
     assert_eq!(app.left.selected, 1);
 
     // Switching active side should affect the correct panel
@@ -53,7 +53,7 @@ fn app_navigation_next_prev_and_paging() {
         .map(|i| Entry::directory(format!("r{}", i), PathBuf::from(format!("/r{}", i)), None))
         .collect();
     assert_eq!(app.right.selected, 0);
-    app.next(3);
+    app.select_next(3);
     assert_eq!(app.right.selected, 1);
 }
 

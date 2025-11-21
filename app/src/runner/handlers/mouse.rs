@@ -39,9 +39,9 @@ pub fn handle_mouse(app: &mut App, me: MouseEvent, term_rect: Rect) -> anyhow::R
                 app.active = Side::Left;
                 let lh = list_height(main_chunks[0]);
                 if matches!(me.kind, MouseEventKind::ScrollDown) {
-                    app.next(lh);
+                    app.select_next(lh);
                 } else {
-                    app.previous(lh);
+                    app.select_prev(lh);
                 }
                 return Ok(false);
             }
@@ -54,9 +54,9 @@ pub fn handle_mouse(app: &mut App, me: MouseEvent, term_rect: Rect) -> anyhow::R
                 app.active = Side::Right;
                 let lh = list_height(main_chunks[1]);
                 if matches!(me.kind, MouseEventKind::ScrollDown) {
-                    app.next(lh);
+                    app.select_next(lh);
                 } else {
-                    app.previous(lh);
+                    app.select_prev(lh);
                 }
                 return Ok(false);
             }
