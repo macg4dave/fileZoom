@@ -13,20 +13,17 @@
   (improves robustness and reduces manual recursion code). Files updated:
   - `app/src/fs_op/copy.rs`
   - `app/src/fs_op/mv.rs`
-  - `app/src/building/make_fakefs_lib.rs`
 
 - Adopt `fs_extra` for file/directory copy operations and add metadata
   preservation hooks:
   - Use `fs_extra` for recursive and batch copies where appropriate to
     improve throughput and simplify implementation.
   - Preserve permissions and timestamps (best-effort) after copies to
-    better retain source metadata; atomic single-file copies still use
     the project's `atomic_copy_file` helper to avoid exposing partially
     written files.
   - `CopyOptions` tuned for the project: 64 KiB buffer and `overwrite = false`.
 
 - Filesystem watching (optional):
-  - Add an optional feature `fs-watch` (gated behind Cargo features) which
     enables filesystem watching via the `notify` crate.
   - The watcher runs in a background thread and sends `FsEvent` messages
     into the runner; the event loop now maps events to affected panel(s)
@@ -36,7 +33,6 @@
   - Implementation: `app/src/fs_op/watcher.rs`, runner wiring in
     `app/src/runner/event_loop_main.rs`, and an integration test
     `app/tests/fs_watch.rs`.
-
   - Refactor: `app::core` module cleanup
     - Consolidated and documented `app/src/app/core/mod.rs`:
       - Introduced clear type aliases for background operation channels and
@@ -48,9 +44,11 @@
       - Improved comments and Rustdoc for `App` and its helper accessors,
         simplified `selected_index` logic, and removed dead/duplicate code.
       - Adjusted helper visibility and kept compatibility with existing
-        tests and modules.
+     - File list now displays permission bits, owner UID, group GID, size and modified timestamp in columns to match a CLI-style listing.
+     - Preview fallback (Details) now includes Permissions, Owner, Group, and readable/writable/executable flags.
+     - `Entry` model extended to hold best-effort metadata (unix_mode, uid, gid, can_read/can_write/can_execute) gathered when reading directories.
+     - Tests added and updated to cover metadata population and the new preview fields.
     - Tests: added a small unit check for `MAX_PREVIEW_BYTES`; full
-      behaviour remains covered by existing integration tests.
 
   - Refactor: navigation helpers and API rename
     - Refactored `app/src/app/core/navigation.rs` to centralise post-navigation
@@ -67,7 +65,6 @@
       require backwards compatibility.
 
 - Tidy: Refactor preview helpers and small core modules
-  - Reworked preview helpers in `app/src/app/core/preview.rs`:
     - Implemented clearer `is_binary` heuristic (NUL detection, UTF-8 checks,
       and a non-printable character ratio threshold).
     - `build_file_preview` now reads a bounded sample, strips UTF-8 BOM,
@@ -82,9 +79,7 @@
   - Small hygiene changes in `app/src/app/core/methods.rs` and
     `app/src/app/core/init.rs`: replaced `use super::*` globs with explicit
     imports and added brief module docs.
-
 - Switch POSIX ACL handling to Rust-only xattr round-trip
-  - Add `app/src/fs_op/posix_acl.rs` which preserves POSIX ACLs by
     reading and writing the `system.posix_acl_access` and
     `system.posix_acl_default` xattrs as opaque binary blobs (round-trip).
   - Remove reliance on native `libacl` bindings and external `getfacl`/
@@ -113,7 +108,6 @@
     for high-level App filesystem operations and tidy internal API.
   - Update runner handlers (`runner/handlers/*`) to use
     `render_fsop_error` where appropriate.
-  - Tests updated/added for move/rename fallback behaviour (feature
     `test-helpers`). All tests pass locally after the change.
 
   - Refactor: move/copy helpers and richer move errors
@@ -132,7 +126,6 @@
 - Test-hooks: move and feature-gate
   - Move test-only failure hooks used by filesystem operation tests into a
     dedicated module: `app/src/fs_op/test_helpers.rs`.
-  - Expose a small, stable API under `crate::fs_op::test_helpers` used by
     unit tests to force rename/copy/write failure paths and to acquire a
     global test lock when mutating hooks.
   - The hooks are enabled when running with the Cargo feature
@@ -146,14 +139,12 @@
     ```bash
     cd app
     cargo test -p fileZoom --features test-helpers -- --nocapture
-    ```
 
 - Refactor: `fs_op::path` path resolver
   - Reworked `app/src/fs_op/path.rs` to improve clarity and robustness:
     - Replace manual `Display`/`Error` impl with `thiserror`-derived
       `PathError` for clearer diagnostics and easier conversions.
     - Use `directories_next::UserDirs` (with an env-var fallback) for reliable
-      cross-platform `~` expansion.
     - Simplified `resolve_path` logic, tightened types, and removed
       duplicated code paths.
     - Tightened visibility and removed unused imports.
@@ -170,7 +161,6 @@
   - Behaviour and public helpers remain compatible; tests updated and pass.
 
 - Refactor: conflict resolution handler
-  - Simplified `runner/handlers/conflict.rs`: extracted a pure mapping helper
     and centralized the send+progress transition to remove duplicated
     branching logic and reduce clones/side-effects.
   - Added focused unit tests for the mapping logic (`map_selection_to_decision`) in
@@ -183,7 +173,6 @@
       - `app/tests/context_menu_extra.rs` covers unknown/other labels (ensuring
         an informative `Mode::Message` is shown) and navigation boundary cases
         (selection does not underflow or overflow).
-      - These tests exercise the context-menu handler and help protect the
         `ContextAction` parsing and navigation logic.
 
 - Refactor: runner command parsing and execution

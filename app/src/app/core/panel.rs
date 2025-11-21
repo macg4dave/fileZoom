@@ -153,11 +153,45 @@ impl Panel {
             let name = dir_entry.file_name().to_string_lossy().into_owned();
             let path_buf = dir_entry.path().to_path_buf();
 
-            let file_entry = if metadata.is_dir() {
-                Entry::directory(name, path_buf, modified_time)
+            let mut file_entry = if metadata.is_dir() {
+                Entry::directory(name, path_buf.clone(), modified_time)
             } else {
-                Entry::file(name, path_buf, metadata.len(), modified_time)
+                Entry::file(name, path_buf.clone(), metadata.len(), modified_time)
             };
+
+            // Best-effort: populate permission/ownership flags using the
+            // existing helpers. Failure to inspect is tolerated.
+            if let Ok(perms) = crate::fs_op::permissions::inspect_permissions(&path_buf, false)
+            {
+                file_entry.unix_mode = perms.unix_mode;
+                file_entry.can_read = Some(perms.can_read);
+                file_entry.can_write = Some(perms.can_write);
+                file_entry.can_execute = Some(perms.can_execute);
+            }
+
+            // Best-effort: uid/gid when available on unix platforms.
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::MetadataExt;
+                file_entry.uid = Some(metadata.uid());
+                file_entry.gid = Some(metadata.gid());
+
+                // Best-effort: resolve uid/gid to names for display
+                // Use the `users` crate which works cross-platform.
+                if let Some(u) = users::get_user_by_uid(metadata.uid()) {
+                    file_entry.owner = Some(u.name().to_string_lossy().into_owned());
+                }
+                if let Some(g) = users::get_group_by_gid(metadata.gid()) {
+                    file_entry.group = Some(g.name().to_string_lossy().into_owned());
+                }
+            }
+            #[cfg(not(unix))]
+            {
+                // populate the uid/gid fields where possible via metadata but
+                // avoid making platform assumptions about user/group resolution
+                file_entry.uid = None;
+                file_entry.gid = None;
+            }
 
             entries_vec.push(file_entry);
         }
@@ -194,5 +228,27 @@ mod tests {
         let p = Panel::new(temp.path().to_path_buf());
         let entries = p.read_entries().unwrap();
         assert!(entries.is_empty(), "expected no entries in empty temp dir");
+    }
+
+    #[test]
+    fn read_entries_populates_permissions_and_owner() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        let file = temp.child("foo.txt");
+        file.write_str("hello").unwrap();
+
+        let p = Panel::new(temp.path().to_path_buf());
+        let entries = p.read_entries().unwrap();
+        assert!(!entries.is_empty());
+        let e = &entries[0];
+        // Best-effort checks: permission flags should be set at least
+        assert!(e.can_read.is_some(), "expected can_read to be present");
+        assert!(e.can_write.is_some(), "expected can_write to be present");
+
+        #[cfg(unix)]
+        {
+            assert!(e.unix_mode.is_some(), "expected unix_mode on unix");
+            assert!(e.uid.is_some(), "expected uid on unix");
+            assert!(e.gid.is_some(), "expected gid on unix");
+        }
     }
 }

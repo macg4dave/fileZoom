@@ -18,6 +18,8 @@ pub struct Settings {
     pub mouse_enabled: bool,
     /// Double-click timeout in milliseconds.
     pub mouse_double_click_ms: u64,
+    /// When true, show the file list using the CLI-like layout (permissions, owner, group columns).
+    pub show_cli_listing: bool,
     /// When true, prefer the integrated `vim` launcher which properly
     /// suspends/restores the TUI. When false, fall back to spawning the
     /// user's `EDITOR` command; integrated launcher is still used when
@@ -41,6 +43,7 @@ impl Default for Settings {
             mouse_enabled: true,
             mouse_double_click_ms: 500,
             prefer_integrated_vim: false,
+            show_cli_listing: false,
         }
     }
 }

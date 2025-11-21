@@ -15,6 +15,7 @@ fn save_and_load_settings_roundtrip() {
         show_hidden: true,
         left_panel_width: 30,
         right_panel_width: 50,
+        show_cli_listing: false,
         context_actions: Settings::default().context_actions.clone(),
         mouse_enabled: true,
         mouse_double_click_ms: 500,

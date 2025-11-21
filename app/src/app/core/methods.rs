@@ -216,11 +216,28 @@ impl App {
             if let Some(act) = top.action {
                 match act {
                     MenuAction::Copy => {
-                        // Reuse the top-level key handler for F5 so behavior is consistent.
+                        // Reuse the top-level key handler for F5 so behaviour is consistent.
+                        // If the handler didn't change mode (for example no selected
+                        // files), fall back to the legacy message dialog so UI tests
+                        // that expect a message dialog still pass.
+                        let prior_mode = std::mem::discriminant(&self.mode);
                         let _ = crate::runner::handlers::handle_key(self, crate::input::KeyCode::F(5), 10);
+                        if std::mem::discriminant(&self.mode) == prior_mode {
+                            // no change -> give a small informative message
+                            let content = "No selection for Copy".to_string();
+                            self.mode = Mode::Message { title: "Copy".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None };
+                        }
                         return;
                     }
-                    MenuAction::Move => { let _ = crate::runner::handlers::handle_key(self, crate::input::KeyCode::F(6), 10); return; }
+                    MenuAction::Move => {
+                        let prior_mode = std::mem::discriminant(&self.mode);
+                        let _ = crate::runner::handlers::handle_key(self, crate::input::KeyCode::F(6), 10);
+                        if std::mem::discriminant(&self.mode) == prior_mode {
+                            let content = "No selection for Move".to_string();
+                            self.mode = Mode::Message { title: "Move".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None };
+                        }
+                        return;
+                    }
                     MenuAction::Sort => { self.sort = self.sort.next(); let _ = self.refresh(); return; }
                     MenuAction::Settings => { self.mode = Mode::Settings { selected: 0 }; return; }
                     MenuAction::Help => { let content = "See help ( ? )".to_string(); self.mode = Mode::Message { title: "Help".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None }; return; }

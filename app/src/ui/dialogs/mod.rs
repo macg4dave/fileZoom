@@ -21,6 +21,7 @@ pub fn draw_settings(f: &mut Frame, area: Rect, app: &crate::app::App, selected:
         "Off"
     };
     let ms = app.settings.mouse_double_click_ms;
+    let cli_mode_on = if app.settings.show_cli_listing { "On" } else { "Off" };
 
     let mut lines: Vec<Line> = Vec::new();
     let normal_style = theme.help_block_style;
@@ -48,8 +49,16 @@ pub fn draw_settings(f: &mut Frame, area: Rect, app: &crate::app::App, selected:
             },
         ),
     ]);
+    let line2 = Line::from(vec![
+        Span::raw("Show CLI-style listing: "),
+        Span::styled(
+            cli_mode_on,
+            if selected == 2 { highlight_style } else { normal_style },
+        ),
+    ]);
     lines.push(line0);
     lines.push(line1);
+    lines.push(line2);
 
     let line_count = lines.len();
     let body = Paragraph::new(lines)
@@ -88,11 +97,11 @@ pub fn draw_settings(f: &mut Frame, area: Rect, app: &crate::app::App, selected:
         f.render_widget(body, content_rect);
     }
 
-    // Footer buttons Save / Cancel. Highlight according to selection index 2/3
+    // Footer buttons Save / Cancel. Highlight according to selection index 3/4
     let buttons = ["Save", "Cancel"];
-    // Map selection index into footer button index (2 -> 0, 3 -> 1). If selected < 2, no footer focus.
-    let footer_selected = if selected >= 2 {
-        selected - 2
+    // Map selection index into footer button index (3 -> 0, 4 -> 1). If selected < 3, no footer focus.
+    let footer_selected = if selected >= 3 {
+        selected - 3
     } else {
         buttons.len()
     };

@@ -81,12 +81,14 @@ pub fn ui(f: &mut Frame, app: &App) {
         left_chunks[1],
         &app.left,
         app.active == crate::app::Side::Left,
+        app.settings.show_cli_listing,
     );
     panels::draw_list(
         f,
         right_chunks[1],
         &app.right,
         app.active == crate::app::Side::Right,
+        app.settings.show_cli_listing,
     );
 
     if app.preview_visible {

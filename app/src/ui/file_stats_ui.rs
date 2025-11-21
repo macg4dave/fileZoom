@@ -13,12 +13,26 @@ pub fn format_file_stats(e: &Entry) -> Vec<String> {
     lines.push(format!("Path: {}", e.path.display()));
     lines.push(if e.is_dir { "Type: directory".to_string() } else { "Type: file".to_string() });
     lines.push(format!("Size: {} bytes", e.size));
+    // Permissions / unix mode (best-effort)
+    let perms = crate::fs_op::permissions::format_unix_mode(e.unix_mode);
+    lines.push(format!("Permissions: {}", perms));
+
+    // Owner / group (UID/GID when names are unavailable)
+    let owner = e.uid.map(|u| u.to_string()).unwrap_or_else(|| "-".to_string());
+    let group = e.gid.map(|g| g.to_string()).unwrap_or_else(|| "-".to_string());
+    lines.push(format!("Owner: {}", owner));
+    lines.push(format!("Group: {}", group));
     let modified = e
         .modified
         .as_ref()
         .map(|dt| dt.to_string())
         .unwrap_or_else(|| "(unknown)".into());
     lines.push(format!("Modified: {}", modified));
+    // Best-effort flags
+    let r = e.can_read.map(|v| v.to_string()).unwrap_or_else(|| "n/a".to_string());
+    let w = e.can_write.map(|v| v.to_string()).unwrap_or_else(|| "n/a".to_string());
+    let x = e.can_execute.map(|v| v.to_string()).unwrap_or_else(|| "n/a".to_string());
+    lines.push(format!("Readable: {}  Writable: {}  Executable: {}", r, w, x));
     lines
 }
 
@@ -52,6 +66,9 @@ mod tests {
         assert!(lines.iter().any(|l| l.starts_with("Name:")));
         assert!(lines.iter().any(|l| l.starts_with("Path:")));
         assert!(lines.iter().any(|l| l.starts_with("Size:")));
+        assert!(lines.iter().any(|l| l.starts_with("Permissions:")));
+        assert!(lines.iter().any(|l| l.starts_with("Owner:")));
+        assert!(lines.iter().any(|l| l.starts_with("Group:")));
     }
 
     #[test]
