@@ -1,3 +1,3 @@
-pub fn menu_labels() -> Vec<String> {
-    vec!["File".into(), "Edit".into(), "Help".into()]
+pub fn menu_labels() -> Vec<&'static str> {
+    vec!["File", "Copy", "Move", "New", "Sort", "Settings", "Help"]
 }

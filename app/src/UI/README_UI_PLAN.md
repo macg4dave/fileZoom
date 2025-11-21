@@ -11,6 +11,9 @@ Structure
 - `tests/` — layout rendering tests using TestBackend
 
 Design goals:
+
 - Adaptive / responsive layout
+
 - 100% ratatui + crossterm for terminal control
+
 - Safe terminal lifecycles and extensive tests

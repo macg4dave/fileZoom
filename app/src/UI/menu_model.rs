@@ -29,7 +29,15 @@ pub struct MenuModel;
 
 impl MenuModel {
     pub fn default_model() -> (Vec<MenuTop>, ()) {
-        let tops = vec![MenuTop { label: "File".into(), action: None, submenu: Some(vec![MenuItem{label:"New File".into(), action: Some(MenuAction::NewFile)}, MenuItem{label:"New Dir".into(), action: Some(MenuAction::NewDir)}])}, MenuTop{label: "Help".into(), action: Some(MenuAction::Help), submenu: None}];
+        let tops = vec![
+            MenuTop { label: "File".into(), action: None, submenu: Some(vec![MenuItem{label:"Open".into(), action: Some(MenuAction::Noop)}]) },
+            MenuTop { label: "Copy".into(), action: Some(MenuAction::Copy), submenu: None },
+            MenuTop { label: "Move".into(), action: Some(MenuAction::Move), submenu: None },
+            MenuTop { label: "New".into(), action: None, submenu: Some(vec![MenuItem{label:"New File".into(), action: Some(MenuAction::NewFile)}, MenuItem{label:"New Dir".into(), action: Some(MenuAction::NewDir)}])},
+            MenuTop { label: "Sort".into(), action: Some(MenuAction::Sort), submenu: None },
+            MenuTop { label: "Settings".into(), action: Some(MenuAction::Settings), submenu: None },
+            MenuTop { label: "Help".into(), action: Some(MenuAction::Help), submenu: None },
+        ];
         (tops, ())
     }
 }
@@ -41,7 +49,13 @@ impl MenuState {
         })
     }
 
-    pub fn index_for_x(_col: u16, _width: u16, _labels: &Vec<String>) -> usize { 0 }
+    pub fn index_for_x(col: u16, width: u16, labels: &Vec<&str>) -> usize {
+        let n = labels.len();
+        if n == 0 { return 0; }
+        let step = (width as usize).saturating_div(n.max(1));
+        let idx = (col as usize).saturating_div(step.max(1));
+        std::cmp::min(idx, n.saturating_sub(1))
+    }
 
     pub fn close(&mut self) { self.open = false; self.submenu_index = None; }
 
