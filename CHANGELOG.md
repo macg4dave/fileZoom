@@ -66,6 +66,23 @@
     - Consider adding deprecated shims for the old names if external users
       require backwards compatibility.
 
+- Tidy: Refactor preview helpers and small core modules
+  - Reworked preview helpers in `app/src/app/core/preview.rs`:
+    - Implemented clearer `is_binary` heuristic (NUL detection, UTF-8 checks,
+      and a non-printable character ratio threshold).
+    - `build_file_preview` now reads a bounded sample, strips UTF-8 BOM,
+      and reports truncated previews when sampling smaller than file size.
+    - `build_directory_preview` uses `std::fs::read_dir` for a shallow
+      one-level listing to reduce allocations and avoid unnecessary recursion.
+  - Added unit tests covering binary detection, file preview truncation,
+    and directory preview listing to ensure behaviour remains stable.
+  - Conservative visibility tidy: attempted to tighten helper visibility,
+    but kept public re-exports intact (compat shim `preview_helpers.rs`) to
+    avoid breaking downstream callers.
+  - Small hygiene changes in `app/src/app/core/methods.rs` and
+    `app/src/app/core/init.rs`: replaced `use super::*` globs with explicit
+    imports and added brief module docs.
+
 ### Notes
 
 - Tests run locally and currently pass.
