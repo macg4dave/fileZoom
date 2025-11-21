@@ -174,6 +174,13 @@ impl App {
         Ok(())
     }
 
+    /// Refresh only the specified panel side. This allows callers (for
+    /// example filesystem watchers) to update just the affected panel
+    /// instead of forcing a full two-panel refresh.
+    pub fn refresh_side(&mut self, side: Side) -> io::Result<()> {
+        self.refresh_panel(side)
+    }
+
     /// Switches the menu selection to the next tab (wraps around).
     pub fn menu_next(&mut self) {
         let n = crate::ui::menu::menu_labels().len();

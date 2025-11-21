@@ -25,6 +25,18 @@
     written files.
   - `CopyOptions` tuned for the project: 64 KiB buffer and `overwrite = false`.
 
+- Filesystem watching (optional):
+  - Add an optional feature `fs-watch` (gated behind Cargo features) which
+    enables filesystem watching via the `notify` crate.
+  - The watcher runs in a background thread and sends `FsEvent` messages
+    into the runner; the event loop now maps events to affected panel(s)
+    and performs a per-panel refresh rather than always refreshing both
+    panels. This reduces unnecessary work and improves responsiveness.
+  - Watcher behavior is recursive by default (subdirectories are observed).
+  - Implementation: `app/src/fs_op/watcher.rs`, runner wiring in
+    `app/src/runner/event_loop_main.rs`, and an integration test
+    `app/tests/fs_watch.rs`.
+
 ### Notes
 
 - Tests run locally and currently pass.

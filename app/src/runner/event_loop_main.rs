@@ -6,6 +6,8 @@ use std::sync::mpsc::Receiver;
 use crate::ui;
 
 use std::time::Duration;
+#[cfg(feature = "fs-watch")]
+use std::sync::mpsc::channel as mpsc_channel;
 
 pub fn run_app(
     mut terminal: TerminalGuard,
@@ -41,8 +43,105 @@ pub fn run_app(
         let _ = crate::runner::terminal::disable_mouse_capture_on_terminal(&mut terminal);
     }
 
+    // Spawn filesystem watchers for the initial panel directories when the
+    // `fs-watch` feature is enabled. Watchers send `FsEvent` into the
+    // receiver, and the event loop will refresh affected panels.
+    #[cfg(feature = "fs-watch")]
+    let (fs_tx, fs_rx) = mpsc_channel::<crate::fs_op::watcher::FsEvent>();
+    #[cfg(feature = "fs-watch")]
+    // Manage watcher join handles and stop senders per side so we can restart
+    // watchers when the panel cwd changes during runtime.
+    let mut left_watcher: Option<(std::thread::JoinHandle<()>, std::sync::mpsc::Sender<()>)> = None;
+    #[cfg(feature = "fs-watch")]
+    let mut right_watcher: Option<(std::thread::JoinHandle<()>, std::sync::mpsc::Sender<()>)> = None;
+    #[cfg(feature = "fs-watch")]
+    {
+        let left_path = app.left.cwd.clone();
+        let right_path = app.right.cwd.clone();
+        let tx_left = fs_tx.clone();
+        let tx_right = fs_tx.clone();
+        // Left
+        let (stop_tx_left, stop_rx_left) = std::sync::mpsc::channel::<()>();
+        let h_left = crate::fs_op::watcher::spawn_watcher(left_path, tx_left, stop_rx_left);
+        left_watcher = Some((h_left, stop_tx_left));
+        // Right
+        let (stop_tx_right, stop_rx_right) = std::sync::mpsc::channel::<()>();
+        let h_right = crate::fs_op::watcher::spawn_watcher(right_path, tx_right, stop_rx_right);
+        right_watcher = Some((h_right, stop_tx_right));
+    }
+    #[cfg(feature = "fs-watch")]
+    let mut prev_left = app.left.cwd.clone();
+    #[cfg(feature = "fs-watch")]
+    let mut prev_right = app.right.cwd.clone();
+
     // Main event loop
     loop {
+        // If watcher signalled a filesystem event, trigger a refresh and redraw.
+        #[cfg(feature = "fs-watch")]
+        if let Ok(evt) = fs_rx.try_recv() {
+            use crate::fs_op::watcher::FsEvent;
+            use crate::app::Side;
+
+            // Map an FsEvent to affected panel sides and refresh those
+            // panels only. This keeps UI updates more granular and avoids
+            // unnecessary work when only one side is impacted.
+            let mut affected: Vec<Side> = Vec::new();
+            match evt {
+                FsEvent::Create(p) | FsEvent::Modify(p) | FsEvent::Remove(p) => {
+                    if p.starts_with(&app.left.cwd) {
+                        affected.push(Side::Left);
+                    }
+                    if p.starts_with(&app.right.cwd) {
+                        affected.push(Side::Right);
+                    }
+                }
+                FsEvent::Rename(a, b) => {
+                    if a.starts_with(&app.left.cwd) || b.starts_with(&app.left.cwd) {
+                        affected.push(Side::Left);
+                    }
+                    if a.starts_with(&app.right.cwd) || b.starts_with(&app.right.cwd) {
+                        affected.push(Side::Right);
+                    }
+                }
+                FsEvent::Other => {}
+            }
+
+            // Deduplicate and refresh affected sides.
+            affected.sort_by_key(|s| match s { Side::Left => 0, Side::Right => 1 });
+            affected.dedup();
+            for side in affected {
+                let _ = app.refresh_side(side);
+            }
+        }
+
+        // If panel cwd changed since last loop, restart the corresponding watcher
+        #[cfg(feature = "fs-watch")]
+        {
+            if app.left.cwd != prev_left {
+                // stop previous left watcher
+                if let Some((h, stop_tx)) = left_watcher.take() {
+                    let _ = stop_tx.send(());
+                    let _ = h.join();
+                }
+                // start new left watcher
+                let (stop_tx_left, stop_rx_left) = std::sync::mpsc::channel::<()>();
+                let tx_left = fs_tx.clone();
+                let h_left = crate::fs_op::watcher::spawn_watcher(app.left.cwd.clone(), tx_left, stop_rx_left);
+                left_watcher = Some((h_left, stop_tx_left));
+                prev_left = app.left.cwd.clone();
+            }
+            if app.right.cwd != prev_right {
+                if let Some((h, stop_tx)) = right_watcher.take() {
+                    let _ = stop_tx.send(());
+                    let _ = h.join();
+                }
+                let (stop_tx_right, stop_rx_right) = std::sync::mpsc::channel::<()>();
+                let tx_right = fs_tx.clone();
+                let h_right = crate::fs_op::watcher::spawn_watcher(app.right.cwd.clone(), tx_right, stop_rx_right);
+                right_watcher = Some((h_right, stop_tx_right));
+                prev_right = app.right.cwd.clone();
+            }
+        }
         // If a shutdown signal has been received (e.g. ctrl-c), break so
         // we can restore the terminal cleanly in the outer scope.
         if let Ok(_) = shutdown_rx.try_recv() {

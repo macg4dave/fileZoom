@@ -92,6 +92,35 @@ Filesystem copy behavior
 - If you need exact platform-specific ownership preservation (UID/GID), the
   code intentionally does not modify ownership to avoid portability issues.
 
+Filesystem watching (optional)
+-----------------------------
+
+- `fileZoom` includes an optional filesystem-watching feature enabled via the
+  Cargo feature `fs-watch`. When enabled the app uses the `notify` crate to
+  watch directories and react to changes (for example file creation,
+  modification, removal, or renames).
+
+- How to enable: build or run with the feature enabled, e.g.:
+
+```bash
+cd app
+cargo run --features fs-watch --release
+```
+
+- Behavior and notes:
+  - Watching is recursive by default: changes in subdirectories are observed.
+  - The watcher runs in a background thread and sends structured events
+    (`FsEvent`) to the runner.
+  - The runner maps events to the affected panel(s) and performs a per-panel
+    refresh, which avoids refreshing both panels when only one side is
+    affected.
+  - The watcher is optional to avoid adding the `notify` dependency for
+    users who do not want filesystem watching.
+
+If you'd like the watcher to be configurable at runtime (enable/disable or
+change recursive behavior), I can add a settings option and persist it in the
+app settings.
+
 If you want different fixture defaults (counts, multilingual probability, tree
 depth/branching), tell me the desired values and I will update the generator.
 

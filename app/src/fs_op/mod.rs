@@ -10,5 +10,7 @@ pub mod permissions;
 pub mod remove;
 pub mod stat;
 pub mod symlink;
+#[cfg(feature = "fs-watch")]
+pub mod watcher;
 
 // Future fs_op modules (ownership, stat helpers) can go here.
