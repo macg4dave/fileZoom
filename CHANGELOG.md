@@ -37,6 +37,35 @@
     `app/src/runner/event_loop_main.rs`, and an integration test
     `app/tests/fs_watch.rs`.
 
+  - Refactor: `app::core` module cleanup
+    - Consolidated and documented `app/src/app/core/mod.rs`:
+      - Introduced clear type aliases for background operation channels and
+        cancel flags (`OpProgressReceiver`, `OpCancelFlag`, `OpDecisionSender`).
+      - Consolidated duplicate preview-size constants into a single
+        canonical `MAX_PREVIEW_BYTES` (100 KiB) while preserving the
+        legacy `App::MAX_PREVIEW_BYTES` associated constant for
+        compatibility.
+      - Improved comments and Rustdoc for `App` and its helper accessors,
+        simplified `selected_index` logic, and removed dead/duplicate code.
+      - Adjusted helper visibility and kept compatibility with existing
+        tests and modules.
+    - Tests: added a small unit check for `MAX_PREVIEW_BYTES`; full
+      behaviour remains covered by existing integration tests.
+
+  - Refactor: navigation helpers and API rename
+    - Refactored `app/src/app/core/navigation.rs` to centralise post-navigation
+      behaviour into a private helper (`apply_navigation`) and reduce code
+      duplication when updating panel selection and preview state.
+    - Renamed public `App` navigation methods to clearer identifiers:
+      - `next` -> `select_next`
+      - `previous` -> `select_prev`
+      - `page_down` -> `select_page_down`
+      - `page_up` -> `select_page_up`
+    - Updated internal call sites (runner handlers and tests) to use the
+      new names. All repository tests pass after these changes.
+    - Consider adding deprecated shims for the old names if external users
+      require backwards compatibility.
+
 ### Notes
 
 - Tests run locally and currently pass.
