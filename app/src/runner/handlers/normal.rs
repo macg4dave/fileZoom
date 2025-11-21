@@ -19,6 +19,9 @@ pub fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::
 
     match code {
         KeyCode::Char('q') => return Ok(true),
+        // When the top menu has focus, Up/Down navigate submenu (if open).
+        KeyCode::Down if app.menu_focused && app.menu_state.open => app.menu_sub_next(),
+        KeyCode::Up if app.menu_focused && app.menu_state.open => app.menu_sub_prev(),
         KeyCode::Down => app.select_next(page_size),
         KeyCode::Up => app.select_prev(page_size),
         KeyCode::PageDown => app.select_page_down(page_size),
@@ -45,8 +48,34 @@ pub fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::
         KeyCode::F(1) => app.menu_focused = !app.menu_focused,
         KeyCode::Left if app.menu_focused => app.menu_prev(),
         KeyCode::Right if app.menu_focused => app.menu_next(),
-        KeyCode::Enter if app.menu_focused => { app.menu_activate(); app.menu_focused = false; }
-        KeyCode::Esc if app.menu_focused => app.menu_focused = false,
+        KeyCode::Enter if app.menu_focused => {
+            // If there is a submenu for the current top label, open or activate accordingly.
+            let model = crate::ui::menu_model::MenuModel::default_model();
+            if app.menu_state.open {
+                // submenu open -> activate currently selected submenu entry (if any)
+                app.menu_activate();
+                app.menu_focused = false;
+            } else if let Some(top) = model.0.get(app.menu_index) {
+                if top.submenu.is_some() {
+                    app.open_menu(app.menu_index);
+                } else {
+                    // direct action -> maintain compatibility with prior behaviour
+                    app.menu_activate();
+                    app.menu_focused = false;
+                }
+            } else {
+                // fallback behaviour
+                app.menu_activate();
+                app.menu_focused = false;
+            }
+        }
+        KeyCode::Esc if app.menu_focused => {
+            if app.menu_state.open {
+                app.close_menu();
+            } else {
+                app.menu_focused = false;
+            }
+        }
         KeyCode::Home => app.active_panel_mut().selected = 0,
         KeyCode::End => handle_end_key(app),
         KeyCode::Char('p') => app.toggle_preview(),

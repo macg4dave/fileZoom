@@ -36,7 +36,9 @@ fn settings_handle_settings_direct() {
     handle_settings(&mut app, KeyCode::Right).unwrap();
     assert_eq!(app.settings.mouse_double_click_ms, (before + 50).min(5000));
 
-    // Move to Save and press Enter; expect a Message modal announcing save
+    // Move to Save and press Enter; there is now an extra field (Show CLI listing),
+    // so move down twice to land on Save and then press Enter; expect a Message modal announcing save
+    handle_settings(&mut app, KeyCode::Down).unwrap();
     handle_settings(&mut app, KeyCode::Down).unwrap();
     handle_settings(&mut app, KeyCode::Enter).unwrap();
     match &app.mode {

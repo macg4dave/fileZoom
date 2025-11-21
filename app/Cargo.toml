@@ -44,6 +44,7 @@ thiserror = "2.0.17"
 libc = "0.2"
 nix = { version = "0.30.1", features = ["user", "fs"] }
 xattr = "1"
+users = "0.11"
 [dev-dependencies]
 assert_fs = "1.1.3"
 tempfile = "3.6"

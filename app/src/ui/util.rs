@@ -9,21 +9,26 @@ use ratatui::layout::{Constraint, Direction, Layout, Rect};
 /// Parameters:
 /// - `area` - the area that should be split into columns
 /// - `name_fill` - a `Ratio` pair indicating how to allocate remaining space (name column)
-/// - `size_len`, `modified_len`, `perms_len` - fixed lengths for these columns in characters
+/// - `perms_len`, `owner_len`, `group_len`, `size_len`, `modified_len` - fixed lengths for these columns in characters
 pub fn columns_for_file_list(
     area: Rect,
     name_fill: (u32, u32),
+    perms_len: u16,
+    owner_len: u16,
+    group_len: u16,
     size_len: u16,
     modified_len: u16,
-    perms_len: u16,
 ) -> Vec<Rect> {
     let (rnum, rden) = name_fill;
     // Use `Ratio` for the name column so it scales with available space. The other columns are `Length`.
+    // Order: name | perms | owner | group | size | modified
     let constraints = [
         Constraint::Ratio(rnum, rden),
+        Constraint::Length(perms_len),
+        Constraint::Length(owner_len),
+        Constraint::Length(group_len),
         Constraint::Length(size_len),
         Constraint::Length(modified_len),
-        Constraint::Length(perms_len),
     ];
 
     Layout::default()
@@ -72,15 +77,17 @@ mod tests {
     #[test]
     fn columns_fill_area() {
         let area = Rect::new(0, 0, 80, 10);
+        let perms = 4u16;
+        let owner = 8u16;
+        let group = 8u16;
         let size = 10u16;
         let modified = 16u16;
-        let perms = 4u16;
-        let cols = columns_for_file_list(area, (1, 1), size, modified, perms);
-        assert_eq!(cols.len(), 4);
+        let cols = columns_for_file_list(area, (1, 1), perms, owner, group, size, modified);
+        assert_eq!(cols.len(), 6);
         let total_width: u16 = cols.iter().map(|r| r.width).sum();
         assert_eq!(total_width, area.width);
         // Name width should be area.width - the sum of fixed columns
-        let name_width = area.width - (size + modified + perms);
+        let name_width = area.width - (perms + owner + group + size + modified);
         assert_eq!(cols[0].width, name_width);
     }
 }

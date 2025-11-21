@@ -33,7 +33,8 @@ fn settings_keyboard_interaction() {
     handlers::handle_key(&mut app, KeyCode::Right, 10).unwrap();
     assert_eq!(app.settings.mouse_double_click_ms, (before + 50).min(5000));
 
-    // Move to Save and press Enter
+    // Move to Save and press Enter (there's an extra field now, so move down twice)
+    handlers::handle_key(&mut app, KeyCode::Down, 10).unwrap();
     handlers::handle_key(&mut app, KeyCode::Down, 10).unwrap();
     handlers::handle_key(&mut app, KeyCode::Enter, 10).unwrap();
     match &app.mode {

@@ -156,6 +156,26 @@ pub fn format_unix_mode(mode: Option<u32>) -> String {
     mode.map(|m| format!("{:#o}", m)).unwrap_or_else(|| "n/a".to_string())
 }
 
+/// Render a human readable rwx string (e.g. "rwxr-xr-x") when `mode` is available.
+pub fn format_unix_rwx(mode: Option<u32>) -> String {
+    match mode {
+        None => "n/a".to_string(),
+        Some(m) => {
+            fn trip(mask: u32, r: u32, w: u32, x: u32) -> String {
+                let rch = if (mask & r) != 0 { 'r' } else { '-' };
+                let wch = if (mask & w) != 0 { 'w' } else { '-' };
+                let xch = if (mask & x) != 0 { 'x' } else { '-' };
+                format!("{}{}{}", rch, wch, xch)
+            }
+
+            let owner = trip(m, 0o400, 0o200, 0o100);
+            let group = trip(m, 0o040, 0o020, 0o010);
+            let other = trip(m, 0o004, 0o002, 0o001);
+            format!("{}{}{}", owner, group, other)
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -167,6 +187,13 @@ mod tests {
     fn format_unix_mode_some_and_none() {
         assert_eq!(format_unix_mode(Some(0o644)), "0o644");
         assert_eq!(format_unix_mode(None), "n/a");
+    }
+
+    #[test]
+    fn format_unix_rwx_some_and_none() {
+        assert_eq!(format_unix_rwx(Some(0o755)), "rwxr-xr-x");
+        assert_eq!(format_unix_rwx(Some(0o644)), "rw-r--r--");
+        assert_eq!(format_unix_rwx(None), "n/a");
     }
 
     #[test]

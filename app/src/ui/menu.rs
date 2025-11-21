@@ -5,10 +5,11 @@ use ratatui::Frame;
 
 use crate::app::App;
 use crate::ui::colors::current as theme_current;
+use crate::ui::menu_model::MenuModel;
 
 /// Return the ordered labels used for the top menu.
 pub fn menu_labels() -> Vec<&'static str> {
-    vec!["File", "Copy", "Move", "New", "Sort", "Settings", "Help"]
+    MenuModel::default_model().labels()
 }
 
 /// Draw the top menu bar. The menu is currently static and non-interactive.
@@ -99,6 +100,33 @@ pub fn draw_menu(f: &mut Frame, area: Rect, status: &str, app: &App) {
     }
     // Center: render the tabs into the main chunk
     f.render_widget(tabs, h[1]);
+
+    // If a submenu is open render a small dropdown under the menu
+    if app.menu_state.open {
+        if let Some(top) = MenuModel::default_model().0.get(app.menu_state.top_index) {
+            if let Some(sub) = &top.submenu {
+                // compute width per label inside the tabs area
+                let total = labels.len() as u16;
+                let cell_w = if total > 0 { h[1].width / total } else { h[1].width };
+                let sx = h[1].x + cell_w.saturating_mul(app.menu_index as u16);
+                // dropdown height = items + padding
+                let height = (sub.len() as u16).saturating_add(2).max(1);
+                let rect = Rect::new(sx, menu_area.y.saturating_add(1), cell_w, height);
+                use ratatui::widgets::{List, ListItem};
+                use ratatui::text::Span as RSpan;
+                let items: Vec<ListItem> = sub
+                    .iter()
+                    .enumerate()
+                    .map(|(i, it)| {
+                        let s = if Some(i) == app.menu_state.submenu_index { RSpan::styled(it.label, theme.highlight_style) } else { RSpan::raw(it.label) };
+                        ListItem::new(s)
+                    })
+                    .collect();
+                let list = List::new(items).block(Block::default().borders(Borders::ALL));
+                f.render_widget(list, rect);
+            }
+        }
+    }
 
     // Right: render status text (no borders to keep it compact)
     let status_p = Paragraph::new(status.to_string()).block(

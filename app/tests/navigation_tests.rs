@@ -15,7 +15,9 @@ fn app_navigation_next_prev_and_paging() {
         sort_order: fileZoom::app::types::SortOrder::Ascending,
         menu_index: 0,
         menu_focused: false,
+        menu_state: fileZoom::ui::menu_model::MenuState::default(),
         preview_visible: false,
+        file_stats_visible: false,
         command_line: None,
         settings: fileZoom::app::settings::write_settings::Settings::default(),
         op_progress_rx: None,
@@ -73,11 +75,15 @@ fn menu_focus_and_navigation() {
         app.menu_index,
         (initial_idx + 1) % fileZoom::ui::menu::menu_labels().len()
     );
-    // activate menu (enter) - should set a Mode::Message
+    // activate menu (enter) - for items with submenus this opens the submenu
     handlers::handle_key(&mut app, fileZoom::input::KeyCode::Enter, 10).unwrap();
-    match app.mode {
-        Mode::Message { .. } => {}
-        _ => panic!("expected Mode::Message after menu activation"),
+    if fileZoom::ui::menu_model::MenuModel::default_model().0[app.menu_index].submenu.is_some() {
+        assert!(app.menu_state.open);
+    } else {
+        match app.mode {
+            Mode::Message { .. } => {}
+            _ => panic!("expected Mode::Message after menu activation"),
+        }
     }
 }
 
@@ -111,7 +117,9 @@ fn app_navigation_ensure_selection_visible() {
         sort_order: fileZoom::app::types::SortOrder::Ascending,
         menu_index: 0,
         menu_focused: false,
+        menu_state: fileZoom::ui::menu_model::MenuState::default(),
         preview_visible: false,
+        file_stats_visible: false,
         command_line: None,
         settings: fileZoom::app::settings::write_settings::Settings::default(),
         op_progress_rx: None,

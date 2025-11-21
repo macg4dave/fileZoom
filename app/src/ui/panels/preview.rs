@@ -46,13 +46,27 @@ pub fn draw_preview(f: &mut Frame, area: Rect, panel: &Panel) {
         acc.push('\n');
         acc
     });
-    let preview = Paragraph::new(text).block(
-        Block::default()
-            .borders(Borders::ALL)
-            .title("Preview")
-            .style(theme.preview_block_style),
-    );
-    f.render_widget(preview, cols[0]);
+    // If we have textual preview content render it; otherwise render a
+    // simple "no preview" placeholder. The dedicated file-stats column (if
+    // enabled) now owns the compact metadata UI and preview no longer falls
+    // back to rendering file-stats itself.
+    if !text.trim().is_empty() {
+        let preview = Paragraph::new(text).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Preview")
+                .style(theme.preview_block_style),
+        );
+        f.render_widget(preview, cols[0]);
+    } else {
+        let preview = Paragraph::new("No preview available").block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Preview")
+                .style(theme.preview_block_style),
+        );
+        f.render_widget(preview, cols[0]);
+    }
     let max_lines = (cols[0].height as usize).saturating_sub(2);
     // Render scrollbar for preview using ratatui::widgets::Scrollbar
     let mut sb_state = ScrollbarState::new(lines.len())

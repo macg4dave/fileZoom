@@ -23,6 +23,22 @@ pub struct Entry {
     pub size: u64,
     /// Optional last-modified timestamp.
     pub modified: Option<DateTime<Local>>,
+    /// Optional unix permission bits when available (e.g. 0o644).
+    /// This is best-effort and may be `None` on platforms that don't expose
+    /// Unix-like metadata.
+    pub unix_mode: Option<u32>,
+    /// Optional UID of the owner (when available on the platform).
+    pub uid: Option<u32>,
+    /// Optional GID of the owner (when available on the platform).
+    pub gid: Option<u32>,
+    /// Best-effort read/write/execute indicators gathered from `inspect_permissions`.
+    pub can_read: Option<bool>,
+    pub can_write: Option<bool>,
+    pub can_execute: Option<bool>,
+    /// Optional human-readable owner name (best-effort lookup from UID).
+    pub owner: Option<String>,
+    /// Optional human-readable group name (best-effort lookup from GID).
+    pub group: Option<String>,
 }
 
 impl Entry {
@@ -39,6 +55,14 @@ impl Entry {
             is_dir: false,
             size,
             modified,
+            unix_mode: None,
+            uid: None,
+            gid: None,
+            can_read: None,
+            can_write: None,
+            can_execute: None,
+            owner: None,
+            group: None,
         }
     }
 
@@ -54,6 +78,14 @@ impl Entry {
             is_dir: true,
             size: 0,
             modified,
+            unix_mode: None,
+            uid: None,
+            gid: None,
+            can_read: None,
+            can_write: None,
+            can_execute: None,
+            owner: None,
+            group: None,
         }
     }
 

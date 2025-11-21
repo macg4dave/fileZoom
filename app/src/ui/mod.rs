@@ -11,16 +11,20 @@ pub mod command_line;
 pub mod dialogs;
 pub mod header;
 pub mod menu;
+pub mod menu_model;
 pub mod modal;
 pub mod panels;
 pub mod util;
+pub mod file_stats_ui;
 
 pub use bar_ui::*;
 pub use dialogs::*;
 pub use header::*;
 pub use menu::*;
+pub use menu_model::*;
 pub use modal::*;
 pub use panels::*;
+pub use file_stats_ui::*;
 
 pub fn ui(f: &mut Frame, app: &App) {
     // Top menu (1), status (1), main panes (min), bottom help (1)
@@ -37,8 +41,36 @@ pub fn ui(f: &mut Frame, app: &App) {
         )
         .split(f.area());
 
-    // If preview is enabled reserve space for a third pane for the preview.
-    let main_chunks = if app.preview_visible {
+    // Compute main pane layout. Support an optional dedicated file-stats
+    // column in addition to the existing preview column. We compute a set of
+    // percentage-based constraints chosen to keep the classic dual-panel look
+    // while giving compact space to file-stats and preview panes.
+    let main_chunks = if app.preview_visible && app.file_stats_visible {
+        Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Percentage(35),
+                    Constraint::Percentage(35),
+                    Constraint::Percentage(15),
+                    Constraint::Percentage(15),
+                ]
+                .as_ref(),
+            )
+            .split(chunks[2])
+    } else if app.file_stats_visible {
+        Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(
+                [
+                    Constraint::Percentage(45),
+                    Constraint::Percentage(45),
+                    Constraint::Percentage(10),
+                ]
+                .as_ref(),
+            )
+            .split(chunks[2])
+    } else if app.preview_visible {
         Layout::default()
             .direction(Direction::Horizontal)
             .constraints(
@@ -77,13 +109,48 @@ pub fn ui(f: &mut Frame, app: &App) {
         left_chunks[1],
         &app.left,
         app.active == crate::app::Side::Left,
+        app.settings.show_cli_listing,
     );
     panels::draw_list(
         f,
         right_chunks[1],
         &app.right,
         app.active == crate::app::Side::Right,
+        app.settings.show_cli_listing,
     );
+
+    // Optional dedicated file-stats column. When enabled the file-stats
+    // pane always comes after the left/right panels; if preview is also
+    // enabled it will appear before the preview column.
+    if app.file_stats_visible {
+        // file-stats column index is 2 when present (3rd column in layout)
+        let file_stats_index = 2usize;
+        if file_stats_index < main_chunks.len() {
+            let file_stats_area = main_chunks[file_stats_index];
+            let file_stats_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+                .split(file_stats_area);
+            let active_panel = app.active_panel();
+            crate::ui::header::draw_panel_header(
+                f,
+                file_stats_chunks[0],
+                &active_panel.cwd.display().to_string(),
+            );
+            if let Some(entry) = active_panel.selected_entry() {
+                crate::ui::file_stats_ui::draw_file_stats(f, file_stats_chunks[1], entry);
+            } else {
+                let theme = crate::ui::colors::current();
+                let paragraph = Paragraph::new("No entry selected").block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("Details")
+                        .style(theme.preview_block_style),
+                );
+                f.render_widget(paragraph, file_stats_chunks[1]);
+            }
+        }
+    }
 
     if app.preview_visible {
         // Show preview for the active panel in the third column. Split preview into header + content too.
@@ -106,12 +173,13 @@ pub fn ui(f: &mut Frame, app: &App) {
         if cl.visible {
             crate::ui::command_line::draw_command_line(f, chunks[3], app);
         } else {
-            let help = Paragraph::new("F1:menu  F3:actions/right-click  ?:help  ↑/↓:navigate  PgUp/PgDn:page  Enter:open  Backspace:up  Tab:switch panels  F5:copy  F6:move  d:delete  c:copy(to...)  m:move(to...)  R:rename  n:new file  N:new dir  s:sort  q:quit")
+            // Bottom help bar matches classic dual-panel UIs (F-keys)
+            let help = Paragraph::new("F2 Rename  F3 View  F4 Edit  F5 Copy  F6 Move  F7 Mkdir  F8 Delete  F9 Term  F10 Quit")
                 .block(Block::default().borders(Borders::ALL).style(theme.help_block_style));
             f.render_widget(help, chunks[3]);
         }
     } else {
-        let help = Paragraph::new("F1:menu  F3:actions/right-click  ?:help  ↑/↓:navigate  PgUp/PgDn:page  Enter:open  Backspace:up  Tab:switch panels  F5:copy  F6:move  d:delete  c:copy(to...)  m:move(to...)  R:rename  n:new file  N:new dir  s:sort  q:quit")
+        let help = Paragraph::new("F2 Rename  F3 View  F4 Edit  F5 Copy  F6 Move  F7 Mkdir  F8 Delete  F9 Term  F10 Quit")
             .block(Block::default().borders(Borders::ALL).style(theme.help_block_style));
         f.render_widget(help, chunks[3]);
     }

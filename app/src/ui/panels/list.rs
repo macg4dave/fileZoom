@@ -12,7 +12,7 @@ use crate::ui::util::columns_for_file_list;
 
 use crate::ui::panels::UiEntry;
 
-pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool) {
+pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool, cli_mode: bool) {
     let theme = theme_current();
 
     // Top header row + main area inspired by ratatui example layout
@@ -51,11 +51,24 @@ pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool) {
         .constraints([Constraint::Min(0), Constraint::Length(1)].as_ref())
         .split(area);
 
+    let perms_col = 10u16;
+    let owner_col = 10u16;
+    let group_col = 10u16;
     let size_col = 10u16;
     let modified_col = 16u16;
-    let perms_col = 4u16;
     // Compute Rects for the columns using flexible ratio for the name column.
-    let inner_cols = columns_for_file_list(cols[0], (1, 1), size_col, modified_col, perms_col);
+    // Compute Rects for the columns. We always compute the larger CLI-style
+    // column set so the name column can be sized correctly; rendering below
+    // will choose which subset/order to draw depending on `cli_mode`.
+    let inner_cols = columns_for_file_list(
+        cols[0],
+        (1, 1),
+        perms_col,
+        owner_col,
+        group_col,
+        size_col,
+        modified_col,
+    );
     let name_col = inner_cols[0].width as usize;
 
     let mut items: Vec<ListItem> = Vec::new();
@@ -66,20 +79,48 @@ pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool) {
         theme.header_style,
     ));
     header_spans.push(Span::raw(" │ "));
-    header_spans.push(Span::styled(
-        format!("{:<width$}", "Size", width = size_col as usize),
-        theme.header_style,
-    ));
-    header_spans.push(Span::raw(" │ "));
-    header_spans.push(Span::styled(
-        format!("{:<width$}", "Modified", width = modified_col as usize),
-        theme.header_style,
-    ));
-    header_spans.push(Span::raw(" │ "));
-    header_spans.push(Span::styled(
-        format!("{:<width$}", "rwx", width = perms_col as usize),
-        theme.header_style,
-    ));
+    if cli_mode {
+        header_spans.push(Span::styled(
+            format!("{:<width$}", "Perms", width = perms_col as usize),
+            theme.header_style,
+        ));
+        header_spans.push(Span::raw(" │ "));
+        header_spans.push(Span::styled(
+            format!("{:<width$}", "Owner", width = owner_col as usize),
+            theme.header_style,
+        ));
+        header_spans.push(Span::raw(" │ "));
+        header_spans.push(Span::styled(
+            format!("{:<width$}", "Group", width = group_col as usize),
+            theme.header_style,
+        ));
+        header_spans.push(Span::raw(" │ "));
+        header_spans.push(Span::styled(
+            format!("{:<width$}", "Size", width = size_col as usize),
+            theme.header_style,
+        ));
+        header_spans.push(Span::raw(" │ "));
+        header_spans.push(Span::styled(
+            format!("{:<width$}", "Modified", width = modified_col as usize),
+            theme.header_style,
+        ));
+    } else {
+        header_spans.push(Span::styled(
+            format!("{:<width$}", "Size", width = size_col as usize),
+            theme.header_style,
+        ));
+        header_spans.push(Span::raw(" │ "));
+        header_spans.push(Span::styled(
+            format!("{:<width$}", "Modified", width = modified_col as usize),
+            theme.header_style,
+        ));
+        header_spans.push(Span::raw(" │ "));
+        header_spans.push(Span::styled(
+            format!("{:<width$}", "rwx", width = perms_col as usize),
+            theme.header_style,
+        ));
+    }
+    
 
     for (i, e) in visible.iter().enumerate() {
         if crate::ui::panels::is_entry_header(e) {
@@ -95,7 +136,15 @@ pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool) {
             Style::default()
         };
         // Build spans for columns: name | size | modified | perms
-        let icon = if e.entry.is_dir { "📁 " } else { "📄 " };
+        // Use a plain, CLI-friendly name prefix when in cli_mode; emojis are
+        // avoided so the output resembles classic dual-pane file managers.
+        let icon = if cli_mode {
+            ""
+        } else if e.entry.is_dir {
+            "📁 "
+        } else {
+            "📄 "
+        };
         // Determine if this visible ui row corresponds to a domain entry and
         // whether it is selected in the panel's multi-selection set.
         let ui_index = panel.offset + i;
@@ -134,7 +183,21 @@ pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool) {
         } else {
             format!("{:>width$}", mtime, width = modified_col as usize)
         };
-        let perms_field = "rwx".to_string();
+        // Permission string: prefer unix-format rwx when available
+        let perms_field = crate::fs_op::permissions::format_unix_rwx(e.entry.unix_mode);
+
+        let owner_field = e
+            .entry
+            .owner
+            .clone()
+            .or_else(|| e.entry.uid.map(|u| u.to_string()))
+            .unwrap_or_else(|| "-".to_string());
+        let group_field = e
+            .entry
+            .group
+            .clone()
+            .or_else(|| e.entry.gid.map(|g| g.to_string()))
+            .unwrap_or_else(|| "-".to_string());
 
         let mut spans: Vec<Span> = Vec::new();
         // Render a compact selection marker separate from the filename so it can be styled.
@@ -161,11 +224,32 @@ pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool) {
         ));
         spans.push(Span::styled(name_field, style));
         spans.push(Span::raw(" │ "));
-        spans.push(Span::styled(size_field, theme.help_block_style));
-        spans.push(Span::raw(" │ "));
-        spans.push(Span::styled(mtime_field, theme.help_block_style));
-        spans.push(Span::raw(" │ "));
-        spans.push(Span::styled(perms_field, theme.help_block_style));
+        if cli_mode {
+            spans.push(Span::styled(
+                format!("{:<width$}", perms_field, width = perms_col as usize),
+                theme.header_style,
+            ));
+            spans.push(Span::raw(" │ "));
+            spans.push(Span::styled(
+                format!("{:<width$}", owner_field, width = owner_col as usize),
+                theme.help_block_style,
+            ));
+            spans.push(Span::raw(" │ "));
+            spans.push(Span::styled(
+                format!("{:<width$}", group_field, width = group_col as usize),
+                theme.help_block_style,
+            ));
+            spans.push(Span::raw(" │ "));
+            spans.push(Span::styled(size_field, theme.help_block_style));
+            spans.push(Span::raw(" │ "));
+            spans.push(Span::styled(mtime_field, theme.help_block_style));
+        } else {
+            spans.push(Span::styled(size_field, theme.help_block_style));
+            spans.push(Span::raw(" │ "));
+            spans.push(Span::styled(mtime_field, theme.help_block_style));
+            spans.push(Span::raw(" │ "));
+            spans.push(Span::styled(perms_field, theme.help_block_style));
+        }
         items.push(ListItem::new(Text::from(Line::from(spans))));
     }
 
@@ -201,4 +285,44 @@ pub fn draw_list(f: &mut Frame, area: Rect, panel: &Panel, active: bool) {
         .thumb_style(theme.scrollbar_thumb_style)
         .track_style(theme.scrollbar_style);
     f.render_stateful_widget(sb, cols[1], &mut sb_state);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app::Panel;
+    use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
+    use std::path::PathBuf;
+    use chrono::Local;
+
+    #[test]
+    fn draw_list_cli_smoke_test() {
+        let backend = TestBackend::new(80, 12);
+        let mut terminal = Terminal::new(backend).expect("failed to create terminal");
+
+        let mut panel = Panel::new(PathBuf::from("/tmp"));
+        panel.entries.push(crate::app::types::Entry::directory("subdir", PathBuf::from("/tmp/subdir"), Some(Local::now())));
+        panel.entries.push(crate::app::types::Entry::file("foo.txt", PathBuf::from("/tmp/foo.txt"), 128, Some(Local::now())));
+
+        terminal.draw(|f| {
+            let area = Rect::new(0, 0, 80, 12);
+            draw_list(f, area, &panel, true, true);
+        }).expect("failed to draw");
+    }
+
+    #[test]
+    fn draw_list_noncli_smoke_test() {
+        let backend = TestBackend::new(80, 12);
+        let mut terminal = Terminal::new(backend).expect("failed to create terminal");
+
+        let mut panel = Panel::new(PathBuf::from("/tmp"));
+        panel.entries.push(crate::app::types::Entry::directory("subdir", PathBuf::from("/tmp/subdir"), Some(Local::now())));
+        panel.entries.push(crate::app::types::Entry::file("foo.txt", PathBuf::from("/tmp/foo.txt"), 128, Some(Local::now())));
+
+        terminal.draw(|f| {
+            let area = Rect::new(0, 0, 80, 12);
+            draw_list(f, area, &panel, true, false);
+        }).expect("failed to draw");
+    }
 }
