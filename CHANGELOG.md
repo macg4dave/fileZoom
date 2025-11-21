@@ -168,3 +168,20 @@
   - Reimplemented `exists`, `is_dir`, and `is_file` to use the classifier
     (reduces duplicated filesystem checks) and added unit tests.
   - Behaviour and public helpers remain compatible; tests updated and pass.
+
+- Refactor: conflict resolution handler
+  - Simplified `runner/handlers/conflict.rs`: extracted a pure mapping helper
+    and centralized the send+progress transition to remove duplicated
+    branching logic and reduce clones/side-effects.
+  - Added focused unit tests for the mapping logic (`map_selection_to_decision`) in
+    `app/src/runner/handlers/conflict.rs` to cover overwrite/skip/cancel cases.
+  - Behaviour preserved: UI still sends `OperationDecision` messages and
+    transitions to `Mode::Progress`; internal code is clearer and easier to
+    maintain.
+  - Tests:
+    - Add unit tests for context-menu behaviour:
+      - `app/tests/context_menu_extra.rs` covers unknown/other labels (ensuring
+        an informative `Mode::Message` is shown) and navigation boundary cases
+        (selection does not underflow or overflow).
+      - These tests exercise the context-menu handler and help protect the
+        `ContextAction` parsing and navigation logic.
