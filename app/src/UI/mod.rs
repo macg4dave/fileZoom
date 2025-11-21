@@ -7,6 +7,7 @@ pub mod colors;
 pub mod command_line;
 pub mod dialogs;
 pub mod modal;
+pub mod panels;
 pub mod widgets {
     pub mod header;
     pub mod footer;
