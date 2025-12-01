@@ -160,6 +160,16 @@ cargo run --release
 Use the arrow keys or page keys to scroll and confirm the vertical scrollbars
 appear at the right hand side of panels and in the preview.
 
+Inline command line & quick filter
+----------------------------------
+
+- Inline command line: press `:` to open, type a short command (e.g. `toggle-preview`,
+  `menu-next`), Up/Down navigate history, Tab completes known commands, Enter runs,
+  Esc cancels.
+- Quick filter: press `/` to enter a glob pattern that filters the active panel
+  (e.g. `*.rs`); plain text is treated as `*text*`. Submit an empty string to clear.
+  Selection is preserved when the previously selected entry still matches.
+
 CLI Usage
 ---------
 

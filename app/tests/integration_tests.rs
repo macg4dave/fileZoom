@@ -73,13 +73,9 @@ fn test_basic_file_ops() -> Result<(), Box<dyn std::error::Error>> {
     // move dirA to moved_dir
     if let Some(pos) = app.left.entries.iter().position(|e| e.name == "dirA") {
         let header_count = 1usize;
-        let parent_count = if app.left.cwd.parent().is_some() {
-            1usize
-        } else {
-            0usize
-        };
+        let parent_count = if app.left.cwd.parent().is_some() { 1usize } else { 0usize };
         app.left.selected = header_count + parent_count + pos;
-        let moved_to = temp.path().join("moved_dir/");
+        let moved_to = temp.path().join("moved_dir");
         app.move_selected_to(moved_to.clone())?;
         assert!(moved_to.join("file2.txt").exists());
     }

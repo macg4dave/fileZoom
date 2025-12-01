@@ -1,5 +1,6 @@
 use crate::app::types::Entry;
 use chrono::{DateTime, Local};
+use globset::{GlobBuilder, GlobMatcher};
 use std::collections::HashSet;
 use std::io;
 use std::path::PathBuf;
@@ -28,6 +29,9 @@ pub struct Panel {
     pub preview_offset: usize,
     /// Selected entry indices for multi-selection (domain indexes into `entries`).
     pub selections: HashSet<usize>,
+    /// Optional glob filter applied to entry names.
+    pub filter_pattern: Option<String>,
+    filter_matcher: Option<GlobMatcher>,
 }
 
 impl Panel {
@@ -41,6 +45,40 @@ impl Panel {
             preview: String::new(),
             preview_offset: 0,
             selections: HashSet::new(),
+            filter_pattern: None,
+            filter_matcher: None,
+        }
+    }
+
+    /// Set or clear the quick filter for this panel. Empty input clears it.
+    pub fn set_filter(&mut self, pattern: &str) -> Result<(), globset::Error> {
+        let trimmed = pattern.trim();
+        if trimmed.is_empty() {
+            self.filter_pattern = None;
+            self.filter_matcher = None;
+            return Ok(());
+        }
+
+        // If the pattern has no glob meta, treat it as a contains check by
+        // surrounding it with '*' so simple strings still match.
+        let has_meta = trimmed.chars().any(|c| matches!(c, '*' | '?' | '[' | '{'));
+        let glob_str = if has_meta { trimmed.to_string() } else { format!("*{}*", trimmed) };
+        let matcher = GlobBuilder::new(&glob_str)
+            .case_insensitive(true)
+            .literal_separator(true)
+            .build()?
+            .compile_matcher();
+
+        self.filter_pattern = Some(trimmed.to_string());
+        self.filter_matcher = Some(matcher);
+        Ok(())
+    }
+
+    pub(crate) fn apply_filter(&self, entries: Vec<Entry>) -> Vec<Entry> {
+        if let Some(m) = &self.filter_matcher {
+            entries.into_iter().filter(|e| m.is_match(&e.name)).collect()
+        } else {
+            entries
         }
     }
 

@@ -186,3 +186,23 @@ static KEYBINDS: Lazy<Keybinds> = Lazy::new(|| {
 pub fn get() -> &'static Keybinds {
     &KEYBINDS
 }
+
+/// Expose the built-in default bindings in a stable, test-friendly form.
+pub fn default_bindings_for_tests() -> std::collections::BTreeMap<String, Vec<String>> {
+    fn keycode_name(k: &KeyCode) -> String {
+        match k {
+            KeyCode::Char(' ') => "Space".to_string(),
+            KeyCode::Char(c) => format!("Char({})", c),
+            KeyCode::F(n) => format!("F{}", n),
+            other => format!("{:?}", other),
+        }
+    }
+
+    let mut out = std::collections::BTreeMap::new();
+    for (action, keys) in Keybinds::default().map {
+        let mut names: Vec<String> = keys.iter().map(keycode_name).collect();
+        names.sort();
+        out.insert(action, names);
+    }
+    out
+}

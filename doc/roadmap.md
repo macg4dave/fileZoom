@@ -4,6 +4,7 @@ Reference repos:
 
 - Midnight Commander: <https://github.com/MidnightCommander/mc>
 - Krusader: <https://invent.kde.org/utilities/krusader>
+- Parity map snapshot: `doc/parity_map.md`
 
 Guiding principles
 

@@ -47,12 +47,16 @@ pub fn ui(f: &mut Frame, app: &CoreApp) {
         _ => Theme::dark(),
     };
 
+    let show_command_line = app.command_line.as_ref().map(|c| c.visible).unwrap_or(false);
+
     let size = f.area();
     // Make the top menu flexible so tiny terminals still get a content row.
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Min(1), Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
-        .split(size);
+    let mut constraints = vec![Constraint::Min(1), Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)];
+    if show_command_line {
+        // Reserve a short area for the inline command line just above the footer.
+        constraints.insert(constraints.len() - 1, Constraint::Length(3));
+    }
+    let chunks = Layout::default().direction(Direction::Vertical).constraints(constraints).split(size);
     let main = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(55), Constraint::Percentage(45)])
@@ -62,5 +66,10 @@ pub fn ui(f: &mut Frame, app: &CoreApp) {
     crate::ui::widgets::header::render(f, chunks[1], &state, &theme);
     crate::ui::widgets::file_list::render(f, main[0], &state.left_list, state.left_selected, &theme);
     crate::ui::widgets::file_list::render(f, main[1], &state.right_list, state.right_selected, &theme);
-    crate::ui::widgets::footer::render(f, chunks[3], &state, &theme);
+    if show_command_line {
+        if let Some(ref cmd) = app.command_line {
+            crate::ui::command_line::render(f, chunks[chunks.len() - 2], cmd);
+        }
+    }
+    crate::ui::widgets::footer::render(f, chunks[chunks.len() - 1], &state, &theme);
 }

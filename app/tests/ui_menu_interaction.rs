@@ -43,11 +43,7 @@ fn menu_click_activates_item() {
 fn command_line_toggle_preview() {
     let mut app = App::new().unwrap();
     assert!(!app.preview_visible);
-    app.command_line = Some(CommandLineState {
-        visible: true,
-        buffer: String::new(),
-        cursor: 0,
-    });
+    app.command_line = Some(CommandLineState::default());
     // type `toggle-preview` character by character
     for c in "toggle-preview".chars() {
         let _ = fileZoom::ui::command_line::handle_input(&mut app, KeyCode::Char(c)).unwrap();

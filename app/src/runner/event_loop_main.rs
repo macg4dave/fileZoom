@@ -174,7 +174,11 @@ pub fn run_app(
         terminal.draw(|f| ui::ui(f, &app))?;
 
         // Precompute page size for navigation handlers.
-        let page_size = (terminal.size()?.height as usize).saturating_sub(4);
+        let mut reserved_rows = 4usize;
+        if app.command_line.as_ref().map(|c| c.visible).unwrap_or(false) {
+            reserved_rows = reserved_rows.saturating_add(3);
+        }
+        let page_size = (terminal.size()?.height as usize).saturating_sub(reserved_rows);
 
         // Poll for any input for up to 100ms. Use `poll` to avoid blocking
         // indefinitely and to allow aggregation of bursts of events.

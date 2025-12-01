@@ -8,6 +8,14 @@
 use crate::app::{Action, App};
 use crate::fs_op::error::FsOpError;
 
+/// Mapping of known textual commands to their parsed variants.
+const COMMANDS: [(&str, ParsedCommand); 4] = [
+    ("toggle-preview", ParsedCommand::TogglePreview),
+    ("menu-next", ParsedCommand::MenuNext),
+    ("menu-prev", ParsedCommand::MenuPrev),
+    ("menu-activate", ParsedCommand::MenuActivate),
+];
+
 /// Parseable, textual commands accepted by the command-line input.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ParsedCommand {
@@ -37,13 +45,13 @@ impl ParsedCommand {
 /// Returns `Some(ParsedCommand)` when the input matches a known command
 /// (ignoring surrounding whitespace), otherwise `None`.
 pub(crate) fn parse_command(input: &str) -> Option<ParsedCommand> {
-    match input.trim() {
-        "toggle-preview" => Some(ParsedCommand::TogglePreview),
-        "menu-next" => Some(ParsedCommand::MenuNext),
-        "menu-prev" => Some(ParsedCommand::MenuPrev),
-        "menu-activate" => Some(ParsedCommand::MenuActivate),
-        _ => None,
-    }
+    let trimmed = input.trim();
+    COMMANDS.iter().find_map(|(name, cmd)| (*name == trimmed).then_some(*cmd))
+}
+
+/// Return an iterator of known textual commands for completion hints.
+pub fn known_commands() -> impl Iterator<Item = &'static str> {
+    COMMANDS.iter().map(|(name, _)| *name)
 }
 
 /// Perform an `Action` on the application.

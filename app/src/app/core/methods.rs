@@ -311,6 +311,8 @@ impl App {
             Side::Left => &mut self.left,
             Side::Right => &mut self.right,
         };
+        let prev_selected_path = panel.selected_entry().map(|e| e.path.clone());
+        let prev_offset = panel.offset;
         // Read directory entries once via a helper so the iteration and
         // filesystem interaction can be easily unit-tested or refactored.
         let mut entries = panel.read_entries()?;
@@ -329,11 +331,27 @@ impl App {
             entries.reverse();
         }
 
+        // Apply quick filter, if present.
+        entries = panel.apply_filter(entries);
+
         // Keep `panel.entries` as a pure domain list: only filesystem
         // entries (no synthetic header/parent). Store the read entries
         // directly and clamp UI selection/offset against the UI row
         // count (header + parent + entries).
         panel.entries = entries;
+
+        // Preserve selection when possible: stick to the previously selected
+        // entry path if it remains visible after filtering.
+        if let Some(path) = prev_selected_path {
+            if let Some(idx) = panel.entries.iter().position(|e| e.path == path) {
+                panel.selected = super::utils::entry_index_to_ui_row(idx, panel);
+            } else {
+                // Default to the first entry row (after header/parent) when no match.
+                let parent_rows = panel.cwd.parent().is_some() as usize;
+                panel.selected = 1 + parent_rows;
+            }
+        }
+
         let visible_rows = super::utils::ui_row_count(panel);
         let last_index = visible_rows.saturating_sub(1);
         if panel.selected > last_index {
@@ -341,7 +359,10 @@ impl App {
         }
         if panel.offset > last_index {
             panel.offset = last_index;
+        } else {
+            panel.offset = std::cmp::min(prev_offset, last_index);
         }
+        panel.selections.retain(|idx| *idx < panel.entries.len());
         self.update_preview_for(side);
         Ok(())
     }

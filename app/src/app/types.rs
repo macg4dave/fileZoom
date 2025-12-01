@@ -192,6 +192,8 @@ pub enum InputKind {
     NewFile,
     NewDir,
     ChangePath,
+    /// Quick filter on the active panel (glob-style, empty to clear).
+    Filter,
 }
 
 /// Actions represent high-level user requests executed by the runner.

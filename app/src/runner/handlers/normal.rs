@@ -13,7 +13,7 @@ use std::sync::{mpsc, Arc};
 /// Returns `Ok(true)` when the caller should exit the application.
 pub fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Result<bool> {
     // Route to command line if active
-    if app.command_line.is_some() {
+    if app.command_line.as_ref().map(|c| c.visible).unwrap_or(false) {
         return crate::ui::command_line::handle_input(app, code);
     }
 
@@ -42,6 +42,21 @@ pub fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::
         KeyCode::Char('s') => { app.sort = app.sort.next(); app.refresh()?; }
         KeyCode::Char('S') => { use crate::app::types::SortOrder::*; app.sort_order = match app.sort_order { Ascending => Descending, Descending => Ascending }; app.refresh()?; }
         KeyCode::Char(' ') => app.active_panel_mut().toggle_selection(),
+        KeyCode::Char(':') => {
+            // Activate the inline command line (single-line textarea).
+            if let Some(ref mut cmd) = app.command_line {
+                cmd.activate();
+            } else {
+                app.command_line = Some(crate::ui::command_line::CommandLineState::default());
+            }
+        }
+        KeyCode::Char('/') => {
+            app.mode = Mode::Input {
+                prompt: "Quick filter (glob, empty to clear):".to_string(),
+                buffer: String::new(),
+                kind: InputKind::Filter,
+            };
+        }
         KeyCode::Tab => { app.active = match app.active { Side::Left => Side::Right, Side::Right => Side::Left }; }
         KeyCode::F(5) => handle_operation_start(app, Operation::Copy)?,
         KeyCode::F(6) => handle_operation_start(app, Operation::Move)?,
@@ -82,7 +97,7 @@ pub fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::
         KeyCode::F(3) => handle_context_actions(app),
         KeyCode::Char('t') => crate::ui::colors::toggle(),
         KeyCode::Char('?') => {
-            let content = "Keys:\n\nq: quit\nF1: toggle menu focus\nLeft/Right: menu navigation when focused\nEnter: open/activate\nBackspace: up\nd: delete\nc: copy\nm: move\nn/N: new file/dir\nR: rename\ns/S: sort (toggle desc)\nTab: switch panels\n?: show this help\n".to_string();
+            let content = "Keys:\n\nq: quit\nF1: toggle menu focus\nLeft/Right: menu navigation when focused\nEnter: open/activate\nBackspace: up\nd: delete\nc: copy\nm: move\nn/N: new file/dir\nR: rename\n/: quick filter (glob, empty to clear)\n:: inline command (e.g. toggle-preview; Tab completes, Up/Down history)\ns/S: sort (toggle desc)\nTab: switch panels\n?: show this help\n".to_string();
             app.mode = Mode::Message { title: "Help".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None };
         }
         KeyCode::Char('>') => app.active_panel_mut().preview_offset = app.active_panel_mut().preview_offset.saturating_add(5),

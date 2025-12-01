@@ -64,6 +64,16 @@ pub fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
                         set_error_message(app, errors::render_io_error(&e, None, None, None));
                     }
                 }
+                InputKind::Filter => {
+                    let panel = app.active_panel_mut();
+                    if let Err(e) = panel.set_filter(&input) {
+                        set_error_message(app, format!("Invalid filter: {}", e));
+                        return Ok(false);
+                    }
+                    if let Err(e) = app.refresh_active() {
+                        set_error_message(app, errors::render_io_error(&e, None, None, None));
+                    }
+                }
             }
         } else if keybinds::is_backspace(&code) {
             buffer.pop();

@@ -30,6 +30,12 @@ pub(super) fn ui_to_entry_index(selected_row: usize, panel: &Panel) -> Option<us
         .and_then(|idx| if idx < panel.entries.len() { Some(idx) } else { None })
 }
 
+/// Convert a domain entry index back into the UI row index (header + parent + entries).
+pub(super) fn entry_index_to_ui_row(entry_idx: usize, panel: &Panel) -> usize {
+    let parent_rows = panel.cwd.parent().is_some() as usize;
+    HEADER_ROWS + parent_rows + entry_idx
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -78,5 +84,15 @@ mod tests {
         let panel_no_parent = make_panel_with_entries(PathBuf::from("/"), &["only"]);
         assert_eq!(ui_to_entry_index(0, &panel_no_parent), None); // header
         assert_eq!(ui_to_entry_index(1, &panel_no_parent), Some(0));
+    }
+
+    #[test]
+    fn entry_index_round_trip_matches_rows() {
+        let panel = make_panel_with_entries(PathBuf::from("/tmp/example"), &["a", "b"]);
+        assert_eq!(entry_index_to_ui_row(0, &panel), 2);
+        assert_eq!(entry_index_to_ui_row(1, &panel), 3);
+
+        let panel_with_parent = make_panel_with_entries(PathBuf::from("foo/bar"), &["a"]);
+        assert_eq!(entry_index_to_ui_row(0, &panel_with_parent), 2);
     }
 }

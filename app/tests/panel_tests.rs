@@ -1,4 +1,5 @@
-use fileZoom::app::Panel;
+use assert_fs::prelude::*;
+use fileZoom::app::{core::App as CoreApp, Panel, StartOptions};
 use fileZoom::Entry;
 use std::path::PathBuf;
 
@@ -116,4 +117,29 @@ fn ensure_selected_visible_zero_height_and_single_item() {
     q.offset = 5; // intentionally out of range
     q.ensure_selected_visible(1);
     assert_eq!(q.offset, 0);
+}
+
+#[test]
+fn quick_filter_preserves_selection_when_match() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.child("keep.log").write_str("x").unwrap();
+    temp.child("other.txt").write_str("y").unwrap();
+
+    let opts = StartOptions { start_dir: Some(temp.path().to_path_buf()), ..Default::default() };
+    let mut app = CoreApp::with_options(&opts).expect("init app");
+
+    // Select keep.log explicitly.
+    if let Some(idx) = app.left.entries.iter().position(|e| e.name == "keep.log") {
+        let parent_rows = app.left.cwd.parent().is_some() as usize;
+        app.left.selected = 1 + parent_rows + idx;
+    }
+
+    app.left.set_filter("*.log").unwrap();
+    app.refresh_active().unwrap();
+    assert_eq!(app.left.selected_entry().unwrap().name, "keep.log");
+
+    // Clearing filter should keep selection on the same entry if it still exists.
+    app.left.set_filter("").unwrap();
+    app.refresh_active().unwrap();
+    assert_eq!(app.left.selected_entry().unwrap().name, "keep.log");
 }
