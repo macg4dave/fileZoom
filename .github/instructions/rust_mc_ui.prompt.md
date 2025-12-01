@@ -18,6 +18,7 @@ All changes apply to crate fileZoom.
 -   Keep the patch minimal and tightly scoped to UI behaviour unless
     deeper changes are unavoidable.
 -   Keep the parity matrix in `doc/roadmap.md` (and `roadmap.txt` mirror) up to date when UI/features move from missing → partial → complete.
+-   Do not modify `doc/roadmap.md` or `roadmap.txt` without explicit permission; they are the canonical roadmap sources and must stay in sync.
 -   Do not alter CLI flags, public API semantics, or machine-facing
     output.
 -   Preserve behaviour unless tests or the task explicitly call for
