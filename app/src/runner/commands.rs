@@ -9,11 +9,13 @@ use crate::app::{Action, App};
 use crate::fs_op::error::FsOpError;
 
 /// Mapping of known textual commands to their parsed variants.
-const COMMANDS: [(&str, ParsedCommand); 4] = [
+const COMMANDS: [(&str, ParsedCommand); 6] = [
     ("toggle-preview", ParsedCommand::TogglePreview),
     ("menu-next", ParsedCommand::MenuNext),
     ("menu-prev", ParsedCommand::MenuPrev),
     ("menu-activate", ParsedCommand::MenuActivate),
+    ("refresh", ParsedCommand::Refresh),
+    ("toggle-hidden", ParsedCommand::ToggleHidden),
 ];
 
 /// Parseable, textual commands accepted by the command-line input.
@@ -23,6 +25,8 @@ pub(crate) enum ParsedCommand {
     MenuNext,
     MenuPrev,
     MenuActivate,
+    Refresh,
+    ToggleHidden,
 }
 
 impl ParsedCommand {
@@ -36,6 +40,13 @@ impl ParsedCommand {
             ParsedCommand::MenuNext => app.menu_next(),
             ParsedCommand::MenuPrev => app.menu_prev(),
             ParsedCommand::MenuActivate => app.menu_activate(),
+            ParsedCommand::Refresh => {
+                let _ = app.refresh();
+            }
+            ParsedCommand::ToggleHidden => {
+                app.settings.show_hidden = !app.settings.show_hidden;
+                let _ = app.refresh();
+            }
         }
     }
 }
@@ -96,6 +107,8 @@ mod tests {
         assert_eq!(parse_command(" menu-next "), Some(ParsedCommand::MenuNext));
         assert_eq!(parse_command("menu-prev"), Some(ParsedCommand::MenuPrev));
         assert_eq!(parse_command("menu-activate"), Some(ParsedCommand::MenuActivate));
+        assert_eq!(parse_command("refresh"), Some(ParsedCommand::Refresh));
+        assert_eq!(parse_command("toggle-hidden"), Some(ParsedCommand::ToggleHidden));
     }
 
     #[test]

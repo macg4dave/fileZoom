@@ -2,6 +2,8 @@ use crate::app::core::App;
 use crate::input::KeyCode;
 use ratatui::{layout::Rect, widgets::{Block, Borders}, Frame};
 use tui_textarea::{CursorMove, Input as TextInput, Key as TextKey, TextArea};
+use std::path::{Path, PathBuf};
+use std::fs;
 
 /// Maximum number of historical commands remembered in the inline prompt.
 const MAX_HISTORY: usize = 50;
@@ -129,15 +131,35 @@ impl CommandLineState {
         }
     }
 
-    /// Apply a simple tab-completion against known commands.
-    fn apply_completion(&mut self) {
+    /// Completion with access to app for path-aware hints.
+    pub fn apply_completion_with(&mut self, cwd: Option<&Path>) {
         let input = self.current_text();
-        let trimmed = input.trim();
+        let trimmed = input.trim_end();
         if trimmed.is_empty() {
             return;
         }
+
+        // Determine the last token to complete (split by whitespace).
+        let last_ws = trimmed.rfind(char::is_whitespace);
+        let (head, tail) = match last_ws {
+            Some(idx) => (&trimmed[..idx + 1], &trimmed[idx + 1..]),
+            None => ("", trimmed),
+        };
+
+        // Path-style token? Apply path completion when token looks like a path.
+        if let Some(cwd) = cwd {
+            if is_pathy_token(tail) {
+                if let Some(completed) = complete_path(tail, cwd) {
+                    let new_text = format!("{}{}", head, completed);
+                    self.set_text(&new_text);
+                    return;
+                }
+            }
+        }
+
+        // Fallback to command completion.
         let matches: Vec<&str> = crate::runner::commands::known_commands()
-            .filter(|cmd| cmd.starts_with(trimmed))
+            .filter(|cmd| cmd.starts_with(tail))
             .collect();
         if matches.is_empty() {
             return;
@@ -145,12 +167,11 @@ impl CommandLineState {
         let replacement = if matches.len() == 1 {
             matches[0].to_string()
         } else {
-            longest_common_prefix(&matches).unwrap_or_else(|| trimmed.to_string())
+            longest_common_prefix(&matches).unwrap_or_else(|| tail.to_string())
         };
-        // Only extend the buffer; avoid clobbering unrelated text unless we
-        // made progress toward a specific completion.
-        if replacement.len() > input.len() || matches.len() == 1 {
-            self.set_text(&replacement);
+        if replacement.len() > tail.len() || matches.len() == 1 {
+            let new_text = format!("{}{}", head, replacement);
+            self.set_text(&new_text);
         }
     }
 
@@ -175,6 +196,12 @@ pub fn render(f: &mut Frame, area: Rect, state: &CommandLineState) {
 pub fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
     let mut to_execute: Option<String> = None;
 
+    let cwd_for_completion = if matches!(code, KeyCode::Tab) {
+        Some(app.active_panel().cwd.clone())
+    } else {
+        None
+    };
+
     if let Some(cmd) = &mut app.command_line {
         match code {
             KeyCode::Esc => cmd.close(),
@@ -186,7 +213,10 @@ pub fn handle_input(app: &mut App, code: KeyCode) -> anyhow::Result<bool> {
             }
             KeyCode::Up => cmd.history_prev(),
             KeyCode::Down => cmd.history_next(),
-            KeyCode::Tab => cmd.apply_completion(),
+            KeyCode::Tab => {
+                let cwd = cwd_for_completion.as_deref();
+                cmd.apply_completion_with(cwd);
+            }
             _ => cmd.feed_textarea(code),
         }
     }
@@ -238,4 +268,74 @@ fn longest_common_prefix(words: &[&str]) -> Option<String> {
         }
     }
     Some(prefix)
+}
+
+/// Return true if the token should be treated as a path (absolute, relative, or contains a separator).
+fn is_pathy_token(token: &str) -> bool {
+    token.starts_with('/') || token.starts_with('.') || token.starts_with('~') || token.contains(std::path::MAIN_SEPARATOR)
+}
+
+/// Attempt to complete a filesystem path relative to `cwd` using the provided token.
+fn complete_path(token: &str, cwd: &Path) -> Option<String> {
+    // Expand simple "~" to home if present.
+    let token = if token.starts_with("~") {
+        if let Some(home) = directories_next::BaseDirs::new().map(|b| b.home_dir().to_path_buf()) {
+            token.replacen("~", home.to_string_lossy().as_ref(), 1)
+        } else {
+            token.to_string()
+        }
+    } else {
+        token.to_string()
+    };
+
+    let candidate_path = PathBuf::from(&token);
+    let (dir, prefix) = if candidate_path.is_absolute() {
+        if candidate_path.is_dir() {
+            (candidate_path.clone(), String::new())
+        } else {
+            (candidate_path.parent().unwrap_or_else(|| Path::new("/")).to_path_buf(), candidate_path.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default())
+        }
+    } else {
+        // Relative
+        let joined = cwd.join(&candidate_path);
+        if token.ends_with(std::path::MAIN_SEPARATOR) || joined.is_dir() {
+            (joined, String::new())
+        } else {
+            (
+                joined.parent().unwrap_or(cwd).to_path_buf(),
+                joined.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default(),
+            )
+        }
+    };
+
+    let rd = fs::read_dir(&dir).ok()?;
+    let mut matches = Vec::new();
+    for entry in rd.flatten() {
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name.starts_with(&prefix) {
+            let built = if candidate_path.is_absolute() {
+                dir.join(&name)
+            } else {
+                // Convert back to relative form with respect to cwd
+                dir.strip_prefix(cwd).unwrap_or(&dir).join(&name)
+            };
+            let mut s = pathbuf_to_string(&built);
+            if entry.path().is_dir() && !s.ends_with(std::path::MAIN_SEPARATOR) {
+                s.push(std::path::MAIN_SEPARATOR);
+            }
+            matches.push(s);
+        }
+    }
+
+    if matches.is_empty() {
+        None
+    } else if matches.len() == 1 {
+        Some(matches.remove(0))
+    } else {
+        longest_common_prefix(matches.iter().map(|s| s.as_str()).collect::<Vec<_>>().as_slice())
+    }
+}
+
+fn pathbuf_to_string(p: &Path) -> String {
+    p.to_string_lossy().to_string()
 }

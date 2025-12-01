@@ -1,4 +1,5 @@
-use fileZoom::app::App;
+use assert_fs::prelude::*;
+use fileZoom::app::{App, StartOptions};
 use fileZoom::input::KeyCode;
 use fileZoom::ui::command_line::CommandLineState;
 
@@ -38,4 +39,33 @@ fn history_navigation_restores_previous_command() {
     let _ = fileZoom::ui::command_line::handle_input(&mut app, KeyCode::Down).unwrap();
     let cleared = app.command_line.as_ref().unwrap().textarea.lines().join("\n");
     assert!(cleared.is_empty());
+}
+
+#[test]
+fn path_completion_uses_active_cwd() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.child("alpha.txt").write_str("x").unwrap();
+    let opts = StartOptions { start_dir: Some(temp.path().to_path_buf()), ..Default::default() };
+    let mut app = App::with_options(&opts).unwrap();
+    app.command_line = Some(CommandLineState::default());
+
+    for c in "./a".chars() {
+        let _ = fileZoom::ui::command_line::handle_input(&mut app, KeyCode::Char(c)).unwrap();
+    }
+    let _ = fileZoom::ui::command_line::handle_input(&mut app, KeyCode::Tab).unwrap();
+
+    let text = app.command_line.as_ref().unwrap().textarea.lines().join("\n");
+    assert!(text.contains("alpha.txt"), "expected path completion, got {text}");
+}
+
+#[test]
+fn toggle_hidden_command_executes() {
+    let mut app = App::new().unwrap();
+    assert!(!app.settings.show_hidden);
+    app.command_line = Some(CommandLineState::default());
+    for c in "toggle-hidden".chars() {
+        let _ = fileZoom::ui::command_line::handle_input(&mut app, KeyCode::Char(c)).unwrap();
+    }
+    let _ = fileZoom::ui::command_line::handle_input(&mut app, KeyCode::Enter).unwrap();
+    assert!(app.settings.show_hidden);
 }

@@ -13,12 +13,14 @@ Guiding principles
 - Ship incremental slices with tests per feature and stable settings schema; prefer resumable/background operations and predictable error handling.
 
 External assumptions (TrueNAS/Debian)
+
 - Rule 1: No external runtime dependencies or package installs; everything ships via Cargo crates. No required network services or downloads at runtime.
 - Target environments: Debian-stable (and TrueNAS SCALE) with standard userland (bash/sh, coreutils), terminfo, libc, and OpenSSL/Zlib from the base system. No sudo required for normal use.
 - Optional hooks must degrade gracefully: inotify/kqueue presence for fs-watch (feature-gated), OpenSSH client only when users opt into system `ssh`/`sftp` flows; otherwise default to pure-Rust backends.
 - Terminal: xterm-compatible terminals with mouse + 256-color; fallback to basic if capabilities are missing.
 
 Known gaps intentionally deferred (to avoid scope creep)
+
 - Full MC mcedit parity (advanced editing features) and Krusader-specific power-user tools are scheduled for M8 and later.
 - Advanced archive formats beyond zip/tar/7z/iso (e.g., rar, dmg) are out of scope unless a safe Rust crate exists and demand is explicit.
 - Deep plugin ecosystems/user scripting beyond MC/K “user menu/actions” baseline are deferred until core parity is stable.
@@ -84,6 +86,7 @@ Milestones
 | Baselines & tests | Pending | Run make_fakefs startup/IO baselines; record expected timings; add contract tests for copy/move/perm behaviours and settings/schema snapshot tests. |
 
 Cross-cutting blockers to clear early
+
 - Inline command line UX needs a robust input widget (e.g., `tui-textarea`) with history/completion; must integrate with existing handlers and tests.
 - Job queue design (pause/resume/cancel/retry) is missing; affects file ops, VFS transfers, and progress UI.
 - Selection/filtering patterns and panel modes (tree/brief/flat/quick view) are absent; many milestones depend on them.
@@ -92,6 +95,7 @@ Cross-cutting blockers to clear early
 - Settings/keymap schema needs locking and tests to avoid churn once presets and toolbar/menu parity land.
 
 Priority plan (execution order)
+
 - P1: Defaults + inline command line + quick filter scaffolding (M0/M1 foundations); lock keymap/menu defaults and settings schema tests.
 - P2: Tabs/history/bookmarks + selection patterns + panel modes (tree/brief/flat/quick view) for navigation parity (M1/M2).
 - P3: Menus/user actions/toolbar + F-key bar hints aligned to presets (M3).
@@ -115,6 +119,7 @@ Priority plan (execution order)
   - Crate options: `strum` for key enums, `phf` for keymap tables, `serde` for configurable bindings.
 
 ### M1 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Layout & panels | Planned | Implement tree/brief/flat/quick view modes; keep per-panel sort/paging on refresh; add mouse resize/drag/drop parity; tests for selection visibility. |
@@ -132,6 +137,7 @@ Priority plan (execution order)
   - Crate options: `globset`, `regex`, `aho-corasick`, `bitflags` for selection state.
 
 ### M2 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Tabs | Planned | Add tabs with lock/pin, per-tab path/focus persistence, swap/clone; persist layout and restore on start. |
@@ -148,6 +154,7 @@ Priority plan (execution order)
   - Crate options: `serde`, `toml`, `schemars` for schema validation, `once_cell` for defaults.
 
 ### M3 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Menus & accelerators | Planned | Mirror MC/K top menu + context menus with accelerators; align with keymap presets and mouse flows. |
@@ -164,6 +171,7 @@ Priority plan (execution order)
   - Crate options: `ratatui` progress widgets, `indicatif` for progress math, `notify-rust` for desktop notifications.
 
 ### M4 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Job queue | Planned | Build central queue for copy/move/delete/rename/link/chmod/chown with pause/resume/cancel/retry and BG/FG toggle. |
@@ -180,6 +188,7 @@ Priority plan (execution order)
   - Crate options: `aho-corasick`, `globset`, `regex`.
 
 ### M5 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Search & filters | Planned | Add find files/content with filters (size/date/attrs/owner/perm); panelize results retaining selection. |
@@ -196,6 +205,7 @@ Priority plan (execution order)
   - Crate options: `futures`, `async-trait`, `bytes`, `indicatif` for transfer progress.
 
 ### M6 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Local backend | Planned | Harden local VFS behaviours and errors; document capability matrix. |
@@ -213,6 +223,7 @@ Priority plan (execution order)
   - Crate options: `trash`, `dialoguer` for confirmations.
 
 ### M7 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Properties/permissions | Planned | Add properties dialogs with chmod/chown/chgrp/ACL/umask handling; symlink-aware UI; editable ownership. |
@@ -229,6 +240,7 @@ Priority plan (execution order)
   - Crate options: `notify` (fs watch), `ratatui`, `memmap2` for efficient large-file previews.
 
 ### M8 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Viewer | Planned | Build text/hex/pipe viewer with wrap/encoding/charset controls; external viewer hooks. |
@@ -245,6 +257,7 @@ Priority plan (execution order)
   - Crate options: `fluent-bundle`, `unic-langid`, `intl_pluralrules`, `pulldown-cmark` for help rendering, `schemars` for config schemas.
 
 ### M9 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Themes | Planned | Ship presets (MC blue, Krusader light/dark, high-contrast), live switch, user theme loading with persistence. |
@@ -261,6 +274,7 @@ Priority plan (execution order)
   - Crate options: `cargo-dist`, `cross`, `git-cliff`, `mdbook`.
 
 ### M10 workplan (planned)
+
 | Area | Status | Actions |
 | --- | --- | --- |
 | Integration tests | Planned | Add end-to-end coverage for VFS backends, job queue semantics, panelize/search/compare/sync, viewer/editor basics. |

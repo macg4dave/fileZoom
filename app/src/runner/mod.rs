@@ -7,6 +7,7 @@
 pub mod commands;
 pub mod event_loop_main;
 pub mod handlers;
+pub mod job_queue;
 pub mod progress;
 pub mod terminal;
 #[cfg(feature = "fs-watch")]
