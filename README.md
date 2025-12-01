@@ -301,12 +301,19 @@ cargo run -- --no-mouse
 
 Notes:
 
-- `--theme` accepts `default` or `dark` (case-sensitive). If omitted the
-  persisted theme or the built-in default is used.
+- `--theme` accepts `dark` or `light` (unknown values fall back to dark). If
+  omitted the persisted theme or the built-in default is used.
 - The `-v`/`--verbose` flag can be passed multiple times to increase logging
 verbosity: `-v` (info), `-vv` (debug), `-vvv` (trace).
 - CLI flags only affect the current run; use the in-app Settings menu to
   persist changes to disk.
+
+Defaults (terminal baseline)
+----------------------------
+- Keymap: `q` quit; arrows/PageUp/PageDown move; `Enter` open; `Backspace` up; `Tab` swap panels; `Space` toggle selection; `r` refresh; `s/S` cycle sort/direction; `p` toggle preview; `t` toggle theme; `?` help; F-keys: `F1` menu focus, `F3` context actions, `F5` copy, `F6` move. Alt combos are unbound.
+- Panel/layout: dual panels (left active), preview hidden, CLI-style listing enabled, file-stats column hidden (width hint 10) until enabled, Name/Ascending sort, layout split ~55/45.
+- Theme: dark by default (unknown theme strings fall back to dark); `light` is the other built-in option. Toggle via in-app `t` or `--theme`.
+- Config paths: settings live at `$XDG_CONFIG_HOME/fileZoom/settings.toml` (fallback `~/.config/fileZoom/settings.toml`). Keybinds search order: `$XDG_CONFIG_HOME/fileZoom/keybinds.xml` (or platform config dir from `directories-next`) then `./keybinds.xml`. Cache dir uses platform cache via `directories-next` (fallback `~/.cache/filezoom` or `~/.filezoom`).
 
 Top menu usage
 --------------

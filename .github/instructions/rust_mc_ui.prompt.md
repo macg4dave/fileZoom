@@ -17,6 +17,7 @@ All changes apply to crate fileZoom.
 -   Run full tests: cargo test -p fileZoom and paste full output.
 -   Keep the patch minimal and tightly scoped to UI behaviour unless
     deeper changes are unavoidable.
+-   Keep the parity matrix in `doc/roadmap.md` (and `roadmap.txt` mirror) up to date when UI/features move from missing → partial → complete.
 -   Do not alter CLI flags, public API semantics, or machine-facing
     output.
 -   Preserve behaviour unless tests or the task explicitly call for
