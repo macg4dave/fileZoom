@@ -11,6 +11,7 @@ pub enum MenuAction {
     Help,
     Quit,
     About,
+    CyclePanelMode,
     Noop,
 }
 
@@ -31,6 +32,7 @@ impl MenuModel {
     pub fn default_model() -> (Vec<MenuTop>, ()) {
         let tops = vec![
             MenuTop { label: "File".into(), action: None, submenu: Some(vec![MenuItem{label:"Open".into(), action: Some(MenuAction::Noop)}]) },
+            MenuTop { label: "View".into(), action: None, submenu: Some(vec![MenuItem{label:"Cycle Panel Mode".into(), action: Some(MenuAction::CyclePanelMode)}]) },
             MenuTop { label: "Copy".into(), action: Some(MenuAction::Copy), submenu: None },
             MenuTop { label: "Move".into(), action: Some(MenuAction::Move), submenu: None },
             MenuTop { label: "New".into(), action: None, submenu: Some(vec![MenuItem{label:"New File".into(), action: Some(MenuAction::NewFile)}, MenuItem{label:"New Dir".into(), action: Some(MenuAction::NewDir)}])},

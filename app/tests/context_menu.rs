@@ -32,8 +32,8 @@ fn f3_opens_context_menu_and_view_shows_preview() {
     };
     app.left.selected = header_count + parent_count + idx.unwrap();
 
-    // Press F3 to open context menu
-    fileZoom::runner::handlers::handle_key(&mut app, KeyCode::F(3), 10).unwrap();
+    // Press F4 to open context menu (F3 cycles panel mode now)
+    fileZoom::runner::handlers::handle_key(&mut app, KeyCode::F(4), 10).unwrap();
     match app.mode {
         fileZoom::app::Mode::ContextMenu { .. } => {}
         _ => panic!("expected ContextMenu mode after F3"),

@@ -10,7 +10,23 @@ use walkdir::WalkDir;
 /// dual-pane file manager. It intentionally keeps presentation details
 /// (such as rendering rows) out of the model so the core can be tested
 /// without a terminal.
-#[derive(Debug)]
+/// Modes a panel can display entries in. UI may render these differently.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum PanelMode {
+    /// Full listing (default) — all columns and metadata.
+    #[default]
+    Full,
+    /// Brief listing: compact single-line entries.
+    Brief,
+    /// Tree listing: show recursive tree (UI decides how to present).
+    Tree,
+    /// Flat listing: flatten subdirectories into a single list.
+    Flat,
+    /// Quick view mode emphasising a selected entry with less metadata.
+    QuickView,
+}
+
+
 pub struct Panel {
     /// Current working directory shown by this panel.
     pub cwd: PathBuf,
@@ -29,6 +45,8 @@ pub struct Panel {
     pub preview_offset: usize,
     /// Selected entry indices for multi-selection (domain indexes into `entries`).
     pub selections: HashSet<usize>,
+    /// The display mode for the panel (Full/Brief/Tree/Flat/QuickView).
+    pub mode: PanelMode,
     /// Optional glob filter applied to entry names.
     pub filter_pattern: Option<String>,
     filter_matcher: Option<GlobMatcher>,
@@ -47,6 +65,7 @@ impl Panel {
             selections: HashSet::new(),
             filter_pattern: None,
             filter_matcher: None,
+            mode: PanelMode::default(),
         }
     }
 
@@ -90,6 +109,112 @@ impl Panel {
             if !self.selections.remove(&idx) {
                 self.selections.insert(idx);
             }
+        }
+    }
+
+    /// Select all entries in the current listing (domain indices).
+    pub fn select_all(&mut self) {
+        self.selections.clear();
+        for i in 0..self.entries.len() {
+            self.selections.insert(i);
+        }
+    }
+
+    /// Invert current selection: items selected become unselected, and vice-versa.
+    pub fn invert_selection(&mut self) {
+        let mut new = HashSet::new();
+        for i in 0..self.entries.len() {
+            if !self.selections.contains(&i) {
+                new.insert(i);
+            }
+        }
+        self.selections = new;
+    }
+
+    /// Select entries whose name matches `pattern` (glob-style). This does not
+    /// alter the panel's quick-filter — it performs an independent selection.
+    pub fn select_by_pattern(&mut self, pattern: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let trimmed = pattern.trim();
+        if trimmed.is_empty() {
+            self.selections.clear();
+            return Ok(());
+        }
+
+        // Advanced: support regex and attribute filters.
+        // Regex: prefix pattern with "re:" to interpret the remainder as a regular expression.
+        if let Some(re_pat) = trimmed.strip_prefix("re:") {
+            let re = regex::RegexBuilder::new(re_pat.trim()).case_insensitive(true).build().map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+            self.selections.clear();
+            for (i, e) in self.entries.iter().enumerate() {
+                if re.is_match(&e.name) {
+                    self.selections.insert(i);
+                }
+            }
+            return Ok(());
+        }
+
+        // Attribute filters: size>num, size<num, size=num, modified>RFC3339, modified<RFC3339
+        if trimmed.starts_with("size>") || trimmed.starts_with("size<") || trimmed.starts_with("size=") {
+            let op = trimmed.chars().nth(4).unwrap_or('=');
+            let num_str = trimmed[5..].trim();
+            if let Ok(threshold) = num_str.parse::<u64>() {
+                self.selections.clear();
+                for (i, e) in self.entries.iter().enumerate() {
+                    match op {
+                        '>' => if e.size > threshold { self.selections.insert(i); },
+                        '<' => if e.size < threshold { self.selections.insert(i); },
+                        '=' => if e.size == threshold { self.selections.insert(i); },
+                        _ => {}
+                    }
+                }
+            }
+            return Ok(());
+        }
+
+        if trimmed.starts_with("modified>") || trimmed.starts_with("modified<") {
+            let op = trimmed.chars().nth(8).unwrap_or('>');
+            let ts_str = trimmed[9..].trim();
+            if let Ok(dt) = DateTime::parse_from_rfc3339(ts_str) {
+                let dt_local: DateTime<Local> = dt.with_timezone(&Local);
+                self.selections.clear();
+                for (i, e) in self.entries.iter().enumerate() {
+                    if let Some(mod_t) = e.modified {
+                        match op {
+                            '>' => if mod_t > dt_local { self.selections.insert(i); },
+                            '<' => if mod_t < dt_local { self.selections.insert(i); },
+                            _ => {}
+                        }
+                    }
+                }
+            }
+            return Ok(());
+        }
+
+        let has_meta = trimmed.chars().any(|c| matches!(c, '*' | '?' | '[' | '{'));
+        let glob_str = if has_meta { trimmed.to_string() } else { format!("*{}*", trimmed) };
+        let matcher = GlobBuilder::new(&glob_str)
+            .case_insensitive(true)
+            .literal_separator(true)
+            .build()?
+            .compile_matcher();
+
+        self.selections.clear();
+        for (i, e) in self.entries.iter().enumerate() {
+            if matcher.is_match(&e.name) {
+                self.selections.insert(i);
+            }
+        }
+        Ok(())
+    }
+
+    /// Cycle the panel's display mode through Full -> Brief -> Tree -> Flat -> QuickView -> Full.
+    pub fn cycle_mode(&mut self) {
+        self.mode = match self.mode {
+            PanelMode::Full => PanelMode::Brief,
+            PanelMode::Brief => PanelMode::Tree,
+            PanelMode::Tree => PanelMode::Flat,
+            PanelMode::Flat => PanelMode::QuickView,
+            PanelMode::QuickView => PanelMode::Full,
         }
     }
 
@@ -236,6 +361,54 @@ impl Panel {
 
         Ok(entries_vec)
     }
+
+    /// Get a recursive tree of entries starting at this panel's cwd.
+    /// Returns entries paired with their depth (0 => immediate child).
+    /// Depth is limited by `max_depth` to avoid pathological recursion in tests.
+    pub fn tree_entries(&self, max_depth: usize) -> io::Result<Vec<(Entry, usize)>> {
+        let mut entries_vec = Vec::new();
+
+        for dir_entry_result in WalkDir::new(&self.cwd)
+            .min_depth(1)
+            .max_depth(max_depth)
+            .follow_links(false)
+        {
+            let dir_entry = dir_entry_result.map_err(io::Error::other)?;
+
+            let metadata = dir_entry.metadata()?;
+            let depth = dir_entry.depth().saturating_sub(1) as usize;
+            let modified_time = metadata.modified().ok().map(DateTime::<Local>::from);
+            let name = dir_entry.file_name().to_string_lossy().into_owned();
+            let path_buf = dir_entry.path().to_path_buf();
+
+            let mut file_entry = if metadata.is_dir() {
+                Entry::directory(name, path_buf.clone(), modified_time)
+            } else {
+                Entry::file(name, path_buf.clone(), metadata.len(), modified_time)
+            };
+
+            if let Ok(perms) = crate::fs_op::permissions::inspect_permissions(&path_buf, false) {
+                file_entry.unix_mode = perms.unix_mode;
+                file_entry.can_read = Some(perms.can_read);
+                file_entry.can_write = Some(perms.can_write);
+                file_entry.can_execute = Some(perms.can_execute);
+            }
+
+            entries_vec.push((file_entry, depth));
+        }
+
+        Ok(entries_vec)
+    }
+
+    /// Flatten the directory tree under this panel's cwd up to `max_depth`.
+    /// The returned entries are in walk order.
+    pub fn flat_entries(&self, max_depth: usize) -> io::Result<Vec<Entry>> {
+        let mut out = Vec::new();
+        for (e, _) in self.tree_entries(max_depth)? {
+            out.push(e);
+        }
+        Ok(out)
+    }
 }
 
 #[cfg(test)]
@@ -288,5 +461,87 @@ mod tests {
             assert!(e.uid.is_some(), "expected uid on unix");
             assert!(e.gid.is_some(), "expected gid on unix");
         }
+    }
+
+    #[test]
+    fn default_mode_is_full_and_can_change() {
+        let p = Panel::new(std::path::PathBuf::from("/tmp"));
+        assert_eq!(p.mode, PanelMode::Full);
+        let mut p = p;
+        p.mode = PanelMode::Tree;
+        assert_eq!(p.mode, PanelMode::Tree);
+    }
+
+    #[test]
+    fn select_all_and_invert_selection_behaviour() {
+        let mut p = Panel::new(std::path::PathBuf::from("/tmp"));
+        p.entries.push(crate::app::types::Entry::file("a.txt", std::path::PathBuf::from("/tmp/a.txt"), 10, None));
+        p.entries.push(crate::app::types::Entry::file("b.txt", std::path::PathBuf::from("/tmp/b.txt"), 20, None));
+        p.entries.push(crate::app::types::Entry::file("c.log", std::path::PathBuf::from("/tmp/c.log"), 30, None));
+
+        p.select_all();
+        assert_eq!(p.selections.len(), 3);
+
+        p.invert_selection();
+        // previously all selected -> inverted = none selected
+        assert!(p.selections.is_empty());
+    }
+
+    #[test]
+    fn select_by_pattern_selects_matching_entries() {
+        let mut p = Panel::new(std::path::PathBuf::from("/tmp"));
+        p.entries.push(crate::app::types::Entry::file("README.md", std::path::PathBuf::from("/tmp/README.md"), 10, None));
+        p.entries.push(crate::app::types::Entry::file("main.rs", std::path::PathBuf::from("/tmp/main.rs"), 20, None));
+        p.entries.push(crate::app::types::Entry::file("notes.txt", std::path::PathBuf::from("/tmp/notes.txt"), 30, None));
+
+        // pattern without glob meta should match by substring
+        p.select_by_pattern("main").unwrap();
+        assert_eq!(p.selections.len(), 1);
+
+        // select by extension pattern
+        p.select_by_pattern("*.txt").unwrap();
+        assert_eq!(p.selections.iter().map(|&i| p.entries[i].name.clone()).collect::<Vec<_>>(), vec!["notes.txt".to_string()]);
+
+        // empty pattern clears selections
+        p.select_by_pattern("").unwrap();
+        assert!(p.selections.is_empty());
+    }
+
+    #[test]
+    fn regex_and_attribute_selection() {
+        let mut p = Panel::new(std::path::PathBuf::from("/tmp"));
+        // use sizes and modified timestamps
+        let now = chrono::Local::now();
+        p.entries.push(crate::app::types::Entry::file("main.rs", std::path::PathBuf::from("/tmp/main.rs"), 10, Some(now)));
+        p.entries.push(crate::app::types::Entry::file("readme.md", std::path::PathBuf::from("/tmp/readme.md"), 200, Some(now)));
+        p.entries.push(crate::app::types::Entry::file("notes.txt", std::path::PathBuf::from("/tmp/notes.txt"), 500, Some(now)));
+
+        // regex: match names ending with .rs
+        p.select_by_pattern("re:.*\\.rs$").unwrap();
+        assert_eq!(p.selections.len(), 1);
+
+        // size > 100 matches two files
+        p.select_by_pattern("size>100").unwrap();
+        assert_eq!(p.selections.len(), 2);
+
+        // modified > (a timestamp in the past) should select all
+        let past = (now - chrono::Duration::days(1)).to_rfc3339();
+        p.select_by_pattern(&format!("modified>{}", past)).unwrap();
+        assert_eq!(p.selections.len(), 3);
+    }
+
+    #[test]
+    fn tree_and_flat_traversal() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        // Create nested structure: a/b/c/file.txt
+        temp.child("a/b/c").create_dir_all().unwrap();
+        temp.child("a/b/c/file.txt").write_str("hello").unwrap();
+
+        let p = Panel::new(temp.path().to_path_buf());
+        let tree = p.tree_entries(4).unwrap();
+        assert!(tree.iter().any(|(e, _)| e.name == "a" || e.name == "file.txt"));
+
+        let flat = p.flat_entries(4).unwrap();
+        assert!(flat.iter().any(|e| e.name == "file.txt"));
     }
 }

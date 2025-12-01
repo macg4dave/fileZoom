@@ -85,6 +85,8 @@ pub fn handle_key(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::Res
         Mode::Input { .. } => handle_input(app, code),
         Mode::Settings { .. } => handle_settings(app, code),
     }
+
+    
 }
 
 
@@ -101,6 +103,17 @@ mod tests {
         let opts = crate::app::StartOptions { start_dir: Some(cwd.clone()), ..Default::default() };
         let app = crate::app::core::App::with_options(&opts).expect("with_options");
         (app, cwd)
+    }
+
+    #[test]
+    fn f3_cycles_panel_mode() {
+        let (mut app, _cwd) = make_app_at_tmpdir();
+        // Start in Full
+        assert_eq!(app.left.mode, crate::app::core::panel::PanelMode::Full);
+        let _ = handle_key(&mut app, KeyCode::F(3), 0).expect("handler");
+        assert_eq!(app.left.mode, crate::app::core::panel::PanelMode::Brief);
+        let _ = handle_key(&mut app, KeyCode::F(3), 0).expect("handler");
+        assert_eq!(app.left.mode, crate::app::core::panel::PanelMode::Tree);
     }
 
     #[test]

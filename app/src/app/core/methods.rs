@@ -207,6 +207,7 @@ impl App {
                     MenuAction::Move => { let _ = crate::runner::handlers::handle_key(self, crate::input::KeyCode::F(6), 10); }
                     MenuAction::Sort => { self.sort = self.sort.next(); let _ = self.refresh(); }
                     MenuAction::Help => { let content = "See help ( ? )".to_string(); self.mode = Mode::Message { title: "Help".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None }; }
+                    MenuAction::CyclePanelMode => { self.active_panel_mut().cycle_mode(); let _ = self.refresh(); }
                     MenuAction::Quit => { let content = "Quit the app with 'q'".to_string(); self.mode = Mode::Message { title: "Quit".to_string(), content, buttons: vec!["OK".to_string()], selected: 0, actions: None }; }
                     MenuAction::About | MenuAction::Noop => { /* fallthrough to label-based message below */ }
                 }

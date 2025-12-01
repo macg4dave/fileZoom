@@ -94,7 +94,12 @@ pub fn handle_normal(app: &mut App, code: KeyCode, page_size: usize) -> anyhow::
         KeyCode::Home => app.active_panel_mut().selected = 0,
         KeyCode::End => handle_end_key(app),
         KeyCode::Char('p') => app.toggle_preview(),
-        KeyCode::F(3) => handle_context_actions(app),
+        // F3 cycles panel mode (Full -> Brief -> Tree -> Flat -> QuickView -> Full)
+        KeyCode::F(3) => { app.active_panel_mut().cycle_mode(); let _ = app.refresh(); },
+        // Preserve context actions on F4 instead
+        KeyCode::F(4) => handle_context_actions(app),
+        // Alternate keybinding to cycle panel mode
+        KeyCode::Char('v') => { app.active_panel_mut().cycle_mode(); let _ = app.refresh(); },
         KeyCode::Char('t') => crate::ui::colors::toggle(),
         KeyCode::Char('?') => {
             let content = "Keys:\n\nq: quit\nF1: toggle menu focus\nLeft/Right: menu navigation when focused\nEnter: open/activate\nBackspace: up\nd: delete\nc: copy\nm: move\nn/N: new file/dir\nR: rename\n/: quick filter (glob, empty to clear)\n:: inline command (e.g. toggle-preview; Tab completes, Up/Down history)\ns/S: sort (toggle desc)\nTab: switch panels\n?: show this help\n".to_string();

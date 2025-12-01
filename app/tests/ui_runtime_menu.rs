@@ -15,7 +15,8 @@ fn runtime_ui_respects_menu_state() -> Result<()> {
     let mut app = fileZoom::App::new()?;
 
     app.menu_focused = true;
-    app.menu_index = 1;
+    // after adding 'View' the Copy label is at index 2
+    app.menu_index = 2;
 
     // Draw using the runtime UI path. This used to render a static sample
     // state — verify that the draw runs using the real app and that the

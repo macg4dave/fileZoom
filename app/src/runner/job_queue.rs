@@ -88,6 +88,12 @@ impl JobQueue {
     }
 }
 
+impl Default for JobQueue {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Drop for JobQueue {
     fn drop(&mut self) {
         let _ = self.tx.send(WorkerMsg::Shutdown);

@@ -60,8 +60,45 @@ impl UIState {
 
     /// Build a UIState view-model from the core App so UI rendering shows real data.
     pub fn from_core(app: &crate::app::core::App) -> Self {
-        let left_list = app.left.entries.iter().map(|e| e.name.clone()).collect();
-        let right_list = app.right.entries.iter().map(|e| e.name.clone()).collect();
+        use crate::ui::panels::format_entry_line;
+
+        // Build left/right lists depending on each panel's display mode.
+        let left_list = match app.left.mode {
+            crate::app::core::panel::PanelMode::Full => app.left.entries.iter().map(|e| format_entry_line(e)).collect(),
+            crate::app::core::panel::PanelMode::Brief => app.left.entries.iter().map(|e| e.name.clone()).collect(),
+            crate::app::core::panel::PanelMode::QuickView => app.left.entries.iter().map(|e| format!("{}  {}", e.name, if e.is_dir { "<dir>".to_string() } else { format!("{}", e.size) })).collect(),
+            crate::app::core::panel::PanelMode::Tree => {
+                // Build a shallow tree view (max depth 3).
+                match app.left.tree_entries(3) {
+                    Ok(vec) => vec.into_iter().map(|(e, d)| format!("{}{}", "  ".repeat(d), e.name)).collect(),
+                    Err(_) => app.left.entries.iter().map(|e| e.name.clone()).collect(),
+                }
+            }
+            crate::app::core::panel::PanelMode::Flat => {
+                match app.left.flat_entries(3) {
+                    Ok(vec) => vec.into_iter().map(|e| e.name).collect(),
+                    Err(_) => app.left.entries.iter().map(|e| e.name.clone()).collect(),
+                }
+            }
+        };
+
+        let right_list = match app.right.mode {
+            crate::app::core::panel::PanelMode::Full => app.right.entries.iter().map(|e| format_entry_line(e)).collect(),
+            crate::app::core::panel::PanelMode::Brief => app.right.entries.iter().map(|e| e.name.clone()).collect(),
+            crate::app::core::panel::PanelMode::QuickView => app.right.entries.iter().map(|e| format!("{}  {}", e.name, if e.is_dir { "<dir>".to_string() } else { format!("{}", e.size) })).collect(),
+            crate::app::core::panel::PanelMode::Tree => {
+                match app.right.tree_entries(3) {
+                    Ok(vec) => vec.into_iter().map(|(e, d)| format!("{}{}", "  ".repeat(d), e.name)).collect(),
+                    Err(_) => app.right.entries.iter().map(|e| e.name.clone()).collect(),
+                }
+            }
+            crate::app::core::panel::PanelMode::Flat => {
+                match app.right.flat_entries(3) {
+                    Ok(vec) => vec.into_iter().map(|e| e.name).collect(),
+                    Err(_) => app.right.entries.iter().map(|e| e.name.clone()).collect(),
+                }
+            }
+        };
         Self {
             left_list,
             left_selected: app.left.selected,

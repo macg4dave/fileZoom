@@ -7,8 +7,8 @@ use ratatui::layout::Rect;
 #[test]
 fn keyboard_open_submenu_and_activate() {
     let mut app = App::new().unwrap();
-    // target the "New" top label (index 3 in default model)
-    app.menu_index = 3;
+    // target the "New" top label (index 4 in default model)
+    app.menu_index = 4;
     app.menu_focused = true;
 
     // Enter should open the submenu
@@ -32,15 +32,18 @@ fn keyboard_open_submenu_and_activate() {
 #[test]
 fn mouse_open_submenu_then_click_first_item_activates() {
     let mut app = App::new().unwrap();
-    // approximate column that maps to label index 3 when width 80
+    // approximate column that maps to label index 4 when width 80
     let term = Rect::new(0, 0, 80, 24);
-    let click_top = MouseEvent { column: 35, row: 0, kind: MouseEventKind::Down(MouseButton::Left) };
+    let click_top = MouseEvent { column: 45, row: 0, kind: MouseEventKind::Down(MouseButton::Left) };
     let res = handlers::handle_mouse(&mut app, click_top, term).unwrap();
     assert!(res);
     assert!(app.menu_state.open);
+    // make sure the click targeted the New top label
+    assert_eq!(app.menu_index, 4);
+    
 
     // clicking the row beneath the top (row 1) activates the first submenu item
-    let click_sub = MouseEvent { column: 35, row: 1, kind: MouseEventKind::Down(MouseButton::Left) };
+    let click_sub = MouseEvent { column: 45, row: 1, kind: MouseEventKind::Down(MouseButton::Left) };
     let res2 = handlers::handle_mouse(&mut app, click_sub, term).unwrap();
     assert!(res2);
     match app.mode {
@@ -54,12 +57,15 @@ fn mouse_open_submenu_then_click_second_item_activates() {
     let mut app = App::new().unwrap();
     let term = Rect::new(0, 0, 80, 24);
     // open the top submenu by clicking the top label (approximate x)
-    let click_top = MouseEvent { column: 35, row: 0, kind: MouseEventKind::Down(MouseButton::Left) };
+    let click_top = MouseEvent { column: 45, row: 0, kind: MouseEventKind::Down(MouseButton::Left) };
     let _ = handlers::handle_mouse(&mut app, click_top, term).unwrap();
     assert!(app.menu_state.open);
+    // make sure the click targeted the New top label
+    assert_eq!(app.menu_index, 4);
+    
 
     // clicking the second row inside the header should activate the second submenu item
-    let click_sub = MouseEvent { column: 35, row: 2, kind: MouseEventKind::Down(MouseButton::Left) };
+    let click_sub = MouseEvent { column: 45, row: 2, kind: MouseEventKind::Down(MouseButton::Left) };
     let res2 = handlers::handle_mouse(&mut app, click_sub, term).unwrap();
     assert!(res2);
     match app.mode {
@@ -71,9 +77,9 @@ fn mouse_open_submenu_then_click_second_item_activates() {
 #[test]
 fn menu_click_copy_starts_progress() {
     let mut app = App::new().unwrap();
-    // click near the area that maps to the Copy label (index 1)
+    // click near the area that maps to the Copy label (index 2)
     let term = ratatui::layout::Rect::new(0, 0, 80, 24);
-    let me = fileZoom::input::mouse::MouseEvent { column: 12, row: 0, kind: MouseEventKind::Down(MouseButton::Left) };
+    let me = fileZoom::input::mouse::MouseEvent { column: 25, row: 0, kind: MouseEventKind::Down(MouseButton::Left) };
     // select a source path so copy has something to operate on
     app.left.entries = (0..1).map(|i| fileZoom::Entry::directory(format!("f{}", i), std::path::PathBuf::from(format!("/f{}", i)), None)).collect();
     app.left.selections.insert(0);
@@ -86,8 +92,8 @@ fn menu_click_copy_starts_progress() {
 #[test]
 fn menu_enter_move_starts_progress_when_focused() {
     let mut app = App::new().unwrap();
-    // move focus to the top menu and set index to Move (2)
-    app.menu_index = 2;
+    // move focus to the top menu and set index to Move (3)
+    app.menu_index = 3;
     app.menu_focused = true;
     // ensure a source entry is selected so move has something to act on
     app.left.entries = (0..1).map(|i| fileZoom::Entry::directory(format!("d{}", i), std::path::PathBuf::from(format!("/d{}", i)), None)).collect();
@@ -100,7 +106,7 @@ fn menu_enter_move_starts_progress_when_focused() {
 #[test]
 fn menu_enter_sort_cycles_sort_key() {
     let mut app = App::new().unwrap();
-    app.menu_index = 4; // Sort
+    app.menu_index = 5; // Sort
     app.menu_focused = true;
     let prev = app.sort;
     handlers::handle_key(&mut app, fileZoom::input::KeyCode::Enter, 10).unwrap();

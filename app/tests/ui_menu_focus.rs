@@ -9,7 +9,7 @@ fn main_menu_focus_and_selection_render() {
     let mut term = Terminal::new(backend).unwrap();
 
     let mut state = UIState::sample();
-    state.menu_selected = 1;
+    state.menu_selected = 2; // now 'Copy' is index 2 (index 1 is 'View')
     state.menu_focused = true;
     // Render the main menu directly with enough height so content is visible.
     term.draw(|f| {
@@ -25,7 +25,7 @@ fn main_menu_focus_and_selection_render() {
 
     // Toggle focus and selection and draw again to exercise both code paths
     state.menu_focused = false;
-    state.menu_selected = 4;
+    state.menu_selected = 5;
     term.draw(|f| {
         let area = ratatui::layout::Rect::new(0, 0, 80, 3);
         main_menu::render(f, area, state.menu_selected, state.menu_focused);
