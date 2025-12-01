@@ -1,4 +1,4 @@
-# fileZoom Roadmap — Rust rewrite of Midnight Commander / Krusader
+fileZoom → Rust rewrite of Midnight Commander / Krusader (full parity)
 
 Reference repos:
 - Midnight Commander: https://github.com/MidnightCommander/mc
@@ -11,7 +11,7 @@ Guiding principles
 
 Milestones
 
-## M0: Parity map + baselines
+M0: Parity map + baselines
 - Build a feature checklist from MC (4.8.x) and Krusader (current) covering navigation, UI, VFS, jobs, search, compare, user actions, viewer/editor.
   - Crate options: `serde`, `toml`, `serde_json`, `cargo_metadata` (tracking), `insta` (snapshotting expectations).
 - Lock defaults: keymap (F1–F10, Alt+ shortcuts), panel layout, color themes, config paths, menu content, toolbar buttons.
@@ -19,7 +19,7 @@ Milestones
 - Baseline performance/startup/IO numbers using make_fakefs; codify contract tests for filesystem operations.
   - Crate options: `criterion`, `iai`, `assert_fs`, `tempfile`, `walkdir`.
 
-## M1: Core layout + keymap fidelity
+M1: Core layout + keymap fidelity
 - Dual panels with status bars, F-key bar, top menu, inline command line, quick view/preview, mouse resize/click/drag; defaults mirror MC/Krusader.
   - Crate options: `ratatui`, `crossterm`, `unicode-width`, `tui-input`/`tui-textarea` for the inline command line.
 - Panel modes: brief/full/tree/quick view, quick filter/search, sorted columns retained on refresh; keep selection visible.
@@ -29,7 +29,7 @@ Milestones
 - Robust keybindings with on-screen hints and mouse parity for menus/context menus.
   - Crate options: `strum` for key enums, `phf` for keymap tables, `serde` for configurable bindings.
 
-## M2: Navigation, tabs, and histories
+M2: Navigation, tabs, and histories
 - Tabs with lock/pin, per-tab path/focus persistence, quick panel swap/clone; persist last layout.
   - Crate options: `indexmap` for stable ordering, `serde` + `toml`, `slotmap` for tab handles.
 - Bookmarks/hotlist, directory history back/forward, hotlist menu, middle-click open; store bookmarks/keybindings/layout in settings.
@@ -37,7 +37,7 @@ Milestones
 - Marks/selection patterns (Select/Unselect/Invert) and selection stability across reload/panelize.
   - Crate options: `globset`, `regex`, `aho-corasick`, `bitflags` for selection state.
 
-## M3: Command line + menu/toolbar
+M3: Command line + menu/toolbar
 - Menus and context menus mirroring MC/Krusader items/accelerators; configurable keymaps with presets; mouse-driven menus.
   - Crate options: `ratatui` menu widgets, `crossterm`, `strum`, `serde`.
 - User menu (F2) and Krusader User Actions: script execution with placeholders, working directory rules, input/output handling.
@@ -45,7 +45,7 @@ Milestones
 - Toolbar + panel profiles/layouts with save/restore; hints aligned to keybinds.
   - Crate options: `serde`, `toml`, `schemars` for schema validation, `once_cell` for defaults.
 
-## M4: File operations + job queue
+M4: File operations + job queue
 - Central job queue for copy/move/delete/rename/link/chmod/chown with pause/resume/cancel/retry; background/foreground toggle.
   - Crate options: `crossbeam-channel` or `async-channel`, `rayon` for worker pools, `parking_lot` for lightweight locks.
 - Overwrite policies (skip/rename/overwrite/append), checksum verify, preserve permissions/timestamps/ACL where available, temp-root/elevation path.
@@ -53,7 +53,7 @@ Milestones
 - Progress UI per job + aggregate with notifications on completion/error.
   - Crate options: `ratatui` progress widgets, `indicatif` for progress math, `notify-rust` for desktop notifications.
 
-## M5: Search, panelize, compare/sync
+M5: Search, panelize, compare/sync
 - Find file/content grep with filters (size/date/attributes/owner/perm); panelize results while keeping selection.
   - Crate options: `ignore`, `globset`, `regex`, `bstr`, `grep-searcher`.
 - Directory compare/synchronizer (size/date/checksum/content) with conflict resolution dialogs and dry-run.
@@ -61,7 +61,7 @@ Milestones
 - Quick filter in-panel (pattern/regex/type) without losing selection context.
   - Crate options: `aho-corasick`, `globset`, `regex`.
 
-## M6: VFS/backends + archives
+M6: VFS/backends + archives
 - Harden local backend; add SFTP, SMB, FTP, fish; configurable credentials/cache.
   - Crate options: `ssh2`/`async-ssh2-lite` (SFTP), `suppaftp`/`async-ftp`, `smb2`/`smbclient`, `reqwest` + `webdav-client`, `directories` for paths, `rusqlite`/`sled` for caches.
 - Archive navigation via VFS mount points (zip/tar/7z/iso) with transparent copy/move/extract; capability matrix per backend.
@@ -69,7 +69,7 @@ Milestones
 - Background transfers with resume where protocol allows; graceful fallback/blocks.
   - Crate options: `futures`, `async-trait`, `bytes`, `indicatif` for transfer progress.
 
-## M7: Permissions, properties, and disk tools
+M7: Permissions, properties, and disk tools
 - Properties/permissions dialogs (chmod/chown/chgrp/ACL/umask-aware), ownership display/edit, symlink handling.
   - Crate options: `nix`, `users`, `acl`, `umask`, `same-file`.
 - Disk usage/space viewers, checksum commands, mount management (MountMan-like) with privileged/elevated actions where supported.
@@ -77,7 +77,7 @@ Milestones
 - Safe delete/trash confirmations; configurable trash vs delete.
   - Crate options: `trash`, `dialoguer` for confirmations.
 
-## M8: Viewer, editor, and preview
+M8: Viewer, editor, and preview
 - Internal viewer (text/hex/pipe) with wrap/encoding/charset selection; external viewer hooks.
   - Crate options: `ropey`, `encoding_rs`, `bstr`, `hex`/`hexyl` for hex view, `which` for external viewer discovery.
 - Internal editor parity with mcedit basics (syntax highlight presets, indent, search/replace); external editor integration.
@@ -85,7 +85,7 @@ Milestones
 - Quick view panel and preview refresh respecting selection changes.
   - Crate options: `notify` (fs watch), `ratatui`, `memmap2` for efficient large-file previews.
 
-## M9: Themes, i18n, and polish
+M9: Themes, i18n, and polish
 - Theme system with presets (MC blue, Krusader light/dark, high-contrast), user theme loading, live switch + persisted selection; color rules for file types/states.
   - Crate options: `palette`, `serde`, `toml`, `once_cell`, `owo-colors`.
 - Accessibility: contrast checks, keyboard-first flows, focus indicators.
@@ -93,7 +93,7 @@ Milestones
 - Localization and help workflow; config UI for keymaps, mouse behavior, VFS credentials, job defaults; docs/help parity with MC.
   - Crate options: `fluent-bundle`, `unic-langid`, `intl_pluralrules`, `pulldown-cmark` for help rendering, `schemars` for config schemas.
 
-## M10: Quality gates + release readiness
+M10: Quality gates + release readiness
 - Integration tests for VFS backends, job queue semantics, panelize/search/compare/sync, viewer/editor basics.
   - Crate options: `assert_fs`, `predicates`, `rstest`, `escargot` for binary runs.
 - Property tests for path/permissions helpers; perf/soak runs via make_fakefs; crash reporting/logging defaults.
